@@ -54,6 +54,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
   onLogout,
 }) => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const { user, isLoading } = useAuth();
 

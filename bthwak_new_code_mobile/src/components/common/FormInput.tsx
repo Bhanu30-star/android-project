@@ -6,8 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInputProps,
-  NativeSyntheticEvent,
-  TextInputFocusEventData,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Typography, Shapes } from '@/theme';
@@ -46,7 +44,7 @@ export const FormInput: React.FC<FormInputProps> = ({
 
   const activeError = externalError || (hasBlurred ? localError : null);
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur: TextInputProps['onBlur'] = (e) => {
     setIsFocused(false);
     setHasBlurred(true);
     if (onValidate) {

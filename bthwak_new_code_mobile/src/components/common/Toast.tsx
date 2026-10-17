@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { Text, StyleSheet, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Typography, Shadows } from '@/theme';
 
@@ -18,8 +18,8 @@ export const Toast: React.FC<ToastProps> = ({
   onDismiss,
   duration = 3000,
 }) => {
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(-20)).current;
+  const opacityAnim = useMemo(() => new Animated.Value(0), []);
+  const translateYAnim = useMemo(() => new Animated.Value(-20), []);
 
   useEffect(() => {
     if (visible) {

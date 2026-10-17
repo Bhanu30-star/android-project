@@ -48,6 +48,7 @@ function RootStack() {
         <Stack.Screen name="(auth)/login" />
         <Stack.Screen name="dashboard" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="generate-invoice" />
       </Stack>
     </>
   );

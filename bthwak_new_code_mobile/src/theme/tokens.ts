@@ -141,6 +141,12 @@ export const Typography = {
     lineHeight: 22,
     color: Colors.white,
   },
+  body: {
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.text,
+  },
   bodySemiBold: {
     fontFamily: 'PlusJakartaSans_600SemiBold',
     fontSize: 14,
@@ -182,6 +188,11 @@ export const Shapes = {
   centerFabElevated: 28,
   drawerWidth: 320,
   drawerRadius: 24,
+
+  // Radius aliases
+  radiusSmall: 8,
+  radiusMedium: 14,
+  radiusLarge: 20,
 
   // Nested convenience aliases
   card: {

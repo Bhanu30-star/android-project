@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Typography, Shapes } from '@/theme';
+import { Colors, Typography } from '@/theme';
 
 export interface ImageUploadTileProps {
   label: string;

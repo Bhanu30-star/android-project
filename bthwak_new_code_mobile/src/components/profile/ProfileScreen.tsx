@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,17 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Typography, Shapes, Shadows } from '@/theme';
-import { useProfileQuery, useUpdateProfileMutation, ProfileDetails } from '@/api/profile';
+import {
+  useProfileQuery,
+  useUpdateProfileMutation,
+  ProfileDetails,
+  FALLBACK_PROFILE,
+} from '@/api/profile';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { FormInput } from '../common/FormInput';
 import { ImageUploadTile } from '../common/ImageUploadTile';
@@ -22,16 +26,17 @@ import { OfflineBanner } from '../common/OfflineBanner';
 import { Toast } from '../common/Toast';
 import { ChangePasswordSheet } from './ChangePasswordSheet';
 
-export interface ProfileScreenProps {
+interface ProfileFormInnerProps {
+  initialProfile: ProfileDetails;
   onGoBack: () => void;
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
+const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
+  initialProfile,
+  onGoBack,
+}) => {
   const insets = useSafeAreaInsets();
   const isOnline = useNetworkStatus();
-
-  // Shared React Query profile query
-  const { data: profile, isLoading: isProfileLoading } = useProfileQuery();
   const updateProfileMutation = useUpdateProfileMutation();
 
   // Active section tab
@@ -51,113 +56,62 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
     type: 'success',
   });
 
-  // Form Fields State
-  const [firmName, setFirmName] = useState('');
-  const [firmNameHindi, setFirmNameHindi] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [addressHindi, setAddressHindi] = useState('');
-  const [businessDescription, setBusinessDescription] = useState('');
+  // Form Fields State initialized directly from initialProfile (no cascading useEffect)
+  const [firmName, setFirmName] = useState(initialProfile.distributor_name || '');
+  const [firmNameHindi, setFirmNameHindi] = useState(initialProfile.distributor_name_in_hindi || '');
+  const [mobileNumber, setMobileNumber] = useState(initialProfile.mobile_no || initialProfile.primary_no || '');
+  const [address, setAddress] = useState(initialProfile.distributor_address || '');
+  const [addressHindi, setAddressHindi] = useState(initialProfile.distributor_address_in_hindi || '');
+  const [businessDescription, setBusinessDescription] = useState(
+    initialProfile.business_description || initialProfile.description || ''
+  );
 
   // Tax & Registration
-  const [gstin, setGstin] = useState('');
-  const [panNumber, setPanNumber] = useState('');
-  const [country, setCountry] = useState('India');
-  const [dlnNo, setDlnNo] = useState('');
-  const [foodLicenseNo, setFoodLicenseNo] = useState('');
-  const [udyamRegNo, setUdyamRegNo] = useState('');
-  const [tcsApplicable, setTcsApplicable] = useState<'Yes' | 'No'>('No');
+  const [gstin, setGstin] = useState(initialProfile.gstin || initialProfile.gstin_no || '');
+  const [panNumber, setPanNumber] = useState(initialProfile.pan_no || '');
+  const [country, setCountry] = useState(initialProfile.country || 'India');
+  const [dlnNo, setDlnNo] = useState(initialProfile.dln_no || '');
+  const [foodLicenseNo, setFoodLicenseNo] = useState(initialProfile.food_license || '');
+  const [udyamRegNo, setUdyamRegNo] = useState(initialProfile.udyam_no || '');
+  const [tcsApplicable, setTcsApplicable] = useState<'Yes' | 'No'>(initialProfile.tcs_applicable || 'No');
 
   // Portal Logins (passwords never logged/cached)
-  const [gstUsername, setGstUsername] = useState('');
-  const [gstPassword, setGstPassword] = useState('');
-  const [itrUsername, setItrUsername] = useState('');
-  const [itrPassword, setItrPassword] = useState('');
+  const [gstUsername, setGstUsername] = useState(initialProfile.gst_username || '');
+  const [gstPassword, setGstPassword] = useState(initialProfile.gst_password || '');
+  const [itrUsername, setItrUsername] = useState(initialProfile.itr_username || '');
+  const [itrPassword, setItrPassword] = useState(initialProfile.itr_password || '');
 
   // Uploads
-  const [bankQrUri, setBankQrUri] = useState<string | null>(null);
-  const [companyLogoUri, setCompanyLogoUri] = useState<string | null>(null);
-  const [profileAvatarUri, setProfileAvatarUri] = useState<string | null>(null);
+  const [bankQrUri, setBankQrUri] = useState<string | null>(initialProfile.bank_qr_code || null);
+  const [companyLogoUri, setCompanyLogoUri] = useState<string | null>(initialProfile.company_logo || null);
+  const [profileAvatarUri, setProfileAvatarUri] = useState<string | null>(initialProfile.profile_image || null);
 
-  // Original snapshot to detect dirty state
-  const [initialData, setInitialData] = useState<Partial<ProfileDetails>>({});
-
-  // Sync profile data into form fields when query loads
-  useEffect(() => {
-    if (profile) {
-      setFirmName(profile.distributor_name || '');
-      setFirmNameHindi(profile.distributor_name_in_hindi || '');
-      setMobileNumber(profile.mobile_no || profile.primary_no || '');
-      setAddress(profile.distributor_address || '');
-      setAddressHindi(profile.distributor_address_in_hindi || '');
-      setBusinessDescription(profile.business_description || profile.description || '');
-
-      setGstin(profile.gstin || profile.gstin_no || '');
-      setPanNumber(profile.pan_no || '');
-      setCountry(profile.country || 'India');
-      setDlnNo(profile.dln_no || '');
-      setFoodLicenseNo(profile.food_license || '');
-      setUdyamRegNo(profile.udyam_no || '');
-      setTcsApplicable(profile.tcs_applicable || 'No');
-
-      setGstUsername(profile.gst_username || '');
-      setGstPassword(profile.gst_password || '');
-      setItrUsername(profile.itr_username || '');
-      setItrPassword(profile.itr_password || '');
-
-      setBankQrUri(profile.bank_qr_code || null);
-      setCompanyLogoUri(profile.company_logo || null);
-      setProfileAvatarUri(profile.profile_image || null);
-
-      setInitialData({
-        distributor_name: profile.distributor_name || '',
-        distributor_name_in_hindi: profile.distributor_name_in_hindi || '',
-        mobile_no: profile.mobile_no || profile.primary_no || '',
-        distributor_address: profile.distributor_address || '',
-        distributor_address_in_hindi: profile.distributor_address_in_hindi || '',
-        description: profile.business_description || profile.description || '',
-        gstin: profile.gstin || profile.gstin_no || '',
-        pan_no: profile.pan_no || '',
-        country: profile.country || 'India',
-        dln_no: profile.dln_no || '',
-        food_license: profile.food_license || '',
-        udyam_no: profile.udyam_no || '',
-        tcs_applicable: profile.tcs_applicable || 'No',
-        gst_username: profile.gst_username || '',
-        gst_password: profile.gst_password || '',
-        itr_username: profile.itr_username || '',
-        itr_password: profile.itr_password || '',
-      });
-    }
-  }, [profile]);
-
-  // Dirty State Calculation
+  // Dirty State Calculation against initial values
   const isDirty = useMemo(() => {
-    if (!initialData) return false;
     return (
-      firmName !== (initialData.distributor_name ?? '') ||
-      firmNameHindi !== (initialData.distributor_name_in_hindi ?? '') ||
-      mobileNumber !== (initialData.mobile_no ?? '') ||
-      address !== (initialData.distributor_address ?? '') ||
-      addressHindi !== (initialData.distributor_address_in_hindi ?? '') ||
-      businessDescription !== (initialData.description ?? '') ||
-      gstin !== (initialData.gstin ?? '') ||
-      panNumber !== (initialData.pan_no ?? '') ||
-      country !== (initialData.country ?? 'India') ||
-      dlnNo !== (initialData.dln_no ?? '') ||
-      foodLicenseNo !== (initialData.food_license ?? '') ||
-      udyamRegNo !== (initialData.udyam_no ?? '') ||
-      tcsApplicable !== (initialData.tcs_applicable ?? 'No') ||
-      gstUsername !== (initialData.gst_username ?? '') ||
-      gstPassword !== (initialData.gst_password ?? '') ||
-      itrUsername !== (initialData.itr_username ?? '') ||
-      itrPassword !== (initialData.itr_password ?? '') ||
-      bankQrUri !== (profile?.bank_qr_code || null) ||
-      companyLogoUri !== (profile?.company_logo || null) ||
-      profileAvatarUri !== (profile?.profile_image || null)
+      firmName !== (initialProfile.distributor_name ?? '') ||
+      firmNameHindi !== (initialProfile.distributor_name_in_hindi ?? '') ||
+      mobileNumber !== (initialProfile.mobile_no || initialProfile.primary_no || '') ||
+      address !== (initialProfile.distributor_address ?? '') ||
+      addressHindi !== (initialProfile.distributor_address_in_hindi ?? '') ||
+      businessDescription !== (initialProfile.business_description || initialProfile.description || '') ||
+      gstin !== (initialProfile.gstin || initialProfile.gstin_no || '') ||
+      panNumber !== (initialProfile.pan_no ?? '') ||
+      country !== (initialProfile.country || 'India') ||
+      dlnNo !== (initialProfile.dln_no ?? '') ||
+      foodLicenseNo !== (initialProfile.food_license ?? '') ||
+      udyamRegNo !== (initialProfile.udyam_no ?? '') ||
+      tcsApplicable !== (initialProfile.tcs_applicable || 'No') ||
+      gstUsername !== (initialProfile.gst_username ?? '') ||
+      gstPassword !== (initialProfile.gst_password ?? '') ||
+      itrUsername !== (initialProfile.itr_username ?? '') ||
+      itrPassword !== (initialProfile.itr_password ?? '') ||
+      bankQrUri !== (initialProfile.bank_qr_code || null) ||
+      companyLogoUri !== (initialProfile.company_logo || null) ||
+      profileAvatarUri !== (initialProfile.profile_image || null)
     );
   }, [
-    initialData,
+    initialProfile,
     firmName,
     firmNameHindi,
     mobileNumber,
@@ -178,7 +132,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
     bankQrUri,
     companyLogoUri,
     profileAvatarUri,
-    profile,
   ]);
 
   // Validation Rules
@@ -197,7 +150,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
   };
 
   const validateGstin = (val: string): string | null => {
-    if (!val || val.trim() === '') return null; // optional if not provided
+    if (!val || val.trim() === '') return null; // optional
     if (val.trim().length !== 15) {
       return 'GSTIN must be 15 characters';
     }
@@ -209,7 +162,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
   };
 
   const validatePan = (val: string): string | null => {
-    if (!val || val.trim() === '') return null; // optional if not provided
+    if (!val || val.trim() === '') return null; // optional
     if (val.trim().length !== 10) {
       return 'PAN must be 10 characters';
     }
@@ -282,7 +235,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
       formData.append('distributor_name', firmName.trim());
       formData.append('distributor_name_in_hindi', firmNameHindi.trim());
       formData.append('mobile_no', mobileNumber.trim());
-      formData.append('distributor_email', profile?.distributor_email || 'bhanu.appyzio30@gmail.com');
+      formData.append('distributor_email', initialProfile.distributor_email || 'bhanu.appyzio30@gmail.com');
       formData.append('distributor_address', address.trim());
       formData.append('distributor_address_in_hindi', addressHindi.trim());
       formData.append('description', businessDescription.trim());
@@ -410,10 +363,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
           </View>
 
           {/* User Name & Location */}
-          <Text style={styles.profileName}>{firmName || profile?.user_name || 'Bhanu'}</Text>
+          <Text style={styles.profileName}>{firmName || initialProfile.user_name || 'Bhanu'}</Text>
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.locationText}>{profile?.place_of_supply || 'Rajasthan'}</Text>
+            <Text style={styles.locationText}>{initialProfile.place_of_supply || 'Rajasthan'}</Text>
           </View>
 
           {/* 3 Info Boxes */}
@@ -432,7 +385,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
                 <Feather name="mail" size={16} color={Colors.primary} />
               </View>
               <Text style={styles.infoBoxValue} numberOfLines={1}>
-                {profile?.distributor_email || 'bhanu.appyzio30@gmail.com'}
+                {initialProfile.distributor_email || 'bhanu.appyzio30@gmail.com'}
               </Text>
             </View>
 
@@ -828,7 +781,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
                 <Text style={styles.subPlanExpiry}>
                   Renewal Date:{' '}
                   <Text style={styles.boldText}>
-                    {profile?.renew_date || 'Active Plan (31 Dec 2026)'}
+                    {initialProfile.renew_date || 'Active Plan (31 Dec 2026)'}
                   </Text>
                 </Text>
               </View>
@@ -915,6 +868,19 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onGoBack }) => {
         }}
       />
     </View>
+  );
+};
+
+export const ProfileScreen: React.FC<{ onGoBack: () => void }> = ({ onGoBack }) => {
+  const { data: profile } = useProfileQuery();
+  const currentProfile = profile || FALLBACK_PROFILE;
+
+  return (
+    <ProfileFormInner
+      key={currentProfile.distributor_id ? String(currentProfile.distributor_id) : 'profile-form'}
+      initialProfile={currentProfile}
+      onGoBack={onGoBack}
+    />
   );
 };
 
