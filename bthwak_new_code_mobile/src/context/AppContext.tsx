@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-export type AppTabType = 'dashboard' | 'sales' | 'parties' | 'reports' | 'settings';
+export type AppTabType = 'dashboard' | 'sales' | 'parties' | 'reports' | 'settings' | 'chat';
 
 interface AppContextType {
   activeTab: AppTabType;

@@ -9,7 +9,6 @@ import {
   UIManager,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Typography } from '@/theme';
 import { SubMenuItemConfig } from '@/navigation/menu';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -26,6 +25,23 @@ interface MenuGroupProps {
   onSelectSubItem: (item: SubMenuItemConfig) => void;
 }
 
+const getSubItemIcon = (label: string): keyof typeof Feather.glyphMap => {
+  const lower = label.toLowerCase();
+  if (lower.includes('executive') || lower.includes('buyer') || lower.includes('seller') || lower.includes('customer')) {
+    return 'users';
+  }
+  if (lower.includes('beat') || lower.includes('movement')) {
+    return 'git-branch';
+  }
+  if (lower.includes('note') || lower.includes('invoice') || lower.includes('bill')) {
+    return 'file-text';
+  }
+  if (lower.includes('stock') || lower.includes('transfer')) {
+    return 'box';
+  }
+  return 'corner-down-right';
+};
+
 export const MenuGroup: React.FC<MenuGroupProps> = ({
   label,
   icon,
@@ -41,62 +57,67 @@ export const MenuGroup: React.FC<MenuGroupProps> = ({
   };
 
   return (
-    <View style={[styles.container, isExpanded && styles.containerExpanded]}>
+    <View style={styles.container}>
       {/* Header Row */}
       <TouchableOpacity
-        style={styles.headerRow}
+        style={[styles.headerRow, isExpanded && styles.headerRowExpanded]}
         onPress={handleToggle}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityRole="button"
         accessibilityLabel={`${label} menu group`}
         accessibilityState={{ expanded: isExpanded }}
       >
-        <Feather
-          name={icon}
-          size={20}
-          color={isExpanded ? '#2A2470' : '#4F46E5'}
-        />
-        <Text style={[styles.headerLabel, isExpanded && styles.headerLabelExpanded]}>
-          {label}
-        </Text>
+        <View style={styles.headerLeft}>
+          <Feather
+            name={icon}
+            size={18}
+            color={isExpanded ? '#FFFFFF' : '#F2F2FA'}
+          />
+          <Text style={[styles.headerLabel, isExpanded && styles.headerLabelExpanded]}>
+            {label}
+          </Text>
+        </View>
+
         <Feather
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color={isExpanded ? '#2A2470' : '#5E5B85'}
+          color={isExpanded ? '#FFFFFF' : '#8E95B3'}
         />
       </TouchableOpacity>
 
       {/* Expanded Submenu */}
       {isExpanded && (
         <View style={styles.submenuWrapper}>
-          {/* 2px vertical guide line on left */}
-          <View style={styles.guideLine} />
-
-          <View style={styles.subItemsList}>
-            {subItems.map((sub) => {
-              const isSubActive = activeRoute === sub.route;
-              return (
-                <TouchableOpacity
-                  key={sub.id}
-                  style={styles.subItemRow}
-                  onPress={() => onSelectSubItem(sub)}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={sub.label}
+          {subItems.map((sub) => {
+            const isSubActive = activeRoute === sub.route;
+            const subIcon = getSubItemIcon(sub.label);
+            return (
+              <TouchableOpacity
+                key={sub.id}
+                style={[styles.subItemRow, isSubActive && styles.subItemRowActive]}
+                onPress={() => onSelectSubItem(sub)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={sub.label}
+              >
+                <Feather
+                  name={subIcon}
+                  size={16}
+                  color={isSubActive ? '#6C7CFF' : '#8E95B3'}
+                  style={{ marginRight: 12 }}
+                />
+                <Text
+                  style={[
+                    styles.subItemLabel,
+                    isSubActive && styles.subItemLabelActive,
+                  ]}
+                  numberOfLines={1}
                 >
-                  <Text
-                    style={[
-                      styles.subItemLabel,
-                      isSubActive && styles.subItemLabelActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {sub.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                  {sub.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
     </View>
@@ -105,57 +126,56 @@ export const MenuGroup: React.FC<MenuGroupProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 14,
-    marginVertical: 1,
-  },
-  containerExpanded: {
-    backgroundColor: '#EEEDFF',
-    borderRadius: 16,
-    paddingBottom: 8,
+    marginVertical: 2,
   },
   headerRow: {
-    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 14,
-    paddingHorizontal: 12,
+  },
+  headerRowExpanded: {
+    backgroundColor: '#5B35C2',
+  },
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    flex: 1,
   },
   headerLabel: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#1B1840',
-    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#F2F2FA',
   },
   headerLabelExpanded: {
-    color: '#2A2470',
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   submenuWrapper: {
-    flexDirection: 'row',
+    paddingTop: 6,
+    paddingBottom: 8,
     paddingLeft: 22,
-    paddingRight: 12,
-    marginTop: 2,
-  },
-  guideLine: {
-    width: 2,
-    backgroundColor: '#C9C6F5',
-    marginRight: 14,
-    borderRadius: 1,
-  },
-  subItemsList: {
-    flex: 1,
   },
   subItemRow: {
-    height: 44,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  subItemRowActive: {
+    backgroundColor: '#1E2540',
   },
   subItemLabel: {
-    fontFamily: Typography.fontFamily.semiBold,
-    fontSize: 13,
-    color: '#3A376A',
+    fontSize: 14,
+    color: '#8E95B3',
+    fontWeight: '500',
   },
   subItemLabelActive: {
-    fontFamily: Typography.fontFamily.bold,
-    color: '#2A2470',
+    color: '#6C7CFF',
+    fontWeight: '600',
   },
 });

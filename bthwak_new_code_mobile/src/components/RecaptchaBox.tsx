@@ -19,11 +19,10 @@ export const RecaptchaBox: React.FC<RecaptchaBoxProps> = ({
   const handlePress = () => {
     if (verified || isVerifying) return;
     setIsVerifying(true);
-    // Simulate quick verification or generate mobile verification token
     setTimeout(() => {
       setIsVerifying(false);
       onVerify('mobile_recaptcha_verified_' + Date.now());
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -31,7 +30,7 @@ export const RecaptchaBox: React.FC<RecaptchaBoxProps> = ({
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.85}
-        style={[styles.container, !!error && styles.containerError]}
+        style={[styles.container, !!error && styles.containerError, verified && styles.containerVerified]}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: verified }}
         accessibilityLabel="I'm not a robot reCAPTCHA verification"
@@ -46,9 +45,9 @@ export const RecaptchaBox: React.FC<RecaptchaBoxProps> = ({
             ]}
           >
             {isVerifying ? (
-              <ActivityIndicator size="small" color={Theme.colors.primary} />
+              <ActivityIndicator size="small" color="#FF5B00" />
             ) : verified ? (
-              <Ionicons name="checkmark" size={20} color={Theme.colors.success} />
+              <Ionicons name="checkmark" size={18} color="#FFFFFF" />
             ) : null}
           </View>
           <Text style={styles.label}>I&apos;m not a robot</Text>
@@ -57,7 +56,7 @@ export const RecaptchaBox: React.FC<RecaptchaBoxProps> = ({
         {/* Right Side: ReCAPTCHA branding */}
         <View style={styles.brandSection}>
           <View style={styles.brandIconWrapper}>
-            <Ionicons name="reload-circle-outline" size={26} color="#1A73E8" />
+            <Ionicons name="shield-checkmark-outline" size={22} color={verified ? '#16A34A' : '#3B82F6'} />
           </View>
           <Text style={styles.brandText}>reCAPTCHA</Text>
           <View style={styles.termsRow}>
@@ -76,24 +75,28 @@ export const RecaptchaBox: React.FC<RecaptchaBoxProps> = ({
 const styles = StyleSheet.create({
   outerContainer: {
     width: '100%',
-    marginVertical: Theme.spacing.sm,
+    marginVertical: 10,
     alignItems: 'center',
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#17162A',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: Theme.borderRadius.sm,
-    paddingHorizontal: Theme.spacing.md,
+    borderColor: '#2A2D4A',
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 10,
     width: '100%',
-    maxWidth: 300,
+  },
+  containerVerified: {
+    borderColor: '#2DD4A8',
+    backgroundColor: '#162828',
   },
   containerError: {
-    borderColor: Theme.colors.error,
+    borderColor: '#FF5C6C',
+    backgroundColor: '#26131D',
   },
   leftSection: {
     flexDirection: 'row',
@@ -101,26 +104,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   checkboxSquare: {
-    width: 26,
-    height: 26,
-    borderRadius: 3,
-    borderWidth: 2,
-    borderColor: '#C1C7D0',
-    backgroundColor: '#FFFFFF',
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#2A2D4A',
+    backgroundColor: '#1E1D36',
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSquareVerified: {
-    borderColor: '#FFFFFF',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#2DD4A8',
+    backgroundColor: '#2DD4A8',
   },
   checkboxSquareVerifying: {
-    borderColor: Theme.colors.primary,
+    borderColor: '#6C7CFF',
   },
   label: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#222222',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F2F2FA',
   },
   brandSection: {
     alignItems: 'center',
@@ -128,15 +131,13 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   brandIconWrapper: {
-    width: 26,
-    height: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandText: {
     fontSize: 9,
-    fontWeight: '600',
-    color: '#555555',
+    fontWeight: '700',
+    color: '#9AA0BF',
     marginTop: 1,
   },
   termsRow: {
@@ -146,15 +147,15 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: 8,
-    color: '#777777',
+    color: '#5B6084',
   },
   termsDot: {
     fontSize: 8,
-    color: '#777777',
+    color: '#5B6084',
   },
   errorText: {
-    color: Theme.colors.error,
-    fontSize: Theme.typography.sizes.xs,
+    color: '#FF5C6C',
+    fontSize: 12,
     marginTop: 4,
     textAlign: 'center',
   },

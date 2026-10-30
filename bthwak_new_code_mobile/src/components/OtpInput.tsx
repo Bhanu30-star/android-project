@@ -5,7 +5,6 @@ import {
   StyleSheet,
   NativeSyntheticEvent,
 } from 'react-native';
-import { Theme } from '../theme';
 
 interface OtpInputProps {
   value: string;
@@ -21,12 +20,21 @@ export const OtpInput: React.FC<OtpInputProps> = ({
   hasError = false,
 }) => {
   const inputsRef = useRef<any[]>([]);
+  const lastCompletedRef = useRef<string>('');
+  const onCompleteRef = useRef(onComplete);
 
   useEffect(() => {
-    if (value.length === 6 && onComplete) {
-      onComplete(value);
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (value.length === 6 && lastCompletedRef.current !== value) {
+      lastCompletedRef.current = value;
+      onCompleteRef.current?.(value);
+    } else if (value.length < 6) {
+      lastCompletedRef.current = '';
     }
-  }, [value, onComplete]);
+  }, [value]);
 
   const handleDigitChange = (text: string, index: number) => {
     const cleanDigits = text.replace(/[^0-9]/g, '');
@@ -40,9 +48,9 @@ export const OtpInput: React.FC<OtpInputProps> = ({
       return;
     }
 
-    const currentDigits = value.split('');
-    currentDigits[index] = cleanDigits.slice(-1) || '';
-    const newOtp = currentDigits.join('').slice(0, 6);
+    const currentDigits = (value || '').padEnd(6, ' ').split('');
+    currentDigits[index] = cleanDigits.slice(-1) || ' ';
+    const newOtp = currentDigits.join('').replace(/\s+$/, '');
     onChange(newOtp);
 
     if (cleanDigits && index < 5) {
@@ -55,23 +63,21 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     index: number
   ) => {
     if (e.nativeEvent.key === 'Backspace') {
-      const currentDigits = value.split('');
+      const currentDigits = (value || '').split('');
       if (!currentDigits[index] && index > 0) {
         inputsRef.current[index - 1]?.focus();
-        currentDigits[index - 1] = '';
-        onChange(currentDigits.join(''));
-      } else {
-        currentDigits[index] = '';
-        onChange(currentDigits.join(''));
       }
     }
   };
 
+  const digits = value.padEnd(6, ' ').slice(0, 6).split('');
+
   return (
-    <View style={styles.container}>
-      {Array.from({ length: 6 }).map((_, index) => {
-        const digit = value[index] || '';
-        const isCurrent = index === value.length || (index === 5 && value.length === 6);
+    <View style={styles.container} accessibilityRole="none">
+      {digits.map((digit, index) => {
+        const char = digit.trim();
+        const isFilled = !!char;
+        const isCurrentFocus = value.length === index;
 
         return (
           <TextInput
@@ -79,18 +85,18 @@ export const OtpInput: React.FC<OtpInputProps> = ({
             ref={(ref) => {
               inputsRef.current[index] = ref;
             }}
-            value={digit}
+            value={char}
             onChangeText={(text) => handleDigitChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
             keyboardType="number-pad"
-            maxLength={index === 0 ? 6 : 1}
-            textAlign="center"
+            maxLength={6}
             style={[
-              styles.box,
-              digit ? styles.boxFilled : null,
-              isCurrent ? styles.boxCurrent : null,
-              hasError ? styles.boxError : null,
+              styles.digitBox,
+              isFilled && styles.digitBoxFilled,
+              isCurrentFocus && styles.digitBoxActive,
+              hasError && styles.digitBoxError,
             ]}
+            textAlign="center"
             selectTextOnFocus
             accessibilityLabel={`OTP digit ${index + 1}`}
           />
@@ -104,30 +110,39 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     width: '100%',
-    marginVertical: Theme.spacing.md,
+    marginVertical: 14,
     gap: 8,
   },
-  box: {
+  digitBox: {
     flex: 1,
     height: 52,
-    backgroundColor: Theme.colors.inputBg,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#2A2D4A',
+    backgroundColor: '#17162A',
     fontSize: 22,
     fontWeight: '700',
-    color: Theme.colors.textPrimary,
+    color: '#F2F2FA',
     textAlign: 'center',
   },
-  boxCurrent: {
-    borderColor: Theme.colors.primary,
-    backgroundColor: '#FFFFFF',
+  digitBoxFilled: {
+    borderColor: '#6C7CFF',
+    backgroundColor: '#1E1D36',
+    color: '#F2F2FA',
   },
-  boxFilled: {
-    borderColor: Theme.colors.primary,
+  digitBoxActive: {
+    borderColor: '#6C7CFF',
+    backgroundColor: '#1E1D36',
+    shadowColor: '#6C7CFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  boxError: {
-    borderColor: Theme.colors.error,
+  digitBoxError: {
+    borderColor: '#FF5C6C',
+    backgroundColor: '#26131D',
   },
 });

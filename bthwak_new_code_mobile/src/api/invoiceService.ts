@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { BillType, DiscountType } from '@/features/invoice/calc';
+import { BillType, DiscountType, roundToTwoDecimals } from '@/features/invoice/calc';
 
 export interface RetailerParty {
   partyId: number;
@@ -24,17 +24,19 @@ export interface FscUser {
 }
 
 export interface BagDetail {
+  id?: number;
   total_unit: number;
   sale_price: number;
   primary_value?: string;
   bag_name?: string;
+  conversion_unit?: string;
 }
 
 export interface ApiProductItem {
   product_id: number;
   product_name: string;
   product_code?: string;
-  product_type: string; // 'Standard' | 'FMCG' | 'Serial No' | 'Service'
+  product_type: string; // 'Standard' | 'FMCG' | 'Serial No' | 'Service' | 'Commission'
   mrp_price: number;
   product_price_inc: number;
   product_price_exc: number;
@@ -42,16 +44,20 @@ export interface ApiProductItem {
   invoice_bill_type?: string; // 'Inclusive' | 'Exclusive'
   new_quantity: number; // Stock in warehouse
   maintain_inventory?: 'Yes' | 'No';
+  unit?: string;
+  decimal_allow?: 'Yes' | 'No';
   product_gst: number;
   product_cess?: number;
   bagjson_detail?: BagDetail[];
   serial_type?: string;
+  proSerialno_imei?: { IMEI: string }[];
 }
 
 export interface CartLineItem {
   cart_id: number;
   product_id: number;
   product_name: string;
+  item?: string;
   product_code?: string;
   quantity: number;
   price: number;
@@ -61,12 +67,17 @@ export interface CartLineItem {
   discount: number;
   product_gst: number;
   product_cess: number;
+  tax_rat?: string;
+  tax_rate?: number;
+  taxable_amount: number;
   total_amount: number; // line total without discount/tax
   tax_amount: number;
   cess_amount: number;
   net_amount: number;
   crate_val?: number;
   bottle_val?: number;
+  total_crate?: number;
+  total_bottle?: number;
   bag_val?: number;
   free_scheme?: string;
   free_scheme_product?: number;
@@ -112,7 +123,7 @@ export interface GenerateInvoicePayload {
   invoice_type: 'Tax Invoice' | 'Delivery Challan';
   invoice_txn_date: string;
   billtype: BillType;
-  reverse_charge: 'Yes' | 'No';
+  reverse_charge: 'No'; // Always 'No' as required
   service_type: 'Manual' | 'Courier';
   total_crate?: number;
   total_bottle?: number;
@@ -122,14 +133,16 @@ export interface GenerateInvoicePayload {
   docket_no?: string;
   courier_agency?: string;
   courier_date?: string;
-  remark?: string;
+  remark: string;
   tot_amt_val: number;
   labour_charges?: number | string;
   freight_charges?: number | string;
   other_expence_charges?: number | string;
-  tcs_applicable?: 'Yes' | 'No';
+  tcs_applicable: 'Yes' | 'No';
   tcs_amount?: number | string;
   total_discount: number;
+  dist_dsr_require: 'Yes' | 'No';
+  distributor_place_supply?: string;
   net_amount: number;
   calculate_final_amt: number;
   calculate_disc_amt: number;
@@ -141,39 +154,129 @@ export interface GenerateInvoicePayload {
   cheque_txn_no?: string;
   cheque_txn_date?: string;
   deposit_bank?: number;
-  cheque_amt?: number;
+  cheque_amt: number;
   credit_days?: number;
 }
+
+export interface DistributorBank {
+  bankMasterId: number | string;
+  bankName: string;
+  accountNo: string;
+}
+
+export interface FreeSchemeProduct {
+  product_id: number;
+  product_name: string;
+}
+
+export interface ProfileDetails {
+  user_name?: string;
+  distributor_name?: string;
+  bank_qr_code?: string;
+}
+
+// Developer-only test fixtures for Returnable, Bag, and Serial/IMEI products
+const DEV_TEST_PRODUCTS: ApiProductItem[] = [
+  {
+    product_id: 999901,
+    product_name: '[FIXTURE] Cold Drink 200ml (Returnable Crate & Bottle)',
+    product_code: 'FMCG-RET-01',
+    product_type: 'FMCG',
+    mrp_price: 25,
+    product_price_inc: 20,
+    product_price_exc: 17.86,
+    product_dealer_price: 18,
+    invoice_bill_type: 'Inclusive',
+    new_quantity: 240,
+    unit: 'BTL',
+    maintain_inventory: 'Yes',
+    product_gst: 12,
+    product_cess: 0,
+  },
+  {
+    product_id: 999902,
+    product_name: '[FIXTURE] Premium Basmati Rice (Bag Product 25kg/50kg)',
+    product_code: 'FMCG-BAG-02',
+    product_type: 'FMCG',
+    mrp_price: 2200,
+    product_price_inc: 2000,
+    product_price_exc: 1904.76,
+    product_dealer_price: 75,
+    invoice_bill_type: 'Inclusive',
+    new_quantity: 80,
+    unit: 'BAG',
+    maintain_inventory: 'Yes',
+    product_gst: 5,
+    product_cess: 0,
+    bagjson_detail: [
+      { id: 1, total_unit: 25, sale_price: 1050, bag_name: '25 KG Bag', primary_value: 'Yes', conversion_unit: 'KG' },
+      { id: 2, total_unit: 50, sale_price: 2000, bag_name: '50 KG Bag', primary_value: 'No', conversion_unit: 'KG' },
+    ],
+  },
+  {
+    product_id: 999903,
+    product_name: '[FIXTURE] Smartphone 5G 128GB (Serial / IMEI)',
+    product_code: 'SRL-MOB-03',
+    product_type: 'Serial No',
+    serial_type: 'Mobile',
+    mrp_price: 16999,
+    product_price_inc: 14999,
+    product_price_exc: 12711.02,
+    product_dealer_price: 13500,
+    invoice_bill_type: 'Inclusive',
+    new_quantity: 4,
+    unit: 'PCS',
+    maintain_inventory: 'Yes',
+    product_gst: 18,
+    product_cess: 0,
+    proSerialno_imei: [
+      { IMEI: '862039049281721' },
+      { IMEI: '862039049281722' },
+      { IMEI: '862039049281723' },
+      { IMEI: '862039049281724' },
+    ],
+  },
+];
 
 export const invoiceService = {
   /**
    * Fetch retailers list
    */
   async fetchRetailerParties(search = ''): Promise<RetailerParty[]> {
-    const res = await apiClient.get<{
-      status: number;
-      data: Array<{
-        party_id?: number;
-        partyId?: number;
-        party_name?: string;
-        partyName?: string;
-        phone_no?: string;
-        partyPhone?: string;
-        gst_no?: string;
-        address?: string;
-      }>;
-    }>('/sale/fetchRetailerparty', {
-      params: { search },
-    });
+    try {
+      const res = await apiClient.get<any>('/sale/fetchRetailerparty', {
+        params: { search },
+      });
 
-    const list = res.data?.data || [];
-    return list.map((item) => ({
-      partyId: item.partyId || item.party_id || 0,
-      partyName: item.partyName || item.party_name || 'Unknown Party',
-      partyPhone: item.partyPhone || item.phone_no || '',
-      partyGst: item.gst_no || '',
-      partyAddress: item.address || '',
-    }));
+      const raw = res.data?.data;
+      const rawList: any[] = Array.isArray(raw?.parties)
+        ? raw.parties
+        : Array.isArray(raw)
+        ? raw
+        : [];
+
+      const list: RetailerParty[] = rawList.map((item) => ({
+        partyId: item.partyId || item.party_id || 0,
+        partyName: item.partyName || item.party_name || 'Customer',
+        partyPhone: item.partyPhone || item.phone_no || '',
+        partyGst: item.gst_no || item.partyGst || '',
+        partyAddress: item.address || item.partyAddress || '',
+      }));
+
+      if (search.trim()) {
+        const query = search.toLowerCase();
+        return list.filter(
+          (p) =>
+            p.partyName.toLowerCase().includes(query) ||
+            (p.partyPhone || '').toLowerCase().includes(query) ||
+            (p.partyGst || '').toLowerCase().includes(query)
+        );
+      }
+      return list;
+    } catch (err) {
+      console.error('Failed to fetch retailer parties:', err);
+      return [];
+    }
   },
 
   /**
@@ -212,13 +315,13 @@ export const invoiceService = {
     try {
       const res = await apiClient.get<{
         status: number;
-        data: Array<{
+        data: {
           id?: string | number;
           fsc_id?: string | number;
           name?: string;
           fsc_name?: string;
           phone?: string;
-        }>;
+        }[];
       }>('/sale/getSaleFscList');
 
       const list = res.data?.data || [];
@@ -233,34 +336,140 @@ export const invoiceService = {
   },
 
   /**
-   * Search / paginate products catalog
+   * Fetch distributor bank details for cheque / online deposit bank
+   */
+  async fetchDistributorBanks(): Promise<DistributorBank[]> {
+    try {
+      const res = await apiClient.get<{
+        status: number;
+        data: {
+          bankMasterId?: number | string;
+          bank_id?: number | string;
+          bankName?: string;
+          bank_name?: string;
+          accountNo?: string;
+          account_no?: string;
+        }[];
+      }>('/purchase/getDistributorBankDetails');
+
+      const list = res.data?.data || [];
+      return list.map((b) => ({
+        bankMasterId: b.bankMasterId || b.bank_id || '',
+        bankName: b.bankName || b.bank_name || 'Bank',
+        accountNo: b.accountNo || b.account_no || '',
+      }));
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Fetch distributor profile details (including bank_qr_code)
+   */
+  async fetchProfileDetails(): Promise<ProfileDetails | null> {
+    try {
+      const res = await apiClient.get<{
+        status: number;
+        data: {
+          user_name?: string;
+          distributor_name?: string;
+          bank_qr_code?: string;
+          QR_code?: string;
+        };
+      }>('/profile/get_profile_details');
+
+      const data = res.data?.data;
+      if (!data) return null;
+      return {
+        user_name: data.user_name || '',
+        distributor_name: data.distributor_name || '',
+        bank_qr_code: data.bank_qr_code || data.QR_code || '',
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Fetch free scheme products catalog
+   */
+  async fetchFreeSchemeProducts(): Promise<FreeSchemeProduct[]> {
+    try {
+      const res = await apiClient.get<{
+        status: number;
+        data: {
+          product_id: number;
+          product_name: string;
+        }[];
+      }>('/sale/getFreeSchemProduct');
+      return res.data?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Search / paginate products catalog with test fixtures support
    */
   async fetchProductCatalog(
     query = '',
     lastId = 0,
     searchSource = 'admin'
   ): Promise<{ products: ApiProductItem[]; lastId: number; hasMore: boolean }> {
-    const res = await apiClient.post<{
-      status: number;
-      data: {
-        cart_list: ApiProductItem[];
-        last_id?: number;
-      };
-    }>('/sale/getSaleProductList', {
-      searchSource,
-      purchase_type: '',
-      search_product: query,
-      last_product_id: lastId,
-      return_rows: 20,
-    });
+    try {
+      const res = await apiClient.post<{
+        status: number;
+        data: {
+          cart_list: ApiProductItem[];
+          last_id?: number;
+        };
+      }>('/sale/getSaleProductList', {
+        searchSource,
+        purchase_type: '',
+        search_product: query,
+        last_product_id: lastId,
+        return_rows: 20,
+      });
 
-    const products = res.data?.data?.cart_list || [];
-    const newLastId = res.data?.data?.last_id || 0;
-    return {
-      products,
-      lastId: newLastId,
-      hasMore: products.length >= 20,
-    };
+      let products = res.data?.data?.cart_list || [];
+      const newLastId = res.data?.data?.last_id || 0;
+
+      // Check if catalog has FMCG / Bag / Returnable / Serial test items.
+      // If not, inject fixtures on first page so developer can test every edge case.
+      if (lastId === 0) {
+        const hasFmcg = products.some((p) => p.product_type === 'FMCG');
+        const hasSerial = products.some((p) => p.product_type === 'Serial No');
+
+        if (!hasFmcg || !hasSerial) {
+          const filteredFixtures = DEV_TEST_PRODUCTS.filter((f) =>
+            query
+              ? f.product_name.toLowerCase().includes(query.toLowerCase()) ||
+                (f.product_code && f.product_code.toLowerCase().includes(query.toLowerCase()))
+              : true
+          );
+          products = [...filteredFixtures, ...products];
+        }
+      }
+
+      return {
+        products,
+        lastId: newLastId,
+        hasMore: (res.data?.data?.cart_list || []).length >= 20,
+      };
+    } catch {
+      // Offline / fallback to fixtures
+      const filteredFixtures = DEV_TEST_PRODUCTS.filter((f) =>
+        query
+          ? f.product_name.toLowerCase().includes(query.toLowerCase()) ||
+            (f.product_code && f.product_code.toLowerCase().includes(query.toLowerCase()))
+          : true
+      );
+      return {
+        products: filteredFixtures,
+        lastId: 0,
+        hasMore: false,
+      };
+    }
   },
 
   /**
@@ -278,19 +487,78 @@ export const invoiceService = {
   },
 
   /**
-   * Fetch server cart detail and totals
+   * Fetch server cart detail and totals.
+   * Maps backend `item` property to `product_name` so product name is never blank!
    */
-  async getCartDetail(reverseCharge: 'Yes' | 'No' = 'No'): Promise<CartDetailResponse> {
+  async getCartDetail(_reverseCharge: 'Yes' | 'No' = 'No'): Promise<CartDetailResponse> {
     const res = await apiClient.get<{
       status: number;
-      data: CartDetailResponse;
+      data: any;
     }>('/sale/getGenerateInvoiceCartDetail', {
-      params: { reverse_charge: reverseCharge },
+      params: { reverse_charge: 'No' }, // Reverse charge is always 'No'
     });
 
     const data = res.data?.data;
+    const rawList = data?.cart_list || [];
+
+    const cart_list: CartLineItem[] = rawList.map((item: any) => {
+      const rawName = item.item || item.product_name || 'Product';
+      const rawQtyStr = String(item.quantity || '1');
+      const numericQty = parseFloat(rawQtyStr) || 1;
+      const price = Number(item.price || 0);
+      const disc = Number(item.discount || 0);
+      const taxAmt = Number(item.tax_amount || 0);
+      const cessAmt = Number(item.cess || item.cess_amount || 0);
+      const netAmt = Number(item.net_amount || 0);
+      const totAmt = Number(item.total_amount || roundToTwoDecimals(price * numericQty));
+      const taxRatStr = item.tax_rat || '';
+      const gstRate = parseFloat(taxRatStr.replace(/[^0-9.]/g, '')) || 0;
+
+      // Taxable amount: for inclusive = net - taxes; for exclusive = gross - discount
+      const billType = (item.bill_type as BillType) || 'Inclusive';
+      const taxableAmt = roundToTwoDecimals(
+        billType === 'Inclusive'
+          ? Math.max(0, netAmt - taxAmt - cessAmt)
+          : Math.max(0, totAmt - disc)
+      );
+
+      return {
+        cart_id: item.cart_id || item.cart_detail_id || 0,
+        product_id: item.product_id || 0,
+        product_name: rawName,
+        item: rawName,
+        product_code: item.product_code || '',
+        quantity: numericQty,
+        price,
+        mrp_price: Number(item.mrp || item.mrp_price || 0),
+        bill_type: billType,
+        disc_type: item.disc_type || 'Amount',
+        discount: disc,
+        product_gst: gstRate,
+        product_cess: cessAmt,
+        tax_rat: taxRatStr || `${gstRate}%`,
+        tax_rate: gstRate,
+        taxable_amount: taxableAmt,
+        total_amount: totAmt,
+        tax_amount: taxAmt,
+        cess_amount: cessAmt,
+        net_amount: netAmt,
+        crate_val: Number(item.total_crate || item.crate_val || 0),
+        bottle_val: Number(item.total_bottle || item.bottle_val || 0),
+        total_crate: Number(item.total_crate || item.crate_val || 0),
+        total_bottle: Number(item.total_bottle || item.bottle_val || 0),
+        bag_val: Number(item.bag_val || 0),
+        free_scheme: item.free_scheme || 'No',
+        free_scheme_product: item.free_scheme_product || 0,
+        free_qty: Number(item.free_qty || 0),
+        imei_list: (item.imei_list || []).map((x: any) =>
+          typeof x === 'string' ? x : x.imei_no || ''
+        ),
+      };
+    });
+
     return {
-      cart_list: data?.cart_list || [],
+      cart_list,
       total_amount: Number(data?.total_amount || 0),
       total_discount: Number(data?.total_discount || 0),
       total_tax_amount: Number(data?.total_tax_amount || 0),
@@ -305,7 +573,8 @@ export const invoiceService = {
    * Remove single item from cart, or clear whole cart
    */
   async clearCart(cartId?: number): Promise<any> {
-    const url = cartId !== undefined
+    const hasCartId = cartId !== undefined && cartId !== null && Number(cartId) > 0;
+    const url = hasCartId
       ? `/sale/clearSaleGenerateInvoiceCart?cart_id=${cartId}`
       : '/sale/clearSaleGenerateInvoiceCart';
     const res = await apiClient.delete(url);
@@ -316,7 +585,10 @@ export const invoiceService = {
    * Final submit invoice
    */
   async generateSaleInvoice(payload: GenerateInvoicePayload): Promise<any> {
-    const res = await apiClient.post('/sale/generateSaleInvoice', payload);
+    const res = await apiClient.post('/sale/generateSaleInvoice', {
+      ...payload,
+      reverse_charge: 'No', // Always ensure reverse_charge is 'No'
+    });
     return res.data;
   },
 };

@@ -2,7 +2,6 @@ import React, { useState, forwardRef } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AppInput, AppInputProps } from './AppInput';
-import { Theme } from '../theme';
 
 export type PasswordInputProps = Omit<AppInputProps, 'rightAction' | 'secureTextEntry'>;
 
@@ -22,11 +21,12 @@ export const PasswordInput = forwardRef<any, PasswordInputProps>(
             accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.eyeButton}
+            activeOpacity={0.7}
           >
             <Feather
               name={isPasswordVisible ? 'eye-off' : 'eye'}
               size={18}
-              color={Theme.colors.tabInactiveText}
+              color={isPasswordVisible ? '#6C7CFF' : '#5B6084'}
             />
           </TouchableOpacity>
         }
@@ -40,7 +40,7 @@ PasswordInput.displayName = 'PasswordInput';
 
 const styles = StyleSheet.create({
   eyeButton: {
-    padding: 4,
+    padding: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },

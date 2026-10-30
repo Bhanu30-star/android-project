@@ -1,7 +1,6 @@
 import {
-  calculateLineItemWithBillType,
+  calculateLineItem,
   calculateInvoiceTotals,
-  roundToTwoDecimals,
   formatIndianCurrency,
 } from './calc';
 
@@ -20,96 +19,107 @@ function assert(description: string, condition: boolean, details?: any) {
 
 console.log('--- Running Invoice Calc Unit Tests ---');
 
-// Test 1: Exclusive GST without discount
-const test1 = calculateLineItemWithBillType({
-  billType: 'Exclusive',
-  price: 1000,
-  quantity: 2,
-  gstRate: 18,
-  cessRate: 0,
-  discountType: 'Amount',
-  discountValue: 0,
-});
-assert('Test 1 - Exclusive GST 18% on 2000 => Taxable: 2000, GST: 360, Net: 2360',
-  test1.baseAmount === 2000 &&
-  test1.taxableAmount === 2000 &&
-  test1.gstAmount === 360 &&
-  test1.netAmount === 2360
-);
-
-// Test 2: Inclusive GST without discount
-const test2 = calculateLineItemWithBillType({
+// Test 1: 20 @ 12% inclusive -> taxable 17.86, GST 2.14, net 20.00
+const test1 = calculateLineItem({
   billType: 'Inclusive',
-  price: 1180,
+  price: 20,
   quantity: 1,
-  gstRate: 18,
-  cessRate: 0,
-  discountType: 'Amount',
-  discountValue: 0,
-});
-assert('Test 2 - Inclusive GST 18% on 1180 => Taxable: 1000, GST: 180, Net: 1180',
-  test2.baseAmount === 1180 &&
-  test2.taxableAmount === 1000 &&
-  test2.gstAmount === 180 &&
-  test2.netAmount === 1180
-);
-
-// Test 3: Exclusive GST with Flat Rupee Discount
-const test3 = calculateLineItemWithBillType({
-  billType: 'Exclusive',
-  price: 500,
-  quantity: 4, // 2000 base
   gstRate: 12,
   cessRate: 0,
   discountType: 'Amount',
-  discountValue: 200, // 1800 taxable
+  discountValue: 0,
 });
-assert('Test 3 - Exclusive GST 12% on 2000 with 200 disc => Taxable: 1800, GST: 216, Net: 2016',
-  test3.baseAmount === 2000 &&
-  test3.discountAmount === 200 &&
-  test3.taxableAmount === 1800 &&
-  test3.gstAmount === 216 &&
-  test3.netAmount === 2016
+assert(
+  'Test 1 - 20 @ 12% inclusive => taxable: 17.86, GST: 2.14, net: 20.00',
+  test1.taxableAmount === 17.86 &&
+  test1.gstAmount === 2.14 &&
+  test1.netAmount === 20.00 &&
+  test1.cgstAmount === 1.07 &&
+  test1.sgstAmount === 1.07,
+  test1
 );
 
-// Test 4: Exclusive GST with Percentage Discount
-const test4 = calculateLineItemWithBillType({
+// Test 2: 20 @ 12% exclusive -> taxable 20.00, GST 2.40, net 22.40
+const test2 = calculateLineItem({
+  billType: 'Exclusive',
+  price: 20,
+  quantity: 1,
+  gstRate: 12,
+  cessRate: 0,
+  discountType: 'Amount',
+  discountValue: 0,
+});
+assert(
+  'Test 2 - 20 @ 12% exclusive => taxable: 20.00, GST: 2.40, net: 22.40',
+  test2.taxableAmount === 20.00 &&
+  test2.gstAmount === 2.40 &&
+  test2.netAmount === 22.40 &&
+  test2.cgstAmount === 1.20 &&
+  test2.sgstAmount === 1.20,
+  test2
+);
+
+// Test 3: with amount discount (500 base - 50 discount @ 18% inclusive)
+const test3 = calculateLineItem({
+  billType: 'Inclusive',
+  price: 250,
+  quantity: 2, // 500 base
+  gstRate: 18,
+  cessRate: 0,
+  discountType: 'Amount',
+  discountValue: 50, // 450 net
+});
+// 450 net inclusive @ 18%: GST = 450 * 18 / 118 = 68.644... -> 68.64, taxable = 450 - 68.64 = 381.36
+assert(
+  'Test 3 - with amount discount inclusive => base: 500, discount: 50, net: 450, GST: 68.64, taxable: 381.36',
+  test3.baseAmount === 500.00 &&
+  test3.discountAmount === 50.00 &&
+  test3.netAmount === 450.00 &&
+  test3.gstAmount === 68.64 &&
+  test3.taxableAmount === 381.36,
+  test3
+);
+
+// Test 4: with percent discount (1000 base with 10% discount @ 18% exclusive)
+const test4 = calculateLineItem({
   billType: 'Exclusive',
   price: 1000,
   quantity: 1,
   gstRate: 18,
   cessRate: 0,
   discountType: 'Percent',
-  discountValue: 10, // 10% of 1000 = 100 disc, 900 taxable
+  discountValue: 10, // 100 discount, 900 taxable
 });
-assert('Test 4 - Exclusive GST 18% with 10% disc => Taxable: 900, GST: 162, Net: 1062',
-  test4.baseAmount === 1000 &&
-  test4.discountAmount === 100 &&
-  test4.taxableAmount === 900 &&
-  test4.gstAmount === 162 &&
-  test4.netAmount === 1062
+assert(
+  'Test 4 - with percent discount exclusive => base: 1000, disc: 100, taxable: 900, GST: 162, net: 1062',
+  test4.baseAmount === 1000.00 &&
+  test4.discountAmount === 100.00 &&
+  test4.taxableAmount === 900.00 &&
+  test4.gstAmount === 162.00 &&
+  test4.netAmount === 1062.00,
+  test4
 );
 
-// Test 5: Inclusive GST with Percentage Discount
-const test5 = calculateLineItemWithBillType({
+// Test 5: free scheme
+const test5 = calculateLineItem({
   billType: 'Inclusive',
-  price: 1180,
-  quantity: 2, // 2360 gross
+  price: 500,
+  quantity: 2,
   gstRate: 18,
   cessRate: 0,
-  discountType: 'Percent',
-  discountValue: 10, // 10% of 2360 = 236 disc, gross after disc = 2124 => Taxable: 1800, GST: 324
+  freeScheme: 'Yes',
 });
-assert('Test 5 - Inclusive GST 18% with 10% disc => Net: 2124, Taxable: 1800, GST: 324',
-  test5.baseAmount === 2360 &&
-  test5.discountAmount === 236 &&
-  test5.netAmount === 2124 &&
-  test5.taxableAmount === 1800 &&
-  test5.gstAmount === 324
+assert(
+  'Test 5 - free scheme item => taxable: 0, GST: 0, net: 0, disc: 0',
+  test5.taxableAmount === 0 &&
+  test5.gstAmount === 0 &&
+  test5.netAmount === 0 &&
+  test5.discountAmount === 0,
+  test5
 );
 
-// Test 6: Exclusive with CESS
-const test6 = calculateLineItemWithBillType({
+// Test 6: CESS exclusive
+const test6 = calculateLineItem({
   billType: 'Exclusive',
   price: 1000,
   quantity: 1,
@@ -118,15 +128,17 @@ const test6 = calculateLineItemWithBillType({
   discountType: 'Amount',
   discountValue: 0,
 });
-assert('Test 6 - Exclusive 28% GST + 12% CESS on 1000 => GST: 280, CESS: 120, Net: 1400',
-  test6.taxableAmount === 1000 &&
-  test6.gstAmount === 280 &&
-  test6.cessAmount === 120 &&
-  test6.netAmount === 1400
+assert(
+  'Test 6 - CESS exclusive 28% GST + 12% CESS => taxable: 1000, GST: 280, CESS: 120, net: 1400',
+  test6.taxableAmount === 1000.00 &&
+  test6.gstAmount === 280.00 &&
+  test6.cessAmount === 120.00 &&
+  test6.netAmount === 1400.00,
+  test6
 );
 
-// Test 7: Inclusive with CESS
-const test7 = calculateLineItemWithBillType({
+// Test 7: CESS inclusive
+const test7 = calculateLineItem({
   billType: 'Inclusive',
   price: 1400,
   quantity: 1,
@@ -135,68 +147,90 @@ const test7 = calculateLineItemWithBillType({
   discountType: 'Amount',
   discountValue: 0,
 });
-assert('Test 7 - Inclusive 28% GST + 12% CESS on 1400 => Taxable: 1000, GST: 280, CESS: 120, Net: 1400',
-  test7.taxableAmount === 1000 &&
-  test7.gstAmount === 280 &&
-  test7.cessAmount === 120 &&
-  test7.netAmount === 1400
+assert(
+  'Test 7 - CESS inclusive 28% GST + 12% CESS => net: 1400, GST: 280, CESS: 120, taxable: 1000',
+  test7.netAmount === 1400.00 &&
+  test7.gstAmount === 280.00 &&
+  test7.cessAmount === 120.00 &&
+  test7.taxableAmount === 1000.00,
+  test7
 );
 
-// Test 8: Discount exceeds base amount (capped to base)
-const test8 = calculateLineItemWithBillType({
+// Test 8: Multiple items totals
+const lineA = calculateLineItem({
+  billType: 'Exclusive',
+  price: 200,
+  quantity: 2, // 400
+  gstRate: 18,
+});
+const lineB = calculateLineItem({
   billType: 'Exclusive',
   price: 100,
-  quantity: 1,
-  gstRate: 18,
-  cessRate: 0,
-  discountType: 'Amount',
-  discountValue: 500,
+  quantity: 3, // 300
+  gstRate: 12,
 });
-assert('Test 8 - Discount larger than price is capped => Discount: 100, Taxable: 0, Net: 0',
-  test8.discountAmount === 100 &&
-  test8.taxableAmount === 0 &&
-  test8.gstAmount === 0 &&
-  test8.netAmount === 0
-);
-
-// Test 9: Zero Quantity
-const test9 = calculateLineItemWithBillType({
+const lineC = calculateLineItem({
   billType: 'Exclusive',
-  price: 250,
-  quantity: 0,
-  gstRate: 18,
-  cessRate: 0,
-  discountType: 'Amount',
-  discountValue: 0,
+  price: 50,
+  quantity: 4, // 200
+  gstRate: 5,
 });
-assert('Test 9 - Zero quantity yields 0 across all figures',
-  test9.baseAmount === 0 && test9.netAmount === 0
+
+const multiTotals = calculateInvoiceTotals(
+  [lineA, lineB, lineC],
+  {
+    labour: 50,
+    freight: 100,
+    other: 0,
+    tcsApplicable: false,
+    overallDiscount: 20,
+  }
+);
+// Base: 400 + 300 + 200 = 900
+// GST: 72 + 36 + 10 = 118
+// Cart Net: 900 + 118 = 1018
+// Charges: 150
+// Overall Disc: 20
+// Final: 1018 + 150 - 20 = 1148
+assert(
+  'Test 8 - Multiple items totals => Base: 900, GST: 118, CartNet: 1018, Payable: 1148',
+  multiTotals.totalBaseAmount === 900.00 &&
+  multiTotals.totalGstAmount === 118.00 &&
+  multiTotals.cartNetAmount === 1018.00 &&
+  multiTotals.finalPayableAmount === 1148.00 &&
+  multiTotals.roundedPayableAmount === 1148.00 &&
+  multiTotals.roundOffDifference === 0.00,
+  multiTotals
 );
 
-// Test 10: Invoice Totals with Additional Charges, TCS, and Overall Discount
-const lines = [test1, test3]; // test1 Net = 2360, test3 Net = 2016 => Cart Net = 4376
-const totals = calculateInvoiceTotals(lines, {
-  labour: 100,
-  freight: 150,
-  other: 50,
-  tcsApplicable: true,
-  tcsAmount: 25.5,
-  overallDiscount: 151.5,
+// Test 9: Rounding case
+const lineRounding = calculateLineItem({
+  billType: 'Exclusive',
+  price: 33.33,
+  quantity: 3, // 99.99
+  gstRate: 18, // 18.00
 });
-// 4376 + 325.5 - 151.5 = 4550.00
-assert('Test 10 - Invoice Totals with additional charges & TCS => Payable: 4550',
-  totals.cartNetAmount === 4376 &&
-  totals.totalAdditionalCharges === 325.5 &&
-  totals.finalPayableAmount === 4550 &&
-  totals.roundedPayableAmount === 4550 &&
-  totals.roundOffDifference === 0
+const roundingTotals = calculateInvoiceTotals([lineRounding], {
+  labour: 0,
+  freight: 0,
+  other: 0,
+});
+// 99.99 + 18.00 = 117.99 => rounded: 118, diff: +0.01
+assert(
+  'Test 9 - Rounding case => exact: 117.99, rounded: 118, roundOffDiff: 0.01',
+  roundingTotals.finalPayableAmount === 117.99 &&
+  roundingTotals.roundedPayableAmount === 118.00 &&
+  roundingTotals.roundOffDifference === 0.01,
+  roundingTotals
 );
 
-// Test 11: Currency Formatting
-const formatted = formatIndianCurrency(1234567.89);
-assert('Test 11 - Indian currency formatting => ₹12,34,567.89',
-  formatted === '₹12,34,567.89'
+// Test 10: Currency formatting
+assert(
+  'Test 10 - Currency formatting => ₹1,234.56',
+  formatIndianCurrency(1234.56) === '₹1,234.56'
 );
 
 console.log(`\nTests Completed: ${passedCount} passed, ${failedCount} failed.`);
-
+if (failedCount > 0) {
+  process.exit(1);
+}

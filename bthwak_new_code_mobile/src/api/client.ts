@@ -45,18 +45,25 @@ apiClient.interceptors.request.use(
 
 export function parseApiError(error: unknown): string {
   if (isAxiosError(error)) {
-    const axiosErr = error as AxiosError<{ message?: string; error?: string; status?: boolean }>;
+    const axiosErr = error as AxiosError<{ message?: string | string[]; error?: string; status?: boolean }>;
     if (axiosErr.code === 'ECONNABORTED' || axiosErr.message.includes('timeout')) {
       return 'Connection timed out. Please check your network connection and server status.';
     }
     if (axiosErr.message === 'Network Error' || !axiosErr.response) {
       return 'Unable to connect to the server. Please check your internet connection or API URL.';
     }
-    if (axiosErr.response?.data?.message) {
-      return axiosErr.response.data.message;
+    const responseData = axiosErr.response?.data;
+    if (responseData?.message) {
+      if (Array.isArray(responseData.message)) {
+        return responseData.message.join(', ');
+      }
+      if (typeof responseData.message === 'string') {
+        return responseData.message;
+      }
+      return JSON.stringify(responseData.message);
     }
-    if (axiosErr.response?.data?.error) {
-      return axiosErr.response.data.error;
+    if (responseData?.error) {
+      return typeof responseData.error === 'string' ? responseData.error : JSON.stringify(responseData.error);
     }
     if (axiosErr.response?.status === 401) {
       return 'Unauthorized. Please log in again.';

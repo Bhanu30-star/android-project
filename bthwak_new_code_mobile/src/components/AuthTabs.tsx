@@ -6,7 +6,6 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '../theme';
 
 export type AuthTabType = 'password' | 'otp' | 'qr';
@@ -19,7 +18,7 @@ interface AuthTabsProps {
 const TABS: { id: AuthTabType; label: string }[] = [
   { id: 'password', label: 'Password' },
   { id: 'otp', label: 'OTP' },
-  { id: 'qr', label: 'QR Code' },
+  { id: 'qr', label: 'QR' },
 ];
 
 export const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) => {
@@ -27,11 +26,15 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) =>
   const activeIndex = TABS.findIndex((t) => t.id === activeTab);
   const translateX = useSharedValue(0);
 
-  const tabWidth = containerWidth > 0 ? (containerWidth - 8) / TABS.length : 0;
+  const tabWidth = containerWidth > 0 ? containerWidth / TABS.length : 0;
+  // Underline width
+  const indicatorWidth = 54;
 
   useEffect(() => {
     if (tabWidth > 0) {
-      translateX.value = withTiming(activeIndex * tabWidth, {
+      // Center the indicator under the active tab
+      const targetX = activeIndex * tabWidth + (tabWidth - indicatorWidth) / 2;
+      translateX.value = withTiming(targetX, {
         duration: 250,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       });
@@ -41,7 +44,6 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) =>
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],
-      width: tabWidth,
     };
   });
 
@@ -51,79 +53,91 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) =>
   };
 
   return (
-    <View style={styles.container} onLayout={onLayout} accessibilityRole="tablist">
-      {tabWidth > 0 && (
-        <Animated.View style={[styles.indicatorWrapper, animatedIndicatorStyle]}>
-          <LinearGradient
-            colors={Theme.colors.primaryGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientPill}
-          />
-        </Animated.View>
-      )}
+    <View style={styles.wrapper} onLayout={onLayout} accessibilityRole="tablist">
+      <View style={styles.tabsRow}>
+        {TABS.map((tab) => {
+          const isActive = tab.id === activeTab;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => onTabChange(tab.id)}
+              style={styles.tabButton}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${tab.label} tab`}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  isActive ? styles.tabTextActive : styles.tabTextInactive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
-      {TABS.map((tab) => {
-        const isActive = tab.id === activeTab;
-        return (
-          <TouchableOpacity
-            key={tab.id}
-            onPress={() => onTabChange(tab.id)}
-            style={styles.tabButton}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={`${tab.label} tab`}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabText, isActive ? styles.tabTextActive : styles.tabTextInactive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      {/* Baseline divider and sliding indicator */}
+      <View style={styles.lineContainer}>
+        {tabWidth > 0 && (
+          <Animated.View
+            style={[
+              styles.indicator,
+              { width: indicatorWidth },
+              animatedIndicatorStyle,
+            ]}
+          />
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.tabsContainerBg,
-    borderRadius: Theme.borderRadius.xl,
-    padding: 4,
-    position: 'relative',
-    height: 44,
-    alignItems: 'center',
+  wrapper: {
+    width: '100%',
     marginBottom: Theme.spacing.lg,
   },
-  indicatorWrapper: {
-    position: 'absolute',
-    top: 4,
-    bottom: 4,
-    left: 4,
-    borderRadius: Theme.borderRadius.lg,
-    overflow: 'hidden',
-  },
-  gradientPill: {
-    flex: 1,
-    borderRadius: Theme.borderRadius.lg,
-    ...Theme.shadows.pill,
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    width: '100%',
   },
   tabButton: {
     flex: 1,
-    height: 36,
-    justifyContent: 'center',
+    paddingVertical: 12,
     alignItems: 'center',
-    zIndex: 1,
+    justifyContent: 'center',
   },
   tabText: {
-    fontSize: Theme.typography.sizes.sm,
-    fontWeight: '600',
+    fontSize: 15,
+    letterSpacing: 0.2,
   },
   tabTextActive: {
-    color: Theme.colors.tabActiveText,
+    color: '#6C7CFF',
+    fontWeight: '700',
   },
   tabTextInactive: {
-    color: Theme.colors.tabInactiveText,
+    color: '#9AA0BF',
+    fontWeight: '600',
+  },
+  lineContainer: {
+    height: 3,
+    backgroundColor: '#2A2D4A',
+    borderRadius: 2,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  indicator: {
+    height: 3,
+    backgroundColor: '#6C7CFF',
+    borderRadius: 3,
+    position: 'absolute',
+    left: 0,
+    top: 0,
   },
 });

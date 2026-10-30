@@ -1,7 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Typography } from '@/theme';
 
 interface MenuItemProps {
   label: string;
@@ -26,8 +25,8 @@ export const MenuItem: React.FC<MenuItemProps> = ({
     >
       <Feather
         name={icon}
-        size={20}
-        color={isActive ? '#2A2470' : '#4F46E5'}
+        size={18}
+        color={isActive ? '#6C7CFF' : '#F2F2FA'}
       />
       <Text
         style={[
@@ -44,23 +43,24 @@ export const MenuItem: React.FC<MenuItemProps> = ({
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: 48,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 14,
-    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    marginVertical: 2,
   },
   rowActive: {
-    backgroundColor: '#EEEDFF',
+    backgroundColor: '#1E2540',
   },
   label: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#1B1840',
-    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#F2F2FA',
   },
   labelActive: {
-    color: '#2A2470',
+    color: '#6C7CFF',
+    fontWeight: '600',
   },
 });

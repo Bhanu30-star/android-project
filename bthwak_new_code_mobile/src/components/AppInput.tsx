@@ -6,27 +6,44 @@ import {
   TextInputProps,
   StyleSheet,
   Pressable,
+  ViewStyle,
+  StyleProp,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Theme } from '../theme';
 
 export interface AppInputProps extends TextInputProps {
-  label: string;
+  label?: string;
   iconName?: keyof typeof Feather.glyphMap;
   error?: string;
   rightAction?: React.ReactNode;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 export const AppInput = forwardRef<any, AppInputProps>(
-  ({ label, iconName, error, rightAction, style, value, onFocus, onBlur, ...props }, ref) => {
+  (
+    {
+      label,
+      iconName,
+      error,
+      rightAction,
+      style,
+      containerStyle,
+      value,
+      onFocus,
+      onBlur,
+      ...props
+    },
+    ref
+  ) => {
     const [isFocused, setIsFocused] = useState(false);
     const innerRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => innerRef.current);
 
     return (
-      <View style={styles.container}>
-        <Text style={styles.label}>{label}</Text>
+      <View style={[styles.container, containerStyle]}>
+        {label ? <Text style={styles.label}>{label}</Text> : null}
         <Pressable
           onPress={() => innerRef.current?.focus()}
           style={[
@@ -38,8 +55,8 @@ export const AppInput = forwardRef<any, AppInputProps>(
           {iconName && (
             <Feather
               name={iconName}
-              size={18}
-              color={isFocused ? Theme.colors.primary : Theme.colors.tabInactiveText}
+              size={19}
+              color={isFocused ? '#6C7CFF' : '#5B6084'}
               style={styles.leadingIcon}
             />
           )}
@@ -47,7 +64,7 @@ export const AppInput = forwardRef<any, AppInputProps>(
           <TextInput
             ref={innerRef}
             value={value ?? ''}
-            placeholderTextColor={Theme.colors.textMuted}
+            placeholderTextColor="#5B6084"
             style={[styles.input, style]}
             onFocus={(e) => {
               setIsFocused(true);
@@ -57,7 +74,7 @@ export const AppInput = forwardRef<any, AppInputProps>(
               setIsFocused(false);
               onBlur?.(e);
             }}
-            accessibilityLabel={label}
+            accessibilityLabel={label || props.placeholder}
             {...props}
           />
 
@@ -65,9 +82,12 @@ export const AppInput = forwardRef<any, AppInputProps>(
         </Pressable>
 
         {!!error && (
-          <Text style={styles.errorText} accessibilityRole="alert">
-            {error}
-          </Text>
+          <View style={styles.errorRow}>
+            <Feather name="alert-circle" size={13} color="#FF5C6C" />
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {error}
+            </Text>
+          </View>
         )}
       </View>
     );
@@ -78,49 +98,63 @@ AppInput.displayName = 'AppInput';
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Theme.spacing.md,
+    marginBottom: 14,
     width: '100%',
   },
   label: {
-    fontSize: Theme.typography.sizes.sm,
+    fontSize: 13,
     fontWeight: '600',
-    color: Theme.colors.textPrimary,
+    color: '#9AA0BF',
     marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.inputBg,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-    paddingHorizontal: Theme.spacing.md,
-    minHeight: 48,
+    backgroundColor: '#17162A',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#2A2D4A',
+    paddingHorizontal: 16,
+    minHeight: 52,
   },
   inputContainerFocused: {
-    borderColor: Theme.colors.inputBorderFocused,
-    backgroundColor: '#FFFFFF',
+    borderColor: '#6C7CFF',
+    backgroundColor: '#1E1D36',
+    shadowColor: '#6C7CFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
   inputContainerError: {
-    borderColor: Theme.colors.error,
+    borderColor: '#FF5C6C',
+    backgroundColor: '#26131D',
   },
   leadingIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: Theme.typography.sizes.base,
-    color: Theme.colors.textPrimary,
+    fontSize: 15,
+    color: '#F2F2FA',
     paddingVertical: 10,
-    minHeight: 44,
+    fontWeight: '500',
   },
   rightAction: {
     marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 5,
+    paddingHorizontal: 4,
   },
   errorText: {
-    color: Theme.colors.error,
-    fontSize: Theme.typography.sizes.xs,
-    marginTop: 4,
-    marginLeft: 2,
+    fontSize: 12,
+    color: '#FF5C6C',
+    fontWeight: '500',
   },
 });

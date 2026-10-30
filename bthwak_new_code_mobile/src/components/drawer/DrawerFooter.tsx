@@ -1,15 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Typography } from '@/theme';
 
 interface DrawerFooterProps {
-  onPressHelp: () => void;
+  onPressHelp?: () => void;
   onPressLogout: () => void;
 }
 
 export const DrawerFooter: React.FC<DrawerFooterProps> = ({
-  onPressHelp,
   onPressLogout,
 }) => {
   const handleLogoutPress = () => {
@@ -30,63 +28,46 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
 
   return (
     <View style={styles.footerContainer}>
-      <View style={styles.divider} />
-
-      {/* Help & Support */}
-      <TouchableOpacity
-        style={styles.row}
-        onPress={onPressHelp}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Help and support"
-      >
-        <Feather name="help-circle" size={20} color="#4F46E5" />
-        <Text style={styles.helpText}>Help & support</Text>
-      </TouchableOpacity>
-
       {/* Log out */}
       <TouchableOpacity
-        style={styles.row}
+        style={styles.logoutRow}
         onPress={handleLogoutPress}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel="Log out"
+        accessibilityLabel="Logout"
       >
-        <Feather name="log-out" size={20} color="#B01E25" />
-        <Text style={styles.logoutText}>Log out</Text>
+        <Feather name="log-out" size={18} color="#FF5C6C" />
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
+
+      {/* Version */}
+      <Text style={styles.versionText}>Version 2.0.0</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   footerContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#ECEBFA',
-    marginBottom: 8,
-  },
-  row: {
-    minHeight: 48,
-    borderRadius: 14,
-    paddingHorizontal: 12,
+  logoutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-  },
-  helpText: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#1B1840',
+    gap: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
   logoutText: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#B01E25',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF5C6C',
+  },
+  versionText: {
+    fontSize: 13,
+    color: '#5B6084',
+    fontWeight: '500',
+    paddingLeft: 2,
   },
 });

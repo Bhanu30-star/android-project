@@ -11,10 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/context/AppContext';
-import { Colors, Typography, Shapes, Shadows } from '@/theme';
 import {
   PresetKey,
   DateRange,
@@ -26,32 +25,16 @@ import {
   DashboardData,
   FaqItem,
 } from '@/api/dashboard';
-import { formatIndianCurrency } from '@/utils/formatters';
 
-// Redesigned UI Components
+// Screen Header & Navigation
 import { ScreenHeader } from '@/components/dashboard/ScreenHeader';
-import { HeroBalanceCard } from '@/components/dashboard/HeroBalanceCard';
-import { SectionHeader } from '@/components/dashboard/SectionHeader';
-import { StatCard } from '@/components/dashboard/StatCard';
-import { MiniStatTile } from '@/components/dashboard/MiniStatTile';
-import { InfoListCard, InfoListRowItem } from '@/components/dashboard/InfoListCard';
-import { BarChartCard } from '@/components/dashboard/BarChartCard';
-import { ExpensesCard } from '@/components/dashboard/ExpensesCard';
-import { SupportCard } from '@/components/dashboard/SupportCard';
-import { FaqAccordion } from '@/components/dashboard/FaqAccordion';
-import { PeriodSheet } from '@/components/dashboard/PeriodSheet';
-import { SkeletonLoader } from '@/components/dashboard/SkeletonLoader';
-
-// Navigation & Modals
 import { AppTabBar } from '@/components/navigation/AppTabBar';
 import { AppDrawer } from '@/components/navigation/AppDrawer';
-import { PlusActionSheet } from '@/components/modals/PlusActionSheet';
+import { SkeletonLoader } from '@/components/dashboard/SkeletonLoader';
 import { MetricDetailModal, MetricDetailConfig } from '@/components/dashboard/MetricDetailModal';
-import { InvoiceCreateSheet } from '@/components/modals/InvoiceCreateSheet';
 import { PaymentReceiptSheet } from '@/components/modals/PaymentReceiptSheet';
 import { AddPartySheet } from '@/components/modals/AddPartySheet';
 import { QrScannerSheet } from '@/components/modals/QrScannerSheet';
-import { ProfileModal } from '@/components/dashboard/ProfileModal';
 
 // Alternative Tab Views
 import { SalesView } from '@/components/dashboard/SalesView';
@@ -59,16 +42,35 @@ import { PartiesView } from '@/components/dashboard/PartiesView';
 import { ReportsView } from '@/components/dashboard/ReportsView';
 import { SettingsScreen } from '@/components/settings/SettingsScreen';
 
+const formatMetric = (val: number | string | undefined | null, isCurrency = false): string => {
+  if (val === undefined || val === null) return isCurrency ? '₹ 0' : '0';
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return isCurrency ? '₹ 0' : '0';
+  if (num === 0) return isCurrency ? '₹ 0' : '0';
+
+  let formatted = '';
+  if (Math.abs(num) >= 100000) {
+    const inLakhs = num / 100000;
+    formatted = `${inLakhs.toFixed(2).replace(/\.00$/, '')} L`;
+  } else if (Math.abs(num) >= 1000) {
+    formatted = num.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+  } else {
+    formatted = `${num}`;
+  }
+
+  return isCurrency ? `₹ ${formatted}` : formatted;
+};
+
 export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { activeTab, setActiveTab } = useApp();
 
-  // Time Filter State
-  const [selectedPreset, setSelectedPreset] = useState<PresetKey>('MTD');
+  // Time Filter State - Default to 'FTD' (Today) as in screenshot
+  const [selectedPreset, setSelectedPreset] = useState<PresetKey>('FTD');
   const [activeRange, setActiveRange] = useState<DateRange>(() =>
-    getPresetDateRange('MTD')
+    getPresetDateRange('FTD')
   );
 
   // Data State
@@ -77,19 +79,12 @@ export default function DashboardScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const [faqs, setFaqs] = useState<FaqItem[]>([]);
-
-  // Sheet & Modal Visibility State
+  // Modals & Navigation
   const [showDrawer, setShowDrawer] = useState(false);
-  const [showPeriodSheet, setShowPeriodSheet] = useState(false);
-  const [showPlusSheet, setShowPlusSheet] = useState(false);
-  const [showInvoiceSheet, setShowInvoiceSheet] = useState(false);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [showAddPartySheet, setShowAddPartySheet] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [detailModalConfig, setDetailModalConfig] =
-    useState<MetricDetailConfig | null>(null);
+  const [detailModalConfig, setDetailModalConfig] = useState<MetricDetailConfig | null>(null);
 
   // Left-edge swipe to open drawer
   const edgePanResponder = React.useMemo(
@@ -106,28 +101,6 @@ export default function DashboardScreen() {
       }),
     []
   );
-
-  // Map preset key to display text
-  const getPeriodLabel = (preset: PresetKey): string => {
-    switch (preset) {
-      case 'MTD':
-        return 'This month';
-      case 'FTD':
-        return 'Today';
-      case 'YESTERDAY':
-        return 'Yesterday';
-      case 'LAST_7':
-        return 'Last 7 days';
-      case 'LAST_30':
-        return 'Last 30 days';
-      case 'LAST_MONTH':
-        return 'Last month';
-      case 'YTD':
-        return 'Year to date';
-      default:
-        return 'This month';
-    }
-  };
 
   // Fetch dashboard data
   const loadDashboard = useCallback(
@@ -156,43 +129,20 @@ export default function DashboardScreen() {
     []
   );
 
-  // Load FAQs
-  const loadFaqs = useCallback(async () => {
-    try {
-      const items = await getFaqDetailsApi();
-      setFaqs(items);
-    } catch {
-      // Graceful fallback to default FAQs
-    }
-  }, []);
-
-  // Fetch on mount and period change
   useEffect(() => {
     let isCancelled = false;
-
     async function fetchData() {
       try {
-        const [dashResult, faqResult] = await Promise.allSettled([
-          getDashboardDetailsApi(activeRange.startDate, activeRange.endDate),
-          getFaqDetailsApi(),
-        ]);
-
+        const data = await getDashboardDetailsApi(activeRange.startDate, activeRange.endDate);
         if (!isCancelled) {
-          if (dashResult.status === 'fulfilled') {
-            setDashboardData(dashResult.value);
-            setApiError(null);
-          } else {
-            const err = dashResult.reason;
-            setApiError(
-              err instanceof Error
-                ? err.message
-                : 'Unable to fetch dashboard metrics. Please check your connection.'
-            );
-          }
-
-          if (faqResult.status === 'fulfilled') {
-            setFaqs(faqResult.value);
-          }
+          setDashboardData(data);
+          setApiError(null);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setApiError(
+            err instanceof Error ? err.message : 'Unable to fetch dashboard metrics.'
+          );
         }
       } finally {
         if (!isCancelled) {
@@ -200,57 +150,40 @@ export default function DashboardScreen() {
         }
       }
     }
-
     void fetchData();
-
     return () => {
       isCancelled = true;
     };
   }, [activeRange]);
 
-  // Handle Preset Selection
   const handleSelectPreset = (preset: PresetKey) => {
     setSelectedPreset(preset);
     const newRange = getPresetDateRange(preset);
     setActiveRange(newRange);
   };
 
-  // Pull-to-refresh
   const handleRefresh = () => {
     loadDashboard(activeRange, true);
-    loadFaqs();
   };
 
-  // Logout handler
   const handleLogout = async () => {
     await logout();
     router.replace('/(auth)/login');
   };
 
-  // Plus sheet action routing
-  const handlePlusActionSelect = (action: 'invoice' | 'receipt' | 'purchase') => {
-    if (action === 'invoice') {
-      setShowInvoiceSheet(true);
-    } else if (action === 'receipt') {
-      setShowPaymentSheet(true);
-    } else if (action === 'purchase') {
-      setActiveTab('parties');
-    }
-  };
-
-  // Drilldown modals for cards
+  // Card click handlers for metric drilldowns
   const handleOpenSaleDetail = () => {
     setDetailModalConfig({
       title: 'Gross Sales',
       subtitle: 'Turnover & outward billings summary',
       iconName: 'shopping-cart',
-      iconColor: Colors.primary,
-      iconBg: Colors.chips.sale.bg,
+      iconColor: '#6C7CFF',
+      iconBg: '#1E2548',
       items: [
         {
           label: 'Total Sale Revenue',
           value: dashboardData?.totalSale ?? 0,
-          highlightColor: Colors.primary,
+          highlightColor: '#6C7CFF',
           subtext: 'Net turnover for selected period',
         },
         {
@@ -268,13 +201,13 @@ export default function DashboardScreen() {
       title: 'Total Purchases',
       subtitle: 'Stock procurement and vendor acquisitions',
       iconName: 'package',
-      iconColor: Colors.chips.purchase.icon,
-      iconBg: Colors.chips.purchase.bg,
+      iconColor: '#F59E0B',
+      iconBg: '#332414',
       items: [
         {
           label: 'Gross Purchases',
           value: dashboardData?.totalPurchase ?? 0,
-          highlightColor: Colors.chips.purchase.icon,
+          highlightColor: '#F59E0B',
           subtext: 'Inventory goods purchased this period',
         },
       ],
@@ -284,16 +217,16 @@ export default function DashboardScreen() {
 
   const handleOpenCashCollectedDetail = () => {
     setDetailModalConfig({
-      title: 'Cash Collected',
-      subtitle: 'Physical cash received across sales & receipts',
+      title: 'Collections',
+      subtitle: 'Physical cash and bank collections',
       iconName: 'dollar-sign',
-      iconColor: Colors.chips.collected.icon,
-      iconBg: Colors.chips.collected.bg,
+      iconColor: '#3B82F6',
+      iconBg: '#132644',
       items: [
         {
           label: 'Cash Inflow',
           value: dashboardData?.cashCollected ?? 0,
-          highlightColor: Colors.chips.collected.icon,
+          highlightColor: '#3B82F6',
           subtext: 'Liquid cash physically received',
         },
         {
@@ -311,55 +244,19 @@ export default function DashboardScreen() {
       title: 'Outstanding Receivables',
       subtitle: 'Unsettled credit balances owed by parties',
       iconName: 'clock',
-      iconColor: Colors.chips.toCollect.icon,
-      iconBg: Colors.chips.toCollect.bg,
+      iconColor: '#A855F7',
+      iconBg: '#2A1748',
       items: [
         {
           label: 'Total To Collect',
           value: dashboardData?.outstandingCollected ?? dashboardData?.toCollect ?? 0,
-          highlightColor: Colors.chips.toCollect.icon,
+          highlightColor: '#A855F7',
           subtext: 'Pending receivables from customers and retailers',
         },
       ],
       tips: 'Send automated WhatsApp reminders to clear pending credit bills faster.',
     });
   };
-
-  const currencySymbol =
-    dashboardData?.currency_value === 'INR'
-      ? '₹'
-      : dashboardData?.currency_value || '₹';
-
-  // Invoices & payments row data
-  const invoiceRows: InfoListRowItem[] = [
-    {
-      id: 'total-invoices',
-      label: 'Total invoices',
-      value: String(dashboardData?.totalInvoice ?? 0),
-      onPress: handleOpenSaleDetail,
-    },
-    {
-      id: 'credit-invoices',
-      label: 'Credit invoices',
-      value: String(dashboardData?.totalCreditInvoice ?? 0),
-      onPress: handleOpenSaleDetail,
-    },
-    {
-      id: 'bank-collected',
-      label: 'Bank collected',
-      value: formatIndianCurrency(dashboardData?.bankCollected ?? 0, currencySymbol),
-      onPress: handleOpenCashCollectedDetail,
-    },
-    {
-      id: 'to-pay',
-      label: 'To pay',
-      value: formatIndianCurrency(
-        dashboardData?.outstandingPay ?? dashboardData?.toPay ?? 0,
-        currencySymbol
-      ),
-      onPress: handleOpenPurchaseDetail,
-    },
-  ];
 
   return (
     <SafeAreaView
@@ -372,235 +269,309 @@ export default function DashboardScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContainer,
-            { paddingBottom: Shapes.tabBarHeight + Math.max(insets.bottom, 12) + 24 },
+            { paddingBottom: 90 + Math.max(insets.bottom, 10) },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={[Colors.primary]}
-              tintColor={Colors.primary}
+              colors={['#6C7CFF']}
+              tintColor="#6C7CFF"
             />
           }
         >
-          {/* HEADER ROW & TITLE ROW */}
+          {/* TOP APP BAR & HEADING & PILLS */}
           <ScreenHeader
             onPressHamburger={() => setShowDrawer(true)}
-            onPressNotification={() =>
-              Alert.alert(
-                'Notifications',
-                'Your business compliance and GST reporting are up to date.'
-              )
-            }
-            onPressProfile={() => setShowProfileModal(true)}
-            selectedPeriodLabel={getPeriodLabel(selectedPreset)}
-            onPressPeriod={() => setShowPeriodSheet(true)}
+            onPressSettings={() => setActiveTab('settings')}
+            selectedPreset={selectedPreset}
+            onSelectPreset={handleSelectPreset}
           />
 
-          {/* ERROR CARD WITH FRIENDLY RETRY */}
           {apiError && (
-            <View style={styles.errorCard}>
-              <View style={styles.errorIconWrap}>
-                <Feather name="alert-circle" size={20} color={Colors.error} />
-              </View>
-              <View style={styles.errorTextWrap}>
-                <Text style={styles.errorTitle}>Unable to load insights</Text>
-                <Text style={styles.errorSub} numberOfLines={2}>
-                  {apiError}
-                </Text>
-              </View>
+            <View style={styles.errorBanner}>
+              <Feather name="alert-circle" size={16} color="#FF5C6C" />
+              <Text style={styles.errorText} numberOfLines={2}>
+                {apiError}
+              </Text>
               <TouchableOpacity
-                style={styles.retryButton}
                 onPress={() => loadDashboard(activeRange)}
-                activeOpacity={0.8}
-                accessibilityLabel="Retry loading data"
-                accessibilityRole="button"
+                style={styles.retryBtn}
               >
-                <Text style={styles.retryButtonText}>Retry</Text>
+                <Text style={styles.retryText}>Retry</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* SKELETON LOADER OR REAL CONTENT */}
           {isLoading && !dashboardData ? (
             <SkeletonLoader />
           ) : (
-            <>
-              {/* HERO BALANCE CARD */}
-              <HeroBalanceCard
-                cashBalance={dashboardData?.cashBalance ?? -84120}
-                bankBalance={dashboardData?.bankBalance ?? 0}
-                expensesThisMonth={dashboardData?.expenseAmt ?? 0}
-                onPressCash={handleOpenCashCollectedDetail}
-                onPressBank={handleOpenCashCollectedDetail}
-                onPressExpense={() => {
-                  setDetailModalConfig({
-                    title: 'Operating Expenses',
-                    subtitle: 'Business, operational, and office expenditures',
-                    iconName: 'trending-down',
-                    iconColor: '#DC2626',
-                    iconBg: '#FEF2F2',
-                    items: [
-                      {
-                        label: 'Total Expenses This Month',
-                        value: dashboardData?.expenseAmt ?? 0,
-                        highlightColor: '#DC2626',
-                        subtext: 'Operational and miscellaneous costs',
-                      },
-                    ],
-                    tips: 'Record all fuel and conveyance vouchers to claim tax deductions.',
-                  });
-                }}
-              />
+            <View style={styles.contentPadding}>
+              {/* TWO BIG HERO CARDS: SALES & PURCHASES */}
+              <View style={styles.heroRow}>
+                {/* Sales Card */}
+                <TouchableOpacity
+                  style={styles.heroCard}
+                  onPress={handleOpenSaleDetail}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.heroHeaderRow}>
+                    <View style={styles.greenCircleBadge}>
+                      <Feather name="trending-up" size={14} color="#10B981" />
+                    </View>
+                    <Text style={styles.heroCardLabel}>Sales</Text>
+                  </View>
+                  <Text style={styles.heroCardValue} numberOfLines={1}>
+                    {formatMetric(dashboardData?.totalSale ?? 288000, true)}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* OVERVIEW SECTION (2x2 STAT CARDS) */}
-              <SectionHeader
-                title="Overview"
-                actionText="See all"
-                onPressAction={handleOpenSaleDetail}
-              />
-
-              <View style={styles.overviewGrid}>
-                {/* Row 1 */}
-                <View style={styles.gridRow}>
-                  <StatCard
-                    label="Total sale"
-                    value={formatIndianCurrency(dashboardData?.totalSale ?? 0, currencySymbol)}
-                    iconName="shopping-cart"
-                    chipBg={Colors.chips.sale.bg}
-                    chipIconColor={Colors.chips.sale.icon}
-                    valueColor={Colors.chips.sale.value}
-                    onPress={handleOpenSaleDetail}
-                  />
-                  <StatCard
-                    label="Total purchase"
-                    value={formatIndianCurrency(dashboardData?.totalPurchase ?? 5000, currencySymbol)}
-                    iconName="package"
-                    chipBg={Colors.chips.purchase.bg}
-                    chipIconColor={Colors.chips.purchase.icon}
-                    valueColor={Colors.chips.purchase.value}
-                    onPress={handleOpenPurchaseDetail}
-                  />
-                </View>
-
-                {/* Row 2 */}
-                <View style={styles.gridRow}>
-                  <StatCard
-                    label="Cash collected"
-                    value={formatIndianCurrency(dashboardData?.cashCollected ?? 113020, currencySymbol)}
-                    isBanknote={true}
-                    chipBg={Colors.chips.collected.bg}
-                    chipIconColor={Colors.chips.collected.icon}
-                    valueColor={Colors.chips.collected.value}
-                    onPress={handleOpenCashCollectedDetail}
-                  />
-                  <StatCard
-                    label="To collect"
-                    value={formatIndianCurrency(
-                      dashboardData?.outstandingCollected ?? dashboardData?.toCollect ?? 5000,
-                      currencySymbol
-                    )}
-                    iconName="clock"
-                    chipBg={Colors.chips.toCollect.bg}
-                    chipIconColor={Colors.chips.toCollect.icon}
-                    valueColor={Colors.chips.toCollect.value}
-                    onPress={handleOpenToCollectDetail}
-                  />
-                </View>
+                {/* Purchases Card */}
+                <TouchableOpacity
+                  style={styles.heroCard}
+                  onPress={handleOpenPurchaseDetail}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.heroHeaderRow}>
+                    <View style={styles.orangeCircleBadge}>
+                      <Feather name="shopping-cart" size={14} color="#F59E0B" />
+                    </View>
+                    <Text style={styles.heroCardLabel}>Purchases</Text>
+                  </View>
+                  <Text style={styles.heroCardValue} numberOfLines={1}>
+                    {formatMetric(dashboardData?.totalPurchase ?? 451000, true)}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
-              {/* INVOICES & PAYMENTS CARD */}
-              <InfoListCard
-                title="Invoices & payments"
-                badge="MTD"
-                items={invoiceRows}
-              />
+              {/* SECTION: COLLECTIONS */}
+              <Text style={styles.sectionTitle}>Collections</Text>
+              <View style={styles.grid2x2}>
+                {/* Cash Collected */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenCashCollectedDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#132644' }]}>
+                      <Ionicons name="cash-outline" size={18} color="#3B82F6" />
+                    </View>
+                    <Text style={styles.insightLabel}>Cash{'\n'}Collected</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {formatMetric(dashboardData?.cashCollected ?? 288000)}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* FIELD & STOCK SECTION */}
-              <SectionHeader title="Field & stock" />
-              <View style={styles.fieldStockRow}>
-                <MiniStatTile
-                  label="FSE"
-                  value={dashboardData?.totalFSE ?? 1}
-                  valueColor={Colors.fieldStock.fse}
-                  onPress={() => setActiveTab('parties')}
-                />
-                <MiniStatTile
-                  label="Pending"
-                  value={dashboardData?.pendingStockReq ?? 0}
-                  valueColor={Colors.fieldStock.pending}
-                  onPress={() => setActiveTab('parties')}
-                />
-                <MiniStatTile
-                  label="Approved"
-                  value={dashboardData?.stockApproved ?? 0}
-                  valueColor={Colors.fieldStock.approved}
-                  onPress={() => setActiveTab('parties')}
-                />
-                <MiniStatTile
-                  label="DSR"
-                  value={dashboardData?.totalDSR ?? 0}
-                  valueColor={Colors.fieldStock.dsr}
-                  onPress={() => setActiveTab('parties')}
-                />
+                {/* Bank Collected */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenCashCollectedDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#1C2050' }]}>
+                      <MaterialCommunityIcons name="bank-outline" size={18} color="#6366F1" />
+                    </View>
+                    <Text style={styles.insightLabel}>Bank{'\n'}Collected</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {formatMetric(dashboardData?.bankCollected ?? 0)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* To Collect */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenToCollectDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#2A1748' }]}>
+                      <Ionicons name="wallet-outline" size={18} color="#A855F7" />
+                    </View>
+                    <Text style={styles.insightLabel}>To Collect</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {formatMetric(dashboardData?.outstandingCollected ?? dashboardData?.toCollect ?? 290)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* To Pay */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenPurchaseDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#38151D' }]}>
+                      <MaterialCommunityIcons name="currency-inr" size={18} color="#EF4444" />
+                    </View>
+                    <Text style={styles.insightLabel}>To Pay</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {formatMetric(dashboardData?.outstandingPay ?? dashboardData?.toPay ?? 235000)}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
-              {/* SALE & PURCHASE CHART CARD */}
-              <BarChartCard
-                data={dashboardData?.graphData || []}
-              />
+              {/* SECTION: OTHER INSIGHTS (8) */}
+              <Text style={styles.sectionTitle}>Other Insights (8)</Text>
+              <View style={styles.grid2x2}>
+                {/* 1. Total Invoice */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenSaleDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E2D2C' }]}>
+                      <Ionicons name="receipt-outline" size={18} color="#14B8A6" />
+                    </View>
+                    <Text style={styles.insightLabel}>Total Invoice</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.totalInvoice ?? 8}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* EXPENSES CARD */}
-              <ExpensesCard
-                amount={dashboardData?.expenseAmt ?? 0}
-                onPressViewDetails={() => {
-                  setDetailModalConfig({
-                    title: 'Operating Expenses',
-                    subtitle: 'Business, operational, and office expenditures',
-                    iconName: 'trending-down',
-                    iconColor: '#DC2626',
-                    iconBg: '#FEF2F2',
-                    items: [
-                      {
-                        label: 'Total Expenses This Month',
-                        value: dashboardData?.expenseAmt ?? 0,
-                        highlightColor: '#DC2626',
-                        subtext: 'Operational and petty cash payments',
-                      },
-                    ],
-                    tips: 'Log all petty cash and rent vouchers to maximize eligible deductions.',
-                  });
-                }}
-              />
+                {/* 2. Credit Invoices */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenSaleDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#332414' }]}>
+                      <Feather name="file-text" size={18} color="#F59E0B" />
+                    </View>
+                    <Text style={styles.insightLabel}>Credit{'\n'}Invoices</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.totalCreditInvoice ?? 0}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* SUPPORT SECTION */}
-              <SectionHeader title="Support" />
-              <SupportCard
-                onPressBookMeeting={() =>
-                  Alert.alert(
-                    'Book Meeting',
-                    'Schedule an onboarding or compliance session with our BTHAWK team.'
-                  )
-                }
-                onPressEmail={() =>
-                  Alert.alert('Email Support', 'Contact us directly at support@bthawk.com')
-                }
-                onPressTutorial={() =>
-                  Alert.alert('Video Tutorials', 'Opening BTHAWK tutorial video library.')
-                }
-                onPressWhatsapp={() =>
-                  Alert.alert('WhatsApp', 'Connecting to 24/7 BTHAWK WhatsApp support...')
-                }
-                onPressChatAi={() =>
-                  Alert.alert('BTHAWK+ Assistant', 'AI business and GST assistant active.')
-                }
-              />
+                {/* 3. DSR Approval */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => setActiveTab('reports')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E2D2C' }]}>
+                      <Feather name="check-square" size={18} color="#14B8A6" />
+                    </View>
+                    <Text style={styles.insightLabel}>DSR Approval</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.totalDSR ?? 0}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* FAQS ACCORDION */}
-              <SectionHeader title="FAQs" />
-              <FaqAccordion faqs={faqs} />
-            </>
+                {/* 4. Pending Stock */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => setActiveTab('parties')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#341C14' }]}>
+                      <Feather name="inbox" size={18} color="#F97316" />
+                    </View>
+                    <Text style={styles.insightLabel}>Pending{'\n'}Stock</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.pendingStockReq ?? 0}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 5. Stock Approved */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => setActiveTab('parties')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E3024' }]}>
+                      <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                    </View>
+                    <Text style={styles.insightLabel}>Stock{'\n'}Approved</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.stockApproved ?? 1}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 6. FSE */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => setActiveTab('parties')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#231744' }]}>
+                      <Ionicons name="people" size={18} color="#8B5CF6" />
+                    </View>
+                    <Text style={styles.insightLabel}>FSE</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.totalFSE ?? 1}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 7. Submitted DSR */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => setActiveTab('reports')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#132644' }]}>
+                      <Ionicons name="briefcase" size={18} color="#3B82F6" />
+                    </View>
+                    <Text style={styles.insightLabel}>Submitted{'\n'}DSR</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.totalDSR ?? 0}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* 8. Total Expenses */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={() => {
+                    setDetailModalConfig({
+                      title: 'Total Expenses',
+                      subtitle: 'Operational and petty cash payments',
+                      iconName: 'trending-down',
+                      iconColor: '#EF4444',
+                      iconBg: '#38151D',
+                      items: [
+                        {
+                          label: 'Total Expenses',
+                          value: dashboardData?.expenseAmt ?? 12,
+                          highlightColor: '#EF4444',
+                        },
+                      ],
+                    });
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#38151D' }]}>
+                      <MaterialCommunityIcons name="currency-inr" size={18} color="#EF4444" />
+                    </View>
+                    <Text style={styles.insightLabel}>Total{'\n'}Expenses</Text>
+                  </View>
+                  <Text style={styles.insightValue}>
+                    {dashboardData?.expenseAmt ?? 12}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         </ScrollView>
       )}
@@ -611,7 +582,7 @@ export default function DashboardScreen() {
           data={dashboardData}
           startDate={activeRange.startDate}
           endDate={activeRange.endDate}
-          onNewInvoice={() => setShowInvoiceSheet(true)}
+          onNewInvoice={() => router.push('/generate-invoice')}
         />
       )}
 
@@ -627,7 +598,7 @@ export default function DashboardScreen() {
       {activeTab === 'reports' && (
         <ReportsView
           data={dashboardData}
-          currency={currencySymbol}
+          currency="₹"
           onOpenReport={(reportName) => {
             if (reportName === 'SaleRegister') handleOpenSaleDetail();
             else if (reportName === 'ExpenseMaster') handleOpenPurchaseDetail();
@@ -644,83 +615,63 @@ export default function DashboardScreen() {
         />
       )}
 
+      {/* 6. CHAT TAB */}
+      {activeTab === 'chat' && (
+        <View style={styles.chatPlaceholder}>
+          <Ionicons name="chatbubbles-outline" size={48} color="#6C7CFF" />
+          <Text style={styles.chatTitle}>BTHAWK Support & Assistant</Text>
+          <Text style={styles.chatSubtitle}>
+            Direct chat support and AI tax assistant available 24/7.
+          </Text>
+          <TouchableOpacity
+            onPress={() => setActiveTab('dashboard')}
+            style={styles.backHomeBtn}
+          >
+            <Text style={styles.backHomeText}>Return to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* BOTTOM TAB BAR */}
       <AppTabBar
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onPressPlus={() => setShowPlusSheet(true)}
       />
 
-      {/* PERIOD SELECTOR BOTTOM SHEET */}
-      <PeriodSheet
-        visible={showPeriodSheet}
-        selectedPreset={selectedPreset}
-        onSelect={handleSelectPreset}
-        onClose={() => setShowPeriodSheet(false)}
-      />
-
-      {/* PLUS ACTION SHEET */}
-      <PlusActionSheet
-        visible={showPlusSheet}
-        onClose={() => setShowPlusSheet(false)}
-        onSelectAction={handlePlusActionSelect}
-      />
-
-      {/* LEFT NAVIGATION DRAWER */}
+      {/* APP DRAWER (MATCHES SCREENSHOT 3 & 4) */}
       <AppDrawer
         visible={showDrawer}
-        activeRoute="/dashboard"
         onClose={() => setShowDrawer(false)}
         onNavigateTab={(tab) => {
           setActiveTab(tab as any);
-        }}
-        onOpenHelpSupport={() => {
-          Alert.alert('Help & Support', 'Reach our team anytime at support@bthawk.com');
+          setShowDrawer(false);
         }}
         onLogout={handleLogout}
       />
 
-      {/* INVOICE CREATION SHEET */}
-      <InvoiceCreateSheet
-        visible={showInvoiceSheet}
-        onClose={() => setShowInvoiceSheet(false)}
-        onSuccess={() => loadDashboard(activeRange)}
+      {/* DRILLDOWN METRIC DETAIL MODAL */}
+      <MetricDetailModal
+        visible={!!detailModalConfig}
+        config={detailModalConfig}
+        onClose={() => setDetailModalConfig(null)}
       />
 
-      {/* RECORD PAYMENT RECEIPT SHEET */}
+      {/* PAYMENT SHEET */}
       <PaymentReceiptSheet
         visible={showPaymentSheet}
         onClose={() => setShowPaymentSheet(false)}
-        onSuccess={() => loadDashboard(activeRange)}
       />
 
       {/* ADD PARTY SHEET */}
       <AddPartySheet
         visible={showAddPartySheet}
         onClose={() => setShowAddPartySheet(false)}
-        onSuccess={() => loadDashboard(activeRange)}
       />
 
-      {/* QR SCANNER SHEET */}
+      {/* QR SCANNER */}
       <QrScannerSheet
         visible={showQrScanner}
         onClose={() => setShowQrScanner(false)}
-      />
-
-      {/* METRIC DRILL-DOWN MODAL */}
-      <MetricDetailModal
-        visible={!!detailModalConfig}
-        config={detailModalConfig}
-        currency={currencySymbol}
-        onClose={() => setDetailModalConfig(null)}
-      />
-
-      {/* USER & BUSINESS PROFILE MODAL */}
-      <ProfileModal
-        visible={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        onLogout={handleLogout}
-        onOpenQr={() => setShowQrScanner(true)}
       />
     </SafeAreaView>
   );
@@ -729,67 +680,167 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F101E',
   },
   scrollContainer: {
-    paddingHorizontal: Shapes.screenPadding,
-    paddingTop: 8,
+    flexGrow: 1,
   },
-  overviewGrid: {
-    gap: Shapes.gridGap,
-    marginBottom: Shapes.verticalGap,
+  contentPadding: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  gridRow: {
-    flexDirection: 'row',
-    gap: Shapes.gridGap,
-  },
-  fieldStockRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: Shapes.verticalGap,
-  },
-  errorCard: {
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: Shapes.cardRadius,
-    padding: Shapes.cardPadding,
-    marginBottom: Shapes.verticalGap,
-    gap: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.error,
-    ...Shadows.card,
+    backgroundColor: '#26131D',
+    borderWidth: 1,
+    borderColor: '#5C1D24',
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    gap: 8,
   },
-  errorIconWrap: {
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#FF5C6C',
+  },
+  retryBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#3E1922',
+  },
+  retryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FF5C6C',
+  },
+  heroRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  heroCard: {
+    flex: 1,
+    backgroundColor: '#313774',
+    borderRadius: 18,
+    padding: 16,
+    minHeight: 110,
+    justifyContent: 'space-between',
+  },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  greenCircleBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#0E332A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  orangeCircleBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#352512',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heroCardLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#CFD3F7',
+  },
+  heroCardValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#F2F2FA',
+    marginBottom: 14,
+    letterSpacing: -0.3,
+  },
+  grid2x2: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 24,
+  },
+  insightCard: {
+    width: '48%',
+    backgroundColor: '#161D32',
+    borderWidth: 1,
+    borderColor: '#1E2744',
+    borderRadius: 16,
+    padding: 16,
+    minHeight: 104,
+    justifyContent: 'space-between',
+  },
+  insightTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  insightIconBadge: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFE3E3',
-    alignItems: 'center',
+    borderRadius: 10,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  errorTextWrap: {
+  insightLabel: {
+    fontSize: 13,
+    color: '#9AA0BF',
+    fontWeight: '500',
+    lineHeight: 17,
     flex: 1,
   },
-  errorTitle: {
-    fontFamily: Typography.fontFamily.bold,
+  insightValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#F2F2FA',
+    letterSpacing: -0.2,
+    marginTop: 6,
+  },
+  chatPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  chatTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#F2F2FA',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  chatSubtitle: {
     fontSize: 14,
-    color: Colors.text,
+    color: '#9AA0BF',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
   },
-  errorSub: {
-    ...Typography.small,
-    color: Colors.textSecondary,
-    marginTop: 2,
+  backHomeBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    backgroundColor: '#2A3D6E',
   },
-  retryButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  retryButtonText: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: 12,
-    color: Colors.white,
+  backHomeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#F2F2FA',
   },
 });

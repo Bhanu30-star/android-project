@@ -7,8 +7,6 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Theme } from '../theme';
 
 interface PrimaryButtonProps {
   title: string;
@@ -39,22 +37,19 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || title}
       accessibilityState={{ disabled: isDisabled, busy: isLoading }}
-      style={[styles.touchable, isDisabled && styles.disabledTouchable, style]}
+      style={[
+        styles.touchable,
+        isDisabled ? styles.disabledTouchable : styles.activeTouchable,
+        style,
+      ]}
     >
-      <LinearGradient
-        colors={isDisabled ? Theme.colors.primaryGradientDisabled : Theme.colors.primaryGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradient}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
-        ) : (
-          <Text style={[styles.text, isDisabled && styles.disabledText, textStyle]}>
-            {title}
-          </Text>
-        )}
-      </LinearGradient>
+      {isLoading ? (
+        <ActivityIndicator color="#F2F2FA" size="small" />
+      ) : (
+        <Text style={[styles.text, isDisabled && styles.disabledText, textStyle]}>
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 };
@@ -62,29 +57,33 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 const styles = StyleSheet.create({
   touchable: {
     width: '100%',
-    borderRadius: Theme.borderRadius.md,
-    overflow: 'hidden',
-    ...Theme.shadows.button,
+    height: 50,
+    borderRadius: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  activeTouchable: {
+    backgroundColor: '#2A3D6E',
+    shadowColor: '#2A3D6E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
   },
   disabledTouchable: {
+    backgroundColor: '#1E2540',
+    opacity: 0.6,
     shadowOpacity: 0,
     elevation: 0,
   },
-  gradient: {
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.lg,
-    borderRadius: Theme.borderRadius.md,
-  },
   text: {
-    color: '#FFFFFF',
-    fontSize: Theme.typography.sizes.base,
+    color: '#F2F2FA',
+    fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
   disabledText: {
-    color: '#FFFFFF',
-    opacity: 0.9,
+    color: '#5B6084',
   },
 });

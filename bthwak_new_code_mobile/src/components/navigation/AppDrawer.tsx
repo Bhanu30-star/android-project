@@ -16,9 +16,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { DRAWER_MENU_SECTIONS } from '@/navigation/menu';
 
-import { DrawerHeader } from '../drawer/DrawerHeader';
 import { UserCard } from '../drawer/UserCard';
-import { SectionLabel } from '../drawer/SectionLabel';
 import { MenuItem } from '../drawer/MenuItem';
 import { MenuGroup } from '../drawer/MenuGroup';
 import { DrawerFooter } from '../drawer/DrawerFooter';
@@ -42,7 +40,7 @@ function getInitialOpenGroupId(activeRoute?: string): string | null {
       }
     }
   }
-  return 'purchase';
+  return null;
 }
 
 export const AppDrawer: React.FC<AppDrawerProps> = ({
@@ -50,7 +48,6 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
   activeRoute = '/dashboard',
   onClose,
   onNavigateTab,
-  onOpenHelpSupport,
   onLogout,
 }) => {
   const insets = useSafeAreaInsets();
@@ -61,16 +58,13 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
   // Drawer width: 320, never more than 85% of screen width
   const drawerWidth = Math.min(320, screenWidth * 0.85);
 
-  // Animated values initialized with useMemo
   const slideAnim = useMemo(() => new Animated.Value(-drawerWidth), [drawerWidth]);
   const opacityAnim = useMemo(() => new Animated.Value(0), []);
 
-  // Track which single group is open
   const [openGroupId, setOpenGroupId] = useState<string | null>(() =>
     getInitialOpenGroupId(activeRoute)
   );
 
-  // Handle slide animation when visibility changes
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -101,7 +95,6 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
     }
   }, [visible, drawerWidth, slideAnim, opacityAnim]);
 
-  // Android Back Button handler
   useEffect(() => {
     if (!visible) return;
 
@@ -113,7 +106,6 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
     return () => backHandler.remove();
   }, [visible, onClose]);
 
-  // PanResponder to detect swipe left to close
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -129,12 +121,10 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
     [onClose]
   );
 
-  // Handle group toggle (only one open at a time)
   const handleToggleGroup = (groupId: string) => {
     setOpenGroupId((prev) => (prev === groupId ? null : groupId));
   };
 
-  // Handle leaf navigation
   const handleSelectRoute = (label: string, route?: string) => {
     onClose();
 
@@ -145,9 +135,11 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
 
     if (route === '/businessdetail') {
       router.push('/profile');
+    } else if (route === '/generate-invoice') {
+      router.push('/generate-invoice');
     } else if (route === '/dashboard') {
       onNavigateTab?.('dashboard');
-    } else if (route.startsWith('/generate-invoice') || route === '/invoice') {
+    } else if (route === '/invoice' || route.startsWith('/invoice')) {
       onNavigateTab?.('sales');
     } else if (route.startsWith('/purchase') || route.startsWith('/master')) {
       onNavigateTab?.('parties');
@@ -170,12 +162,10 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalRoot}>
-        {/* Scrim: #1B1840 at 45% opacity */}
         <TouchableWithoutFeedback onPress={onClose}>
           <Animated.View style={[styles.scrim, { opacity: opacityAnim }]} />
         </TouchableWithoutFeedback>
 
-        {/* Drawer Sliding Body */}
         <Animated.View
           {...panResponder.panHandlers}
           style={[
@@ -187,68 +177,56 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
             },
           ]}
         >
-          {/* 1. Header (Logo Tile & Close Button) */}
-          <DrawerHeader onClose={onClose} />
+          {/* 1. Header with Avatar, User Info & Settings Gear */}
+          <UserCard
+            user={user}
+            isLoading={isLoading}
+            onPressSettings={() => {
+              onClose();
+              onNavigateTab?.('settings');
+            }}
+          />
 
-          {/* 2. User Card (Business name & Mobile) */}
-          <UserCard user={user} isLoading={isLoading} />
-
-          {/* 3. Middle Scrollable Menu */}
+          {/* 2. Middle Scrollable Menu */}
           <ScrollView
             style={styles.scrollArea}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {DRAWER_MENU_SECTIONS.map((section) => (
-              <View key={section.id}>
-                {section.sectionLabel && (
-                  <SectionLabel label={section.sectionLabel} />
-                )}
+            {DRAWER_MENU_SECTIONS[0].items.map((item) => {
+              if (item.children && item.children.length > 0) {
+                return (
+                  <MenuGroup
+                    key={item.id}
+                    label={item.label}
+                    icon={item.icon}
+                    subItems={item.children}
+                    isExpanded={openGroupId === item.id}
+                    activeRoute={activeRoute}
+                    onToggle={() => handleToggleGroup(item.id)}
+                    onSelectSubItem={(sub) =>
+                      handleSelectRoute(sub.label, sub.route)
+                    }
+                  />
+                );
+              }
 
-                {section.items.map((item) => {
-                  if (item.children && item.children.length > 0) {
-                    return (
-                      <MenuGroup
-                        key={item.id}
-                        label={item.label}
-                        icon={item.icon}
-                        subItems={item.children}
-                        isExpanded={openGroupId === item.id}
-                        activeRoute={activeRoute}
-                        onToggle={() => handleToggleGroup(item.id)}
-                        onSelectSubItem={(sub) =>
-                          handleSelectRoute(sub.label, sub.route)
-                        }
-                      />
-                    );
-                  }
-
-                  const isActive = activeRoute === item.route;
-                  return (
-                    <MenuItem
-                      key={item.id}
-                      label={item.label}
-                      icon={item.icon}
-                      isActive={isActive}
-                      onPress={() => handleSelectRoute(item.label, item.route)}
-                    />
-                  );
-                })}
-              </View>
-            ))}
+              const isActive = activeRoute === item.route;
+              return (
+                <MenuItem
+                  key={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={isActive}
+                  onPress={() => handleSelectRoute(item.label, item.route)}
+                />
+              );
+            })}
           </ScrollView>
 
-          {/* 4. Pinned Footer (Help & Support + Logout) */}
+          {/* 3. Pinned Footer with Logout & Version */}
           <View style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
             <DrawerFooter
-              onPressHelp={() => {
-                onClose();
-                if (onOpenHelpSupport) {
-                  onOpenHelpSupport();
-                } else {
-                  Alert.alert('Help & Support', 'Reach us at support@bthawk.com');
-                }
-              }}
               onPressLogout={() => {
                 onClose();
                 onLogout();
@@ -272,15 +250,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(27, 24, 64, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
   },
   drawer: {
-    backgroundColor: '#FFFFFF',
-    borderTopRightRadius: 28,
-    borderBottomRightRadius: 28,
+    backgroundColor: '#121829',
     height: '100%',
-    shadowColor: '#1B1840',
-    shadowOpacity: 0.16,
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
     shadowRadius: 24,
     shadowOffset: { width: 4, height: 0 },
     elevation: 16,
@@ -289,7 +265,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingTop: 8,
     paddingBottom: 16,
   },
 });
