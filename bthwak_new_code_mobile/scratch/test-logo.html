@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Logo Preview</title>
+  <style>
+    body { background: #f0f4f8; display: flex; gap: 30px; padding: 40px; align-items: center; }
+    .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <svg width="180" height="180" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Ambient radial glow -->
+        <radialGradient id="logoHalo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3880FF" stop-opacity="0.18" />
+          <stop offset="60%" stop-color="#5B9DFF" stop-opacity="0.08" />
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+        
+        <!-- Blue V Swoosh Gradient -->
+        <linearGradient id="blueVSwoosh" x1="15%" y1="15%" x2="85%" y2="85%">
+          <stop offset="0%" stop-color="#0E3D96" />
+          <stop offset="50%" stop-color="#082B72" />
+          <stop offset="100%" stop-color="#031A4D" />
+        </linearGradient>
+
+        <!-- Bar Gradients -->
+        <linearGradient id="barGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#00BAFF" />
+          <stop offset="100%" stop-color="#0080E5" />
+        </linearGradient>
+        <linearGradient id="barGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#0088FF" />
+          <stop offset="100%" stop-color="#0058C7" />
+        </linearGradient>
+        <linearGradient id="barGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#0062FF" />
+          <stop offset="100%" stop-color="#003EAC" />
+        </linearGradient>
+
+        <!-- Orange Arrow Gradient -->
+        <linearGradient id="orangeArrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FF5100" />
+          <stop offset="40%" stop-color="#FF7700" />
+          <stop offset="100%" stop-color="#FFA800" />
+        </linearGradient>
+      </defs>
+
+      <!-- Soft Glow Circle -->
+      <circle cx="60" cy="60" r="58" fill="url(#logoHalo)" />
+
+      <!-- Blue V Swoosh -->
+      <!-- Starts top left (24,32) angled to (36,33), curves down to (52,90), sweeping up to (76,78), then back along inner curve -->
+      <path
+        d="M23 35 C28 35, 33 34, 38 33 C37 48, 41 68, 51 80 C56 86, 63 88, 70 85 C77 82, 82 74, 85 64 C82 72, 76 77, 69 77 C62 77, 56 71, 51 62 C45 52, 43 41, 44 32 L23 35 Z"
+        fill="url(#blueVSwoosh)"
+      />
+
+      <!-- 3 Bar Chart Columns (Inside the V) -->
+      <!-- Bar 1 (Left, Shortest) -->
+      <rect x="55" y="47" width="7" height="23" rx="3.5" fill="url(#barGrad1)" />
+
+      <!-- Bar 2 (Middle, Medium) -->
+      <rect x="66" y="34" width="7" height="36" rx="3.5" fill="url(#barGrad2)" />
+
+      <!-- Bar 3 (Right, Tallest) -->
+      <rect x="77" y="21" width="7" height="49" rx="3.5" fill="url(#barGrad3)" />
+
+      <!-- Orange Swoosh Curve & Arrowhead -->
+      <!-- Sweeps from base of V up to top right, with sharp arrow head -->
+      <path
+        d="M52 92 C62 92, 75 87, 85 76 C94 66, 100 52, 104 38 L94 40 L115 25 L114 49 L106 43 C102 56, 96 69, 86 80 C74 92, 61 97, 52 92 Z"
+        fill="url(#orangeArrowGrad)"
+      />
+    </svg>
+  </div>
+</body>
+</html>

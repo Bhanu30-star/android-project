@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { AuthTabs, AuthTabType } from '@/components/AuthTabs';
 import { AppInput } from '@/components/AppInput';
@@ -21,6 +23,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { OtpInput } from '@/components/OtpInput';
 import { QrInstructionCard } from '@/components/QrInstructionCard';
 import { BthawkLogo } from '@/components/BthawkLogo';
+import { AuthBackgroundDecorations } from '@/components/AuthBackgroundDecorations';
 
 import {
   loginSchema,
@@ -40,9 +43,11 @@ export default function LoginScreen() {
 
   const [activeTab, setActiveTab] = useState<AuthTabType>('password');
   const [isForgotPasswordView, setIsForgotPasswordView] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   // Password Login State
-  const [trustDevice, setTrustDevice] = useState(true);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
 
   // OTP Login State
@@ -124,7 +129,7 @@ export default function LoginScreen() {
         emailOrMobile: data.email.trim(),
         password: data.password.trim(),
         loginType: 'with-pass',
-        trustDevice,
+        trustDevice: rememberMe,
         recaptchaKey: 'app_mobile_client',
       });
 
@@ -201,7 +206,7 @@ export default function LoginScreen() {
           emailOrMobile: activeContact,
           otp: code,
           loginType: 'with-otp',
-          trustDevice,
+          trustDevice: rememberMe,
           recaptchaKey: 'app_mobile_client',
         });
 
@@ -224,7 +229,7 @@ export default function LoginScreen() {
         setIsOtpVerifySubmitting(false);
       }
     },
-    [isOtpVerifySubmitting, otpValue, targetContact, getOtpValues, loginWithToken, router, trustDevice]
+    [isOtpVerifySubmitting, otpValue, targetContact, getOtpValues, loginWithToken, router, rememberMe]
   );
 
   // Handler: Resend OTP
@@ -271,9 +276,28 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      {/* BACKGROUND GRAPHICS: WAVES, SKYLINE, GROWTH CHART */}
+      <AuthBackgroundDecorations />
+
       <SafeAreaView style={styles.safeArea}>
+        {/* TOP STATUS BAR ROW: LANGUAGE DROPDOWN PILL */}
+        <View style={styles.topHeaderBar}>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity
+            style={styles.languagePill}
+            onPress={() => setShowLanguageModal(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`Select Language, currently ${selectedLanguage}`}
+          >
+            <Ionicons name="globe-outline" size={16} color="#0E204E" style={{ marginRight: 6 }} />
+            <Text style={styles.languageText}>{selectedLanguage}</Text>
+            <Feather name="chevron-down" size={15} color="#0E204E" style={{ marginLeft: 4 }} />
+          </TouchableOpacity>
+        </View>
+
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
           <ScrollView
@@ -282,21 +306,34 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
-            {/* BRAND HEADER */}
-            <View style={styles.brandHeader}>
-              <View style={styles.brandLogoRow}>
-                <BthawkLogo size={48} />
-                <Text style={styles.brandLogoText}>
-                  BTHAWK<Text style={styles.brandLogoPlus}>+</Text>
-                </Text>
+            {/* BRAND HERO LOGO & TITLE SECTION */}
+            <View style={styles.heroSection}>
+              <View style={styles.logoWrapper}>
+                <BthawkLogo size={82} />
               </View>
-              <Text style={styles.brandSubtitle}>Sales, Stock &amp; Commerce Management</Text>
+
+              <Text style={styles.heroTitle}>
+                Welcome <Text style={styles.heroTitleHighlight}>Back!</Text>
+              </Text>
+
+              <Text style={styles.heroSubtitle}>
+                Sign in to continue your business journey
+              </Text>
+
+              {/* Decorative two-tone gradient wave under subtitle */}
+              <View style={styles.titleDividerAccent}>
+                <LinearGradient
+                  colors={['#FF7A00', '#0047AB']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.accentLine}
+                />
+              </View>
             </View>
 
-            {/* MAIN CARD */}
-            <View style={styles.card}>
-              {/* FORGOT PASSWORD HEADER OR TABS */}
-              {isForgotPasswordView ? (
+            {/* FORGOT PASSWORD VIEW OR MAIN AUTH */}
+            {isForgotPasswordView ? (
+              <View style={styles.formContainer}>
                 <View style={styles.forgotHeader}>
                   <TouchableOpacity
                     onPress={() => {
@@ -307,323 +344,382 @@ export default function LoginScreen() {
                     style={styles.backRow}
                     activeOpacity={0.7}
                   >
-                    <Feather name="arrow-left" size={18} color="#6C7CFF" />
+                    <Feather name="arrow-left" size={18} color="#0047AB" />
                     <Text style={styles.backText}>Back to Login</Text>
                   </TouchableOpacity>
-                  <Text style={styles.cardTitle}>Reset Password</Text>
-                  <Text style={styles.cardSubtitle}>
-                    Enter your registered email or 10-digit mobile number to receive a secure reset link.
+                  <Text style={styles.forgotTitle}>Reset Password</Text>
+                  <Text style={styles.forgotSubtitle}>
+                    Enter your registered email or 10-digit mobile number to receive a secure password reset link.
                   </Text>
                 </View>
-              ) : (
-                <>
-                  <Text style={styles.cardTitle}>Welcome Back</Text>
-                  <Text style={styles.cardSubtitle}>Sign in to access your business portal</Text>
-                  <AuthTabs
-                    activeTab={activeTab}
-                    onTabChange={(tab) => {
-                      setActiveTab(tab);
-                      setApiErrorMessage('');
-                      setApiSuccessMessage('');
-                    }}
-                  />
-                </>
-              )}
 
-              {/* API ERROR BANNER */}
-              {!!apiErrorMessage && (
-                <View style={styles.errorBanner} accessibilityRole="alert">
-                  <Feather name="alert-circle" size={16} color="#FF5C6C" />
-                  <Text style={styles.bannerTextError}>{apiErrorMessage}</Text>
-                </View>
-              )}
-
-              {/* API SUCCESS BANNER */}
-              {!!apiSuccessMessage && (
-                <View style={styles.successBanner} accessibilityRole="alert">
-                  <Ionicons name="checkmark-circle" size={16} color="#2DD4A8" />
-                  <Text style={styles.bannerTextSuccess}>{apiSuccessMessage}</Text>
-                </View>
-              )}
-
-              {/* 1. PASSWORD TAB */}
-              {!isForgotPasswordView && activeTab === 'password' && (
-                <View>
-                  <Controller
-                    control={passwordControl}
-                    name="email"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        iconName="mail"
-                        placeholder="Email or 10-digit mobile"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        returnKeyType="next"
-                        onSubmitEditing={() => passwordInputRef.current?.focus()}
-                        error={passwordErrors.email?.message}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={passwordControl}
-                    name="password"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <PasswordInput
-                        ref={passwordInputRef}
-                        placeholder="Password"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        returnKeyType="done"
-                        onSubmitEditing={() => {
-                          void handlePasswordSubmit(onPasswordLogin)();
-                        }}
-                        error={passwordErrors.password?.message}
-                      />
-                    )}
-                  />
-
-                  {/* OPTIONS ROW: Remember Device & Forgot Password */}
-                  <View style={styles.optionsRow}>
-                    <TouchableOpacity
-                      onPress={() => setTrustDevice((prev) => !prev)}
-                      style={styles.checkboxRow}
-                      activeOpacity={0.8}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: trustDevice }}
-                      accessibilityLabel="Trust this device for 30 days"
-                    >
-                      <View
-                        style={[
-                          styles.checkboxBox,
-                          trustDevice && styles.checkboxBoxChecked,
-                        ]}
-                      >
-                        {trustDevice && (
-                          <Ionicons name="checkmark" size={13} color="#FFFFFF" />
-                        )}
-                      </View>
-                      <Text style={styles.checkboxLabel}>Trust device</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setIsForgotPasswordView(true);
-                        setApiErrorMessage('');
-                        setApiSuccessMessage('');
-                      }}
-                      activeOpacity={0.7}
-                      accessibilityRole="button"
-                      accessibilityLabel="Forgot Password"
-                    >
-                      <Text style={styles.forgotLink}>Forgot Password?</Text>
-                    </TouchableOpacity>
+                {/* API BANNERS */}
+                {!!apiErrorMessage && (
+                  <View style={styles.errorBanner} accessibilityRole="alert">
+                    <Feather name="alert-circle" size={16} color="#DC2626" />
+                    <Text style={styles.bannerTextError}>{apiErrorMessage}</Text>
                   </View>
-
-                  {/* LOGIN CTA BUTTON */}
-                  <PrimaryButton
-                    title="Sign In"
-                    onPress={handlePasswordSubmit(onPasswordLogin)}
-                    disabled={!isPasswordValid}
-                    isLoading={isPasswordSubmitting}
-                    style={styles.submitButton}
-                  />
-
-                  {/* REGISTER FOOTER */}
-                  <View style={styles.registerRow}>
-                    <Text style={styles.registerPrompt}>Don&apos;t have an account? </Text>
-                    <TouchableOpacity onPress={handleOpenRegister} activeOpacity={0.7}>
-                      <Text style={styles.registerLink}>Register</Text>
-                    </TouchableOpacity>
+                )}
+                {!!apiSuccessMessage && (
+                  <View style={styles.successBanner} accessibilityRole="alert">
+                    <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
+                    <Text style={styles.bannerTextSuccess}>{apiSuccessMessage}</Text>
                   </View>
-                </View>
-              )}
+                )}
 
-              {/* 2. OTP TAB */}
-              {!isForgotPasswordView && activeTab === 'otp' && (
-                <View>
-                  {!otpSent ? (
-                    <>
-                      <Controller
-                        control={otpControl}
-                        name="contact"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <AppInput
-                            iconName="phone"
-                            placeholder="Email or 10-digit mobile"
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            returnKeyType="done"
-                            onSubmitEditing={() => {
-                              void handleOtpRequestSubmit(onRequestOtp)();
-                            }}
-                            error={otpErrors.contact?.message}
-                          />
-                        )}
-                      />
+                <Controller
+                  control={forgotControl}
+                  name="user"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <AppInput
+                      iconName="mail"
+                      placeholder="Registered Email or Mobile"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
+                      returnKeyType="done"
+                      onSubmitEditing={handleForgotSubmit(onForgotPassword)}
+                      error={forgotErrors.user?.message}
+                    />
+                  )}
+                />
 
-                      <PrimaryButton
-                        title="Get OTP"
-                        onPress={handleOtpRequestSubmit(onRequestOtp)}
-                        disabled={!isOtpValid}
-                        isLoading={isOtpRequestSubmitting}
-                        style={styles.submitButton}
-                      />
+                <PrimaryButton
+                  title="Send Reset Link"
+                  onPress={handleForgotSubmit(onForgotPassword)}
+                  disabled={!isForgotValid}
+                  isLoading={isForgotSubmitting}
+                  style={styles.actionBtn}
+                />
+              </View>
+            ) : (
+              <View style={styles.formContainer}>
+                {/* 3-SEGMENTED AUTH TABS (PASSWORD / OTP / QR) */}
+                <AuthTabs
+                  activeTab={activeTab}
+                  onTabChange={(tab) => {
+                    setActiveTab(tab);
+                    setApiErrorMessage('');
+                    setApiSuccessMessage('');
+                  }}
+                />
 
-                      {/* REGISTER FOOTER */}
-                      <View style={styles.registerRow}>
-                        <Text style={styles.registerPrompt}>Don&apos;t have an account? </Text>
-                        <TouchableOpacity onPress={handleOpenRegister} activeOpacity={0.7}>
-                          <Text style={styles.registerLink}>Register</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  ) : (
-                    <>
-                      {/* Selected Contact with Change option */}
-                      <View style={styles.contactChipRow}>
-                        <View style={styles.contactChipLeft}>
-                          <Feather name="check-circle" size={15} color="#2DD4A8" />
-                          <Text style={styles.contactChipText} numberOfLines={1}>
-                            {targetContact || getOtpValues('contact')}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setOtpSent(false);
-                            setOtpValue('');
-                            setApiErrorMessage('');
-                            setApiSuccessMessage('');
+                {/* API ERROR BANNER */}
+                {!!apiErrorMessage && (
+                  <View style={styles.errorBanner} accessibilityRole="alert">
+                    <Feather name="alert-circle" size={16} color="#DC2626" />
+                    <Text style={styles.bannerTextError}>{apiErrorMessage}</Text>
+                  </View>
+                )}
+
+                {/* API SUCCESS BANNER */}
+                {!!apiSuccessMessage && (
+                  <View style={styles.successBanner} accessibilityRole="alert">
+                    <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
+                    <Text style={styles.bannerTextSuccess}>{apiSuccessMessage}</Text>
+                  </View>
+                )}
+
+                {/* ============================================================== */}
+                {/* 1. PASSWORD TAB                                                */}
+                {/* ============================================================== */}
+                {activeTab === 'password' && (
+                  <View style={styles.tabBody}>
+                    <Controller
+                      control={passwordControl}
+                      name="email"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <AppInput
+                          iconName="mail"
+                          placeholder="Email / Mobile"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          returnKeyType="next"
+                          onSubmitEditing={() => passwordInputRef.current?.focus()}
+                          error={passwordErrors.email?.message}
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      control={passwordControl}
+                      name="password"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <PasswordInput
+                          ref={passwordInputRef}
+                          placeholder="Password"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          returnKeyType="done"
+                          onSubmitEditing={() => {
+                            void handlePasswordSubmit(onPasswordLogin)();
                           }}
-                          style={styles.changeContactButton}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.changeContactText}>Change</Text>
-                        </TouchableOpacity>
-                      </View>
+                          error={passwordErrors.password?.message}
+                        />
+                      )}
+                    />
 
-                      <Text style={styles.otpPromptText}>
-                        Enter the 6-digit verification code sent to your contact
-                      </Text>
-
-                      {/* 6-box OTP Input */}
-                      <OtpInput
-                        value={otpValue}
-                        onChange={setOtpValue}
-                        onComplete={(code) => {
-                          void onVerifyOtp(code);
-                        }}
-                      />
-
-                      {/* Resend Timer / Action */}
-                      <View style={styles.resendContainer}>
-                        {otpTimer > 0 ? (
-                          <Text style={styles.resendTimerText}>
-                            Resend code in{' '}
-                            <Text style={styles.resendTimerHighlight}>{otpTimer}s</Text>
-                          </Text>
-                        ) : (
-                          <TouchableOpacity
-                            onPress={onResendOtp}
-                            disabled={isOtpRequestSubmitting}
-                            activeOpacity={0.7}
-                          >
-                            <Text style={styles.resendActiveText}>Resend OTP</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      {/* Trust device for OTP */}
+                    {/* OPTIONS ROW: Remember Me & Forgot Password */}
+                    <View style={styles.optionsRow}>
                       <TouchableOpacity
-                        onPress={() => setTrustDevice((prev) => !prev)}
-                        style={[styles.checkboxRow, { marginBottom: 18 }]}
+                        onPress={() => setRememberMe((prev) => !prev)}
+                        style={styles.checkboxRow}
                         activeOpacity={0.8}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: rememberMe }}
+                        accessibilityLabel="Remember Me"
                       >
                         <View
                           style={[
-                            styles.checkboxBox,
-                            trustDevice && styles.checkboxBoxChecked,
+                            styles.checkboxCircle,
+                            rememberMe && styles.checkboxCircleChecked,
                           ]}
                         >
-                          {trustDevice && (
-                            <Ionicons name="checkmark" size={13} color="#FFFFFF" />
+                          {rememberMe && (
+                            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
                           )}
                         </View>
-                        <Text style={styles.checkboxLabel}>Trust this device for 30 days</Text>
+                        <Text style={styles.rememberMeLabel}>Remember Me</Text>
                       </TouchableOpacity>
 
-                      <PrimaryButton
-                        title="Verify & Sign In"
-                        onPress={() => onVerifyOtp()}
-                        disabled={otpValue.length !== 6 || isOtpVerifySubmitting}
-                        isLoading={isOtpVerifySubmitting}
-                        style={styles.submitButton}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-
-              {/* 3. QR CODE TAB */}
-              {!isForgotPasswordView && activeTab === 'qr' && (
-                <QrInstructionCard onSwitchToPassword={() => setActiveTab('password')} />
-              )}
-
-              {/* 4. FORGOT PASSWORD VIEW */}
-              {isForgotPasswordView && (
-                <View>
-                  <Controller
-                    control={forgotControl}
-                    name="user"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <AppInput
-                        iconName="mail"
-                        placeholder="Email or 10-digit mobile"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        returnKeyType="done"
-                        onSubmitEditing={() => {
-                          void handleForgotSubmit(onForgotPassword)();
+                      <TouchableOpacity
+                        onPress={() => {
+                          setIsForgotPasswordView(true);
+                          setApiErrorMessage('');
+                          setApiSuccessMessage('');
                         }}
-                        error={forgotErrors.user?.message}
-                      />
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Forgot Password"
+                        style={styles.forgotLinkRow}
+                      >
+                        <Text style={styles.forgotLink}>Forgot Password?</Text>
+                        <Feather name="chevron-right" size={14} color="#0047AB" />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* LOGIN CTA BUTTON (BLUE-ORANGE GRADIENT WITH [-> | Login]) */}
+                    <PrimaryButton
+                      title="Login"
+                      iconName="log-in-outline"
+                      showDivider={true}
+                      onPress={handlePasswordSubmit(onPasswordLogin)}
+                      disabled={!isPasswordValid}
+                      isLoading={isPasswordSubmitting}
+                      style={styles.loginButton}
+                    />
+
+                    {/* REGISTER FOOTER */}
+                    <View style={styles.registerContainer}>
+                      <View style={styles.registerDividerLine} />
+                      <View style={styles.registerTextWrap}>
+                        <Text style={styles.registerPrompt}>Don’t have an account? </Text>
+                        <TouchableOpacity onPress={handleOpenRegister} activeOpacity={0.7}>
+                          <View style={styles.registerWordContainer}>
+                            <Text style={styles.registerLink}>Register</Text>
+                            {/* Orange swoosh curve underline under Register */}
+                            <View style={styles.registerUnderlineCurve} />
+                          </View>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.registerDividerLine} />
+                    </View>
+                  </View>
+                )}
+
+                {/* ============================================================== */}
+                {/* 2. OTP TAB                                                     */}
+                {/* ============================================================== */}
+                {activeTab === 'otp' && (
+                  <View style={styles.tabBody}>
+                    {!otpSent ? (
+                      <>
+                        <Controller
+                          control={otpControl}
+                          name="contact"
+                          render={({ field: { onChange, onBlur, value } }) => (
+                            <AppInput
+                              iconName="mail"
+                              placeholder="Email / Mobile"
+                              value={value}
+                              onChangeText={onChange}
+                              onBlur={onBlur}
+                              keyboardType="email-address"
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              returnKeyType="done"
+                              onSubmitEditing={handleOtpRequestSubmit(onRequestOtp)}
+                              error={otpErrors.contact?.message}
+                            />
+                          )}
+                        />
+
+                        <PrimaryButton
+                          title="Get OTP"
+                          iconName="send-outline"
+                          showDivider={true}
+                          onPress={handleOtpRequestSubmit(onRequestOtp)}
+                          disabled={!isOtpValid}
+                          isLoading={isOtpRequestSubmitting}
+                          style={styles.loginButton}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <View style={styles.contactChipRow}>
+                          <View style={styles.contactChipLeft}>
+                            <Ionicons name="phone-portrait-outline" size={16} color="#0047AB" />
+                            <Text style={styles.contactChipText}>{targetContact}</Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setOtpSent(false);
+                              setOtpValue('');
+                              setApiErrorMessage('');
+                              setApiSuccessMessage('');
+                            }}
+                            style={styles.changeContactButton}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.changeContactText}>Change</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.otpPromptText}>
+                          Enter the 6-digit verification code sent to your registered contact.
+                        </Text>
+
+                        <OtpInput
+                          value={otpValue}
+                          onChange={(val) => {
+                            setOtpValue(val);
+                            if (val.length === 6) {
+                              void onVerifyOtp(val);
+                            }
+                          }}
+                          onComplete={(val) => {
+                            void onVerifyOtp(val);
+                          }}
+                          hasError={!!apiErrorMessage}
+                        />
+
+                        <View style={styles.resendContainer}>
+                          {otpTimer > 0 ? (
+                            <Text style={styles.resendTimerText}>
+                              Resend code in{' '}
+                              <Text style={styles.resendTimerHighlight}>{otpTimer}s</Text>
+                            </Text>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={onResendOtp}
+                              disabled={isOtpRequestSubmitting}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={styles.resendActiveText}>Resend OTP</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        <PrimaryButton
+                          title="Verify & Login"
+                          iconName="checkmark-done-outline"
+                          showDivider={true}
+                          onPress={() => void onVerifyOtp()}
+                          disabled={otpValue.length !== 6}
+                          isLoading={isOtpVerifySubmitting}
+                          style={styles.loginButton}
+                        />
+                      </>
                     )}
-                  />
 
-                  <PrimaryButton
-                    title="Send Reset Link"
-                    onPress={handleForgotSubmit(onForgotPassword)}
-                    disabled={!isForgotValid}
-                    isLoading={isForgotSubmitting}
-                    style={styles.submitButton}
-                  />
-                </View>
-              )}
-            </View>
+                    {/* REGISTER FOOTER */}
+                    <View style={styles.registerContainer}>
+                      <View style={styles.registerDividerLine} />
+                      <View style={styles.registerTextWrap}>
+                        <Text style={styles.registerPrompt}>Don’t have an account? </Text>
+                        <TouchableOpacity onPress={handleOpenRegister} activeOpacity={0.7}>
+                          <View style={styles.registerWordContainer}>
+                            <Text style={styles.registerLink}>Register</Text>
+                            <View style={styles.registerUnderlineCurve} />
+                          </View>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.registerDividerLine} />
+                    </View>
+                  </View>
+                )}
 
-            {/* TRUST & SECURITY BADGE */}
-            <View style={styles.trustFooter}>
-              <Ionicons name="shield-checkmark-outline" size={14} color="#2DD4A8" />
-              <Text style={styles.trustText}>
-                256-Bit SSL Encrypted • ISO 27001 Certified
-              </Text>
-            </View>
+                {/* ============================================================== */}
+                {/* 3. QR TAB                                                      */}
+                {/* ============================================================== */}
+                {activeTab === 'qr' && (
+                  <View style={styles.tabBody}>
+                    <QrInstructionCard
+                      onSwitchToPassword={() => {
+                        setActiveTab('password');
+                        setApiErrorMessage('');
+                        setApiSuccessMessage('');
+                      }}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Bottom spacer so content doesn't cover artwork */}
+            <View style={{ height: 110 }} />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* LANGUAGE SELECT MODAL */}
+      <Modal
+        visible={showLanguageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.languageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLanguageModal(false)}
+        >
+          <View style={styles.languageModalCard}>
+            <Text style={styles.languageModalTitle}>Select Language</Text>
+            {['English', 'Hindi (हिंदी)', 'Gujarati (ગુજરાતી)', 'Marathi (मराठी)'].map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageOption,
+                  selectedLanguage.startsWith(lang.split(' ')[0]) && styles.languageOptionActive,
+                ]}
+                onPress={() => {
+                  setSelectedLanguage(lang.split(' ')[0]);
+                  setShowLanguageModal(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageOptionText,
+                    selectedLanguage.startsWith(lang.split(' ')[0]) && styles.languageOptionTextActive,
+                  ]}
+                >
+                  {lang}
+                </Text>
+                {selectedLanguage.startsWith(lang.split(' ')[0]) && (
+                  <Ionicons name="checkmark-circle" size={18} color="#0047AB" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -631,188 +727,224 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#100F1D',
+    backgroundColor: '#F4F8FD',
   },
   safeArea: {
     flex: 1,
+  },
+  topHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+    zIndex: 10,
+  },
+  languagePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  languageText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0E204E',
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    justifyContent: 'center',
-    maxWidth: 440,
-    width: '100%',
-    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 40,
   },
-  brandHeader: {
+  heroSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
-  },
-  brandLogoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 6,
-  },
-  brandLogoText: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#F2F2FA',
-    letterSpacing: 0.5,
-  },
-  brandLogoPlus: {
-    color: '#E8552D',
-  },
-  brandSubtitle: {
-    fontSize: 13,
-    color: '#9AA0BF',
-    fontWeight: '500',
-  },
-  card: {
-    backgroundColor: '#17162A',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 24,
-    borderWidth: 1,
-    borderColor: '#2A2D4A',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#F2F2FA',
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#9AA0BF',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  forgotHeader: {
     marginBottom: 12,
   },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
+  heroTitle: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#0E204E',
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
-  backText: {
+  heroTitleHighlight: {
+    color: '#FF6E00',
+  },
+  heroSubtitle: {
     fontSize: 14,
-    color: '#6C7CFF',
-    fontWeight: '700',
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#26131D',
-    borderWidth: 1,
-    borderColor: '#5C1D24',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 14,
-    gap: 8,
-  },
-  bannerTextError: {
-    flex: 1,
-    fontSize: 13,
-    color: '#FF5C6C',
     fontWeight: '500',
-    lineHeight: 18,
+    color: '#5A6B87',
+    marginTop: 6,
+    textAlign: 'center',
   },
-  successBanner: {
-    flexDirection: 'row',
+  titleDividerAccent: {
+    marginTop: 10,
     alignItems: 'center',
-    backgroundColor: '#162828',
-    borderWidth: 1,
-    borderColor: '#1B4D3E',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 14,
-    gap: 8,
+    justifyContent: 'center',
   },
-  bannerTextSuccess: {
-    flex: 1,
-    fontSize: 13,
-    color: '#2DD4A8',
-    fontWeight: '500',
-    lineHeight: 18,
+  accentLine: {
+    width: 60,
+    height: 3.5,
+    borderRadius: 2,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  tabBody: {
+    marginTop: 6,
   },
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 12,
+    paddingHorizontal: 2,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  checkboxBox: {
+  checkboxCircle: {
     width: 20,
     height: 20,
-    borderRadius: 6,
+    borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#2A2D4A',
-    backgroundColor: '#100F1D',
+    borderColor: '#DFE7F2',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxBoxChecked: {
-    backgroundColor: '#6C7CFF',
-    borderColor: '#6C7CFF',
+  checkboxCircleChecked: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
-  checkboxLabel: {
+  rememberMeLabel: {
     fontSize: 13,
-    color: '#9AA0BF',
-    fontWeight: '500',
+    color: '#0E204E',
+    fontWeight: '600',
+  },
+  forgotLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   forgotLink: {
     fontSize: 13,
-    color: '#6C7CFF',
+    color: '#0047AB',
     fontWeight: '600',
   },
-  submitButton: {
-    marginTop: 6,
+  loginButton: {
+    marginTop: 10,
   },
-  registerRow: {
+  registerContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
+    marginTop: 26,
+    paddingHorizontal: 10,
+  },
+  registerDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#DCE6F2',
+  },
+  registerTextWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 12,
   },
   registerPrompt: {
     fontSize: 13,
-    color: '#9AA0BF',
+    color: '#5A6B87',
+    fontWeight: '500',
+  },
+  registerWordContainer: {
+    position: 'relative',
+    alignItems: 'center',
   },
   registerLink: {
-    fontSize: 13,
-    color: '#6C7CFF',
+    fontSize: 14,
+    color: '#0047AB',
     fontWeight: '700',
+  },
+  registerUnderlineCurve: {
+    position: 'absolute',
+    bottom: -3,
+    width: '100%',
+    height: 2.5,
+    backgroundColor: '#FF6E00',
+    borderRadius: 1.5,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 14,
+    gap: 8,
+  },
+  bannerTextError: {
+    fontSize: 13,
+    color: '#DC2626',
+    flex: 1,
+    fontWeight: '500',
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 14,
+    gap: 8,
+  },
+  bannerTextSuccess: {
+    fontSize: 13,
+    color: '#16A34A',
+    flex: 1,
+    fontWeight: '500',
   },
   contactChipRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#100F1D',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#2A2D4A',
-    borderRadius: 12,
+    borderColor: '#DFE7F2',
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    marginBottom: 12,
+    marginBottom: 14,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   contactChipLeft: {
     flexDirection: 'row',
@@ -823,22 +955,22 @@ const styles = StyleSheet.create({
   contactChipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F2F2FA',
+    color: '#0E204E',
   },
   changeContactButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: '#1E1D36',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#E8F1FC',
   },
   changeContactText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6C7CFF',
+    color: '#0047AB',
   },
   otpPromptText: {
     fontSize: 13,
-    color: '#9AA0BF',
+    color: '#5A6B87',
     textAlign: 'center',
     marginTop: 4,
     marginBottom: 6,
@@ -851,27 +983,90 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     fontSize: 13,
-    color: '#9AA0BF',
+    color: '#5A6B87',
   },
   resendTimerHighlight: {
-    color: '#6C7CFF',
+    color: '#0047AB',
     fontWeight: '700',
   },
   resendActiveText: {
     fontSize: 13,
-    color: '#6C7CFF',
+    color: '#0047AB',
     fontWeight: '700',
   },
-  trustFooter: {
+  forgotHeader: {
+    marginBottom: 16,
+  },
+  backRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 6,
-    marginTop: 24,
+    marginBottom: 12,
   },
-  trustText: {
-    fontSize: 12,
-    color: '#5B6084',
+  backText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0047AB',
+  },
+  forgotTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0E204E',
+    marginBottom: 6,
+  },
+  forgotSubtitle: {
+    fontSize: 13,
+    color: '#5A6B87',
+    lineHeight: 18,
+  },
+  actionBtn: {
+    marginTop: 10,
+  },
+  languageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 37, 88, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  languageModalCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  languageModalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0E204E',
+    marginBottom: 16,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F5FC',
+  },
+  languageOptionActive: {
+    backgroundColor: '#F0F6FF',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+  },
+  languageOptionText: {
+    fontSize: 14,
+    color: '#5A6B87',
     fontWeight: '500',
+  },
+  languageOptionTextActive: {
+    color: '#0047AB',
+    fontWeight: '700',
   },
 });

@@ -9,12 +9,12 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { Theme } from '../theme';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 export interface AppInputProps extends TextInputProps {
   label?: string;
   iconName?: keyof typeof Feather.glyphMap;
+  ioniconsName?: keyof typeof Ionicons.glyphMap;
   error?: string;
   rightAction?: React.ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
@@ -25,6 +25,7 @@ export const AppInput = forwardRef<any, AppInputProps>(
     {
       label,
       iconName,
+      ioniconsName,
       error,
       rightAction,
       style,
@@ -52,19 +53,28 @@ export const AppInput = forwardRef<any, AppInputProps>(
             !!error && styles.inputContainerError,
           ]}
         >
-          {iconName && (
-            <Feather
-              name={iconName}
-              size={19}
-              color={isFocused ? '#6C7CFF' : '#5B6084'}
+          {ioniconsName ? (
+            <Ionicons
+              name={ioniconsName}
+              size={18}
+              color={isFocused ? '#0047AB' : '#0E204E'}
               style={styles.leadingIcon}
             />
-          )}
+          ) : iconName ? (
+            <Feather
+              name={iconName}
+              size={18}
+              color={isFocused ? '#0047AB' : '#0E204E'}
+              style={styles.leadingIcon}
+            />
+          ) : null}
+
+          {(iconName || ioniconsName) && <View style={styles.verticalDivider} />}
 
           <TextInput
             ref={innerRef}
             value={value ?? ''}
-            placeholderTextColor="#5B6084"
+            placeholderTextColor="#8E9CAE"
             style={[styles.input, style]}
             onFocus={(e) => {
               setIsFocused(true);
@@ -83,7 +93,7 @@ export const AppInput = forwardRef<any, AppInputProps>(
 
         {!!error && (
           <View style={styles.errorRow}>
-            <Feather name="alert-circle" size={13} color="#FF5C6C" />
+            <Feather name="alert-circle" size={13} color="#DC2626" />
             <Text style={styles.errorText} accessibilityRole="alert">
               {error}
             </Text>
@@ -99,62 +109,66 @@ AppInput.displayName = 'AppInput';
 const styles = StyleSheet.create({
   container: {
     marginBottom: 14,
-    width: '100%',
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9AA0BF',
+    color: '#0E204E',
     marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#17162A',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#2A2D4A',
+    borderColor: '#DFE7F2',
+    borderRadius: 9999,
+    height: 52,
     paddingHorizontal: 16,
-    minHeight: 52,
-  },
-  inputContainerFocused: {
-    borderColor: '#6C7CFF',
-    backgroundColor: '#1E1D36',
-    shadowColor: '#6C7CFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
+  inputContainerFocused: {
+    borderColor: '#0047AB',
+    shadowOpacity: 0.1,
+    shadowColor: '#0047AB',
+  },
   inputContainerError: {
-    borderColor: '#FF5C6C',
-    backgroundColor: '#26131D',
+    borderColor: '#DC2626',
+    backgroundColor: '#FFF8F8',
   },
   leadingIcon: {
-    marginRight: 12,
+    marginRight: 4,
+  },
+  verticalDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#DCE6F2',
+    marginHorizontal: 10,
   },
   input: {
     flex: 1,
-    fontSize: 15,
-    color: '#F2F2FA',
-    paddingVertical: 10,
+    fontSize: 14,
+    color: '#0E204E',
+    paddingVertical: 0,
     fontWeight: '500',
   },
   rightAction: {
     marginLeft: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
     marginTop: 5,
-    paddingHorizontal: 4,
+    marginLeft: 12,
+    gap: 4,
   },
   errorText: {
+    color: '#DC2626',
     fontSize: 12,
-    color: '#FF5C6C',
     fontWeight: '500',
   },
 });

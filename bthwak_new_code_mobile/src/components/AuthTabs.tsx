@@ -1,12 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
-import { Theme } from '../theme';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export type AuthTabType = 'password' | 'otp' | 'qr';
 
@@ -15,129 +10,135 @@ interface AuthTabsProps {
   onTabChange: (tab: AuthTabType) => void;
 }
 
-const TABS: { id: AuthTabType; label: string }[] = [
-  { id: 'password', label: 'Password' },
-  { id: 'otp', label: 'OTP' },
-  { id: 'qr', label: 'QR' },
+const TABS: { id: AuthTabType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'password', label: 'Password', icon: 'lock-closed' },
+  { id: 'otp', label: 'OTP', icon: 'shield-checkmark-sharp' },
+  { id: 'qr', label: 'QR', icon: 'scan-sharp' },
 ];
 
 export const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) => {
-  const [containerWidth, setContainerWidth] = useState(0);
-  const activeIndex = TABS.findIndex((t) => t.id === activeTab);
-  const translateX = useSharedValue(0);
-
-  const tabWidth = containerWidth > 0 ? containerWidth / TABS.length : 0;
-  // Underline width
-  const indicatorWidth = 54;
-
-  useEffect(() => {
-    if (tabWidth > 0) {
-      // Center the indicator under the active tab
-      const targetX = activeIndex * tabWidth + (tabWidth - indicatorWidth) / 2;
-      translateX.value = withTiming(targetX, {
-        duration: 250,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-    }
-  }, [activeIndex, tabWidth, translateX]);
-
-  const animatedIndicatorStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    const width = e.nativeEvent.layout.width;
-    setContainerWidth(width);
-  };
-
   return (
-    <View style={styles.wrapper} onLayout={onLayout} accessibilityRole="tablist">
-      <View style={styles.tabsRow}>
-        {TABS.map((tab) => {
-          const isActive = tab.id === activeTab;
-          return (
+    <View style={styles.container} accessibilityRole="tablist">
+      {TABS.map((tab, index) => {
+        const isActive = tab.id === activeTab;
+        const showDivider = !isActive && index > 0 && TABS[index - 1].id !== activeTab;
+
+        return (
+          <React.Fragment key={tab.id}>
+            {showDivider && <View style={styles.verticalDivider} />}
+
             <TouchableOpacity
-              key={tab.id}
               onPress={() => onTabChange(tab.id)}
-              style={styles.tabButton}
+              style={styles.tabTouch}
               accessibilityRole="tab"
               accessibilityState={{ selected: isActive }}
               accessibilityLabel={`${tab.label} tab`}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  isActive ? styles.tabTextActive : styles.tabTextInactive,
-                ]}
-              >
-                {tab.label}
-              </Text>
+              {isActive ? (
+                <View style={styles.activeWrapper}>
+                  <LinearGradient
+                    colors={['#072863', '#0A3684', '#0F449E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.activeTabPill}
+                  >
+                    <Ionicons name={tab.icon} size={17} color="#FFFFFF" style={styles.tabIcon} />
+                    <Text style={styles.activeTabText}>{tab.label}</Text>
+                  </LinearGradient>
+                  {/* Subtle warm amber/orange bottom glow accent */}
+                  <View style={styles.activeUnderglow} />
+                </View>
+              ) : (
+                <View style={styles.inactiveTabContent}>
+                  <Ionicons name={tab.icon} size={17} color="#0E204E" style={styles.tabIcon} />
+                  <Text style={styles.inactiveTabText}>{tab.label}</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Baseline divider and sliding indicator */}
-      <View style={styles.lineContainer}>
-        {tabWidth > 0 && (
-          <Animated.View
-            style={[
-              styles.indicator,
-              { width: indicatorWidth },
-              animatedIndicatorStyle,
-            ]}
-          />
-        )}
-      </View>
+          </React.Fragment>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    width: '100%',
-    marginBottom: Theme.spacing.lg,
-  },
-  tabsRow: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 9999,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    height: 52,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+    marginVertical: 12,
   },
-  tabButton: {
+  tabTouch: {
     flex: 1,
-    paddingVertical: 12,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeWrapper: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeTabPill: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 9999,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 12,
+    shadowColor: '#0A2558',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  tabText: {
-    fontSize: 15,
+  activeUnderglow: {
+    position: 'absolute',
+    bottom: -2,
+    width: '60%',
+    height: 3,
+    backgroundColor: '#FF8800',
+    borderRadius: 2,
+    opacity: 0.8,
+  },
+  inactiveTabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  tabIcon: {
+    marginRight: 6,
+  },
+  activeTabText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
-  tabTextActive: {
-    color: '#6C7CFF',
-    fontWeight: '700',
-  },
-  tabTextInactive: {
-    color: '#9AA0BF',
+  inactiveTabText: {
+    color: '#0E204E',
+    fontSize: 14,
     fontWeight: '600',
   },
-  lineContainer: {
-    height: 3,
-    backgroundColor: '#2A2D4A',
-    borderRadius: 2,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  indicator: {
-    height: 3,
-    backgroundColor: '#6C7CFF',
-    borderRadius: 3,
-    position: 'absolute',
-    left: 0,
-    top: 0,
+  verticalDivider: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#DCE6F2',
   },
 });

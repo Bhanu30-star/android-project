@@ -70,22 +70,21 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     }
   };
 
-  const digits = value.padEnd(6, ' ').slice(0, 6).split('');
-
   return (
-    <View style={styles.container} accessibilityRole="none">
-      {digits.map((digit, index) => {
-        const char = digit.trim();
-        const isFilled = !!char;
-        const isCurrentFocus = value.length === index;
+    <View style={styles.container}>
+      {[0, 1, 2, 3, 4, 5].map((index) => {
+        const char = value[index] || '';
+        const isFilled = !!char.trim();
+        const isCurrentFocus =
+          value.length === index || (index === 5 && value.length === 6);
 
         return (
           <TextInput
             key={index}
-            ref={(ref) => {
-              inputsRef.current[index] = ref;
+            ref={(r) => {
+              inputsRef.current[index] = r;
             }}
-            value={char}
+            value={char.trim()}
             onChangeText={(text) => handleDigitChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
             keyboardType="number-pad"
@@ -120,29 +119,35 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#2A2D4A',
-    backgroundColor: '#17162A',
+    borderColor: '#DFE7F2',
+    backgroundColor: '#FFFFFF',
     fontSize: 22,
     fontWeight: '700',
-    color: '#F2F2FA',
+    color: '#0E204E',
     textAlign: 'center',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   digitBoxFilled: {
-    borderColor: '#6C7CFF',
-    backgroundColor: '#1E1D36',
-    color: '#F2F2FA',
+    borderColor: '#0047AB',
+    backgroundColor: '#F0F6FF',
+    color: '#0E204E',
   },
   digitBoxActive: {
-    borderColor: '#6C7CFF',
-    backgroundColor: '#1E1D36',
-    shadowColor: '#6C7CFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: '#0047AB',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   digitBoxError: {
-    borderColor: '#FF5C6C',
-    backgroundColor: '#26131D',
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
+    color: '#DC2626',
   },
 });

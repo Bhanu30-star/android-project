@@ -1,6 +1,6 @@
 import React, { useState, forwardRef } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { AppInput, AppInputProps } from './AppInput';
 
 export type PasswordInputProps = Omit<AppInputProps, 'rightAction' | 'secureTextEntry'>;
@@ -23,10 +23,10 @@ export const PasswordInput = forwardRef<any, PasswordInputProps>(
             style={styles.eyeButton}
             activeOpacity={0.7}
           >
-            <Feather
-              name={isPasswordVisible ? 'eye-off' : 'eye'}
-              size={18}
-              color={isPasswordVisible ? '#6C7CFF' : '#5B6084'}
+            <Ionicons
+              name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              size={19}
+              color={isPasswordVisible ? '#0047AB' : '#8E9CAE'}
             />
           </TouchableOpacity>
         }

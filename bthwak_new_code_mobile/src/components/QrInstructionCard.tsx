@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { Theme } from '../theme';
 
 interface QrInstructionCardProps {
   onSwitchToPassword: () => void;
@@ -11,7 +10,7 @@ export const QrInstructionCard: React.FC<QrInstructionCardProps> = ({ onSwitchTo
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Ionicons name="qr-code-outline" size={40} color="#6C7CFF" />
+        <Ionicons name="qr-code-outline" size={38} color="#0047AB" />
       </View>
 
       <Text style={styles.title}>Logging In to BTHAWK Web?</Text>
@@ -55,7 +54,7 @@ export const QrInstructionCard: React.FC<QrInstructionCardProps> = ({ onSwitchTo
         accessibilityRole="button"
         accessibilityLabel="Switch to password login"
       >
-        <Feather name="arrow-left" size={16} color="#6C7CFF" />
+        <Feather name="arrow-left" size={16} color="#0047AB" />
         <Text style={styles.switchButtonText}>Log in with Password / OTP</Text>
       </TouchableOpacity>
     </View>
@@ -68,12 +67,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#1E1D36',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#F0F5FC',
     borderWidth: 1,
-    borderColor: '#2A2D4A',
+    borderColor: '#DFE7F2',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
@@ -81,13 +80,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F2F2FA',
+    color: '#0E204E',
     marginBottom: 6,
     textAlign: 'center',
   },
   description: {
     fontSize: 13,
-    color: '#9AA0BF',
+    color: '#5A6B87',
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 18,
@@ -95,57 +94,56 @@ const styles = StyleSheet.create({
   },
   stepsContainer: {
     width: '100%',
-    backgroundColor: '#17162A',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2A2D4A',
-    padding: 14,
+    borderColor: '#DFE7F2',
+    padding: 16,
     marginBottom: 18,
-    gap: 12,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   stepRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   stepNumberBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#6C7CFF',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E8F1FC',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 1,
+    marginRight: 12,
   },
   stepNumber: {
-    color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
+    color: '#0047AB',
   },
   stepText: {
     flex: 1,
     fontSize: 13,
-    color: '#9AA0BF',
+    color: '#5A6B87',
     lineHeight: 18,
   },
   boldText: {
+    color: '#0E204E',
     fontWeight: '700',
-    color: '#F2F2FA',
   },
   switchButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 9999,
-    backgroundColor: '#1E1D36',
-    borderWidth: 1,
-    borderColor: '#2A2D4A',
+    paddingVertical: 8,
   },
   switchButtonText: {
     fontSize: 13,
-    color: '#6C7CFF',
-    fontWeight: '700',
+    fontWeight: '600',
+    color: '#0047AB',
   },
 });
