@@ -314,16 +314,37 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
           accessibilityLabel="Go back"
           accessibilityRole="button"
         >
-          <Feather name="chevron-left" size={24} color={Colors.text} />
+          <Feather name="chevron-left" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         <Text style={styles.topBarTitle}>Profile</Text>
 
         <View style={styles.topBarRight}>
-          {isDirty && (
-            <View style={styles.unsavedBadge}>
-              <Text style={styles.unsavedText}>Unsaved changes</Text>
-            </View>
+          {isDirty ? (
+            <TouchableOpacity
+              style={styles.saveHeaderBtn}
+              onPress={handleSave}
+              disabled={isSaving || isSaveDisabled}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.saveHeaderText}>Save</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.editPencilBtn}
+              onPress={() => {
+                Alert.alert(
+                  'Edit Business Details',
+                  'You can tap any input field below to edit. Once finished, tap Save at the top right or bottom of the screen.',
+                  [{ text: 'Start Editing' }]
+                );
+              }}
+              activeOpacity={0.7}
+              accessibilityLabel="Edit profile"
+              accessibilityRole="button"
+            >
+              <Feather name="edit-2" size={18} color="#818EF8" />
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -887,39 +908,61 @@ export const ProfileScreen: React.FC<{ onGoBack: () => void }> = ({ onGoBack }) 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0E101F',
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0E101F',
     zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#232948',
   },
   backCircleBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.card,
+    backgroundColor: '#161B35',
     borderWidth: 1,
-    borderColor: Colors.tabBorder,
+    borderColor: '#262E52',
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.card,
   },
   topBarTitle: {
     fontFamily: Typography.fontFamily.extraBold,
     fontSize: 20,
-    color: Colors.text,
+    color: '#FFFFFF',
     marginLeft: 14,
   },
   topBarRight: {
     flex: 1,
     alignItems: 'flex-end',
   },
+  editPencilBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#161B35',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#262E52',
+  },
+  saveHeaderBtn: {
+    backgroundColor: '#818EF8',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 14,
+  },
+  saveHeaderText: {
+    color: '#0E1128',
+    fontWeight: '700',
+    fontSize: 13,
+  },
   unsavedBadge: {
-    backgroundColor: Colors.unsavedTagBg,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -927,7 +970,7 @@ const styles = StyleSheet.create({
   unsavedText: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 11,
-    color: Colors.unsavedTagText,
+    color: '#F87171',
   },
   scrollView: {
     flex: 1,
@@ -939,12 +982,13 @@ const styles = StyleSheet.create({
 
   // Profile Card
   profileCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: '#141830',
     borderRadius: Shapes.card.radius,
     padding: Shapes.card.padding,
     alignItems: 'center',
     marginBottom: 16,
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: '#232948',
   },
   avatarWrapper: {
     position: 'relative',
@@ -954,7 +998,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: 'rgba(129, 142, 248, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -970,9 +1014,9 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#818EF8',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#141830',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -980,7 +1024,7 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.extraBold,
     fontSize: 18,
     lineHeight: 24,
-    color: Colors.text,
+    color: '#FFFFFF',
     marginBottom: 2,
   },
   locationRow: {
@@ -992,7 +1036,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontFamily: Typography.fontFamily.semiBold,
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
   },
   infoBoxesContainer: {
     width: '100%',
@@ -1001,17 +1045,19 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F7FF',
+    backgroundColor: '#161B35',
     borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#262E52',
   },
   infoIconChip: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#EEEDFF',
+    backgroundColor: 'rgba(129, 142, 248, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1019,28 +1065,29 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: Typography.fontFamily.semiBold,
     fontSize: 13,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   infoBoxLabel: {
     flex: 1,
     fontFamily: Typography.fontFamily.semiBold,
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
   },
   infoBoxVersion: {
     fontFamily: Typography.fontFamily.extraBold,
     fontSize: 13,
-    color: Colors.text,
+    color: '#818EF8',
   },
 
   // Menu Links Card
   menuCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: '#141830',
     borderRadius: Shapes.card.radius,
     paddingVertical: 6,
     paddingHorizontal: 16,
     marginBottom: 16,
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: '#232948',
   },
   menuRow: {
     flexDirection: 'row',
@@ -1052,7 +1099,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#EEEDFF',
+    backgroundColor: 'rgba(129, 142, 248, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1060,11 +1107,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: Typography.fontFamily.bold,
     fontSize: 14,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   menuDivider: {
     height: 1,
-    backgroundColor: Colors.divider,
+    backgroundColor: '#232948',
   },
 
   // Section Tabs
@@ -1075,39 +1122,40 @@ const styles = StyleSheet.create({
   },
   tabPill: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: '#161B35',
     borderRadius: 20,
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.tabBorder,
+    borderColor: '#262E52',
   },
   tabPillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: '#818EF8',
+    borderColor: '#818EF8',
   },
   tabPillText: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
   },
   tabPillTextActive: {
-    color: '#FFFFFF',
+    color: '#0E1128',
   },
 
   // Form Cards
   formCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: '#141830',
     borderRadius: Shapes.card.radius,
     padding: Shapes.card.padding,
     marginBottom: 16,
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: '#232948',
   },
   cardHeaderTitle: {
     fontFamily: Typography.fontFamily.extraBold,
     fontSize: 16,
-    color: Colors.text,
+    color: '#FFFFFF',
     marginBottom: 14,
   },
   gridRow: {
@@ -1126,7 +1174,7 @@ const styles = StyleSheet.create({
   tcsLabel: {
     fontFamily: Typography.fontFamily.semiBold,
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
     marginBottom: 8,
   },
   segmentWrapper: {
@@ -1137,22 +1185,23 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: Shapes.buttons.minHeight,
     borderRadius: 14,
-    backgroundColor: '#F5F4FF',
+    backgroundColor: '#161B35',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderColor: '#262E52',
   },
   segmentBtnActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#818EF8',
+    borderColor: '#818EF8',
   },
   segmentBtnText: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 14,
-    color: Colors.text,
+    color: '#8E98BA',
   },
   segmentBtnTextActive: {
-    color: '#FFFFFF',
+    color: '#0E1128',
   },
 
   // Upload Grid
@@ -1166,30 +1215,30 @@ const styles = StyleSheet.create({
   subStatusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: 'rgba(52, 211, 153, 0.15)',
     padding: 14,
     borderRadius: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: '#34D399',
   },
   subPlanTitle: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 14,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   subPlanExpiry: {
     fontFamily: Typography.fontFamily.medium,
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
     marginTop: 2,
   },
   boldText: {
     fontFamily: Typography.fontFamily.bold,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   subActiveBadge: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: 'rgba(52, 211, 153, 0.25)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1197,35 +1246,37 @@ const styles = StyleSheet.create({
   subActiveText: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 11,
-    color: '#15803D',
+    color: '#34D399',
   },
   sectionSubTitle: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 14,
-    color: Colors.text,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   featureItem: {
     fontFamily: Typography.fontFamily.medium,
     fontSize: 13,
     lineHeight: 22,
-    color: Colors.textBody,
+    color: '#E2E8F0',
   },
   accountDetailItem: {
     paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#232948',
   },
   accountLabel: {
     fontFamily: Typography.fontFamily.semiBold,
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: '#8E98BA',
   },
   accountVal: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 14,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
 
   // Floating Save Bar
@@ -1234,22 +1285,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(245, 244, 255, 0.95)',
+    backgroundColor: 'rgba(14, 16, 31, 0.95)',
     paddingHorizontal: 16,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: Colors.tabBorder,
+    borderTopColor: '#232948',
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#818EF8',
     minHeight: Shapes.buttons.minHeight,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.card,
   },
   saveButtonDisabled: {
-    backgroundColor: '#8E89DF',
+    backgroundColor: '#262E52',
     opacity: 0.65,
   },
   saveRow: {
@@ -1265,6 +1315,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontFamily: Typography.fontFamily.bold,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: '#0E1128',
   },
 });

@@ -50,6 +50,30 @@ function RootStack() {
         <Stack.Screen name="dashboard" />
         <Stack.Screen name="profile" />
         <Stack.Screen name="generate-invoice" />
+        <Stack.Screen name="purchase-credit" />
+        <Stack.Screen name="purchase/generate_debit_note" />
+        <Stack.Screen name="generate-debit-note" />
+        <Stack.Screen name="master/sales-executive" />
+        <Stack.Screen name="sales-executive" />
+        <Stack.Screen name="master/buyer-seller" />
+        <Stack.Screen name="buyer-seller" />
+        <Stack.Screen name="master/beat" />
+        <Stack.Screen name="beat" />
+        <Stack.Screen name="master/bulkretailer" />
+        <Stack.Screen name="bulkretailer" />
+        <Stack.Screen name="generate-receipt" />
+        <Stack.Screen name="sale/generate-receipt" />
+        <Stack.Screen name="sale-return" />
+        <Stack.Screen name="sale/return" />
+        <Stack.Screen name="credit-note-detail" />
+        <Stack.Screen name="master/Creditnote" />
+        <Stack.Screen name="master/credit-note" />
+        <Stack.Screen name="invoice" />
+        <Stack.Screen name="edit-invoice" />
+        <Stack.Screen name="purchase/add_stock" />
+        <Stack.Screen name="purchase/add-stock" />
+        <Stack.Screen name="add-stock" />
+        <Stack.Screen name="purchase/credit_list" />
       </Stack>
     </>
   );

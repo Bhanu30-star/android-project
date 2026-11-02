@@ -2,13 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { PresetKey } from '@/utils/dateUtils';
+import { BthawkLogo } from '@/components/BthawkLogo';
 
-interface ScreenHeaderProps {
+export interface DashboardTopBarProps {
   onPressHamburger: () => void;
   onPressSettings: () => void;
+}
+
+export interface DashboardFilterHeaderProps {
   selectedPreset: PresetKey;
   onSelectPreset: (preset: PresetKey) => void;
 }
+
+export interface ScreenHeaderProps extends DashboardTopBarProps, DashboardFilterHeaderProps {}
 
 const PRESET_PILLS: { key: PresetKey; label: string }[] = [
   { key: 'FTD', label: 'Today' },
@@ -16,47 +22,65 @@ const PRESET_PILLS: { key: PresetKey; label: string }[] = [
   { key: 'LAST_7', label: 'Last 7 Days' },
 ];
 
-export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
+/**
+ * Pinned Sticky Top Navigation Bar
+ * Positioned fixed at the top so dashboard content scrolls smoothly UNDER it.
+ */
+export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
   onPressHamburger,
   onPressSettings,
+}) => {
+  return (
+    <View style={styles.topBarPinned}>
+      {/* Left: Modern Squircle Hamburger Button */}
+      <TouchableOpacity
+        onPress={onPressHamburger}
+        style={styles.iconButton}
+        activeOpacity={0.7}
+        accessibilityLabel="Open navigation drawer"
+        accessibilityRole="button"
+      >
+        <Feather name="menu" size={20} color="#0A2558" />
+      </TouchableOpacity>
+
+      {/* Center: Brand Identity Logo */}
+      <View style={styles.centerBrand}>
+        <BthawkLogo size={34} showText={true} textSize={18} textColor="#0E204E" />
+      </View>
+
+      {/* Right: Modern Squircle Settings Button with Orange Accent Dot */}
+      <TouchableOpacity
+        onPress={onPressSettings}
+        style={styles.iconButton}
+        activeOpacity={0.7}
+        accessibilityLabel="Open settings"
+        accessibilityRole="button"
+      >
+        <Feather name="settings" size={19} color="#0A2558" />
+        <View style={styles.notificationDot} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+/**
+ * Scrollable Header Content (Business Insights Heading + Date Filter Pills)
+ * Resides inside ScrollView so it scrolls naturally with the dashboard metrics.
+ */
+export const DashboardFilterHeader: React.FC<DashboardFilterHeaderProps> = ({
   selectedPreset,
   onSelectPreset,
 }) => {
   return (
-    <View style={styles.container}>
-      {/* 1. TOP APP BAR */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={onPressHamburger}
-          style={styles.iconButton}
-          activeOpacity={0.7}
-          accessibilityLabel="Open navigation drawer"
-          accessibilityRole="button"
-        >
-          <Feather name="menu" size={24} color="#F2F2FA" />
-        </TouchableOpacity>
-
-        <View style={styles.centerBrand}>
-          <Text style={styles.brandText}>
-            BTHAWK <Text style={styles.brandPlus}>+</Text>
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={onPressSettings}
-          style={styles.iconButton}
-          activeOpacity={0.7}
-          accessibilityLabel="Open settings"
-          accessibilityRole="button"
-        >
-          <Feather name="settings" size={22} color="#F2F2FA" />
-        </TouchableOpacity>
+    <View style={styles.filterContainer}>
+      {/* 1. BUSINESS INSIGHTS HEADING WITH ORANGE ACCENT */}
+      <View style={styles.headingRow}>
+        <Text style={styles.pageHeading}>
+          Business <Text style={styles.pageHeadingAccent}>Insights</Text>
+        </Text>
       </View>
 
-      {/* 2. BUSINESS INSIGHTS HEADING */}
-      <Text style={styles.pageHeading}>Business Insights</Text>
-
-      {/* 3. TIME FILTER PILLS */}
+      {/* 2. TIME FILTER PILLS */}
       <View style={styles.pillsRow}>
         {PRESET_PILLS.map((pill) => {
           const isActive = selectedPreset === pill.key;
@@ -86,45 +110,96 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   );
 };
 
+/**
+ * Combined ScreenHeader for backwards compatibility
+ */
+export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
+  onPressHamburger,
+  onPressSettings,
+  selectedPreset,
+  onSelectPreset,
+}) => {
+  return (
+    <View style={styles.container}>
+      <DashboardTopBar
+        onPressHamburger={onPressHamburger}
+        onPressSettings={onPressSettings}
+      />
+      <DashboardFilterHeader
+        selectedPreset={selectedPreset}
+        onSelectPreset={onSelectPreset}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingBottom: 4,
   },
-  topBar: {
+  topBarPinned: {
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    zIndex: 20,
+    elevation: 4,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: '#F8FAFD',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#FF6E00',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   centerBrand: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#F2F2FA',
-    letterSpacing: 1.5,
-  },
-  brandPlus: {
-    color: '#E8552D',
-    fontWeight: '800',
+  headingRow: {
+    marginBottom: 12,
   },
   pageHeading: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
-    color: '#F2F2FA',
-    marginBottom: 16,
-    letterSpacing: -0.3,
+    color: '#0E204E',
+    letterSpacing: -0.5,
+  },
+  pageHeadingAccent: {
+    color: '#FF6E00',
   },
   pillsRow: {
     flexDirection: 'row',
@@ -132,30 +207,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pillButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pillButtonActive: {
-    backgroundColor: '#1E2548',
+    backgroundColor: '#0A2558',
     borderWidth: 1,
-    borderColor: '#303B75',
+    borderColor: '#0A2558',
+    shadowColor: '#0A2558',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   pillButtonInactive: {
-    backgroundColor: '#131627',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#1F253E',
+    borderColor: '#DFE7F2',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   pillText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   pillTextActive: {
-    color: '#8B98F8',
+    color: '#FFFFFF',
   },
   pillTextInactive: {
-    color: '#8E95B3',
+    color: '#5A6B87',
   },
 });

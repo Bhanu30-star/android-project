@@ -379,7 +379,9 @@ export default function LoginScreen() {
                       onBlur={onBlur}
                       autoCapitalize="none"
                       returnKeyType="done"
-                      onSubmitEditing={handleForgotSubmit(onForgotPassword)}
+                      onSubmitEditing={() => {
+                        void handleForgotSubmit(onForgotPassword)();
+                      }}
                       error={forgotErrors.user?.message}
                     />
                   )}
@@ -554,7 +556,9 @@ export default function LoginScreen() {
                               autoCapitalize="none"
                               autoCorrect={false}
                               returnKeyType="done"
-                              onSubmitEditing={handleOtpRequestSubmit(onRequestOtp)}
+                              onSubmitEditing={() => {
+                                void handleOtpRequestSubmit(onRequestOtp)();
+                              }}
                               error={otpErrors.contact?.message}
                             />
                           )}

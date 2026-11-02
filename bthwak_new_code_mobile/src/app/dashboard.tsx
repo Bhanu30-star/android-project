@@ -12,6 +12,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/context/AppContext';
 import {
@@ -27,7 +28,12 @@ import {
 } from '@/api/dashboard';
 
 // Screen Header & Navigation
-import { ScreenHeader } from '@/components/dashboard/ScreenHeader';
+import {
+  DashboardTopBar,
+  DashboardFilterHeader,
+  ScreenHeader,
+} from '@/components/dashboard/ScreenHeader';
+import { HomeBackgroundDecorations } from '@/components/dashboard/HomeBackgroundDecorations';
 import { AppTabBar } from '@/components/navigation/AppTabBar';
 import { AppDrawer } from '@/components/navigation/AppDrawer';
 import { SkeletonLoader } from '@/components/dashboard/SkeletonLoader';
@@ -259,91 +265,102 @@ export default function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-      edges={['top', 'left', 'right']}
-      {...edgePanResponder.panHandlers}
-    >
-      {/* 1. DASHBOARD INSIGHTS SCREEN */}
-      {activeTab === 'dashboard' && (
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContainer,
-            { paddingBottom: 90 + Math.max(insets.bottom, 10) },
-          ]}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              colors={['#6C7CFF']}
-              tintColor="#6C7CFF"
+    <View style={styles.rootWrapper}>
+      <HomeBackgroundDecorations />
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={['top', 'left', 'right']}
+        {...edgePanResponder.panHandlers}
+      >
+        {/* 1. DASHBOARD INSIGHTS SCREEN */}
+        {activeTab === 'dashboard' && (
+          <View style={styles.dashboardView}>
+            {/* PINNED STICKY TOP APP BAR (Content scrolls under this bar) */}
+            <DashboardTopBar
+              onPressHamburger={() => setShowDrawer(true)}
+              onPressSettings={() => setActiveTab('settings')}
             />
-          }
-        >
-          {/* TOP APP BAR & HEADING & PILLS */}
-          <ScreenHeader
-            onPressHamburger={() => setShowDrawer(true)}
-            onPressSettings={() => setActiveTab('settings')}
-            selectedPreset={selectedPreset}
-            onSelectPreset={handleSelectPreset}
-          />
 
-          {apiError && (
-            <View style={styles.errorBanner}>
-              <Feather name="alert-circle" size={16} color="#FF5C6C" />
-              <Text style={styles.errorText} numberOfLines={2}>
-                {apiError}
-              </Text>
-              <TouchableOpacity
-                onPress={() => loadDashboard(activeRange)}
-                style={styles.retryBtn}
-              >
-                <Text style={styles.retryText}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            {/* SCROLLABLE HOME CONTENT */}
+            <ScrollView
+              style={styles.dashboardScrollView}
+              contentContainerStyle={[
+                styles.scrollContainer,
+                { paddingBottom: 90 + Math.max(insets.bottom, 10) },
+              ]}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  colors={['#0047AB', '#FF6E00']}
+                  tintColor="#0047AB"
+                />
+              }
+            >
+              {/* BUSINESS INSIGHTS HEADING & PERIOD FILTER PILLS */}
+              <DashboardFilterHeader
+                selectedPreset={selectedPreset}
+                onSelectPreset={handleSelectPreset}
+              />
 
-          {isLoading && !dashboardData ? (
-            <SkeletonLoader />
-          ) : (
-            <View style={styles.contentPadding}>
-              {/* TWO BIG HERO CARDS: SALES & PURCHASES */}
-              <View style={styles.heroRow}>
-                {/* Sales Card */}
+            {apiError && (
+              <View style={styles.errorBanner}>
+                <Feather name="alert-circle" size={16} color="#DC2626" />
+                <Text style={styles.errorText} numberOfLines={2}>
+                  {apiError}
+                </Text>
                 <TouchableOpacity
-                  style={styles.heroCard}
-                  onPress={handleOpenSaleDetail}
-                  activeOpacity={0.85}
+                  onPress={() => loadDashboard(activeRange)}
+                  style={styles.retryBtn}
                 >
-                  <View style={styles.heroHeaderRow}>
-                    <View style={styles.greenCircleBadge}>
-                      <Feather name="trending-up" size={14} color="#10B981" />
-                    </View>
-                    <Text style={styles.heroCardLabel}>Sales</Text>
-                  </View>
-                  <Text style={styles.heroCardValue} numberOfLines={1}>
-                    {formatMetric(dashboardData?.totalSale ?? 288000, true)}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Purchases Card */}
-                <TouchableOpacity
-                  style={styles.heroCard}
-                  onPress={handleOpenPurchaseDetail}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.heroHeaderRow}>
-                    <View style={styles.orangeCircleBadge}>
-                      <Feather name="shopping-cart" size={14} color="#F59E0B" />
-                    </View>
-                    <Text style={styles.heroCardLabel}>Purchases</Text>
-                  </View>
-                  <Text style={styles.heroCardValue} numberOfLines={1}>
-                    {formatMetric(dashboardData?.totalPurchase ?? 451000, true)}
-                  </Text>
+                  <Text style={styles.retryText}>Retry</Text>
                 </TouchableOpacity>
               </View>
+            )}
+
+            {isLoading && !dashboardData ? (
+              <SkeletonLoader />
+            ) : (
+              <View style={styles.contentPadding}>
+                {/* TWO BIG HERO CARDS: SALES & PURCHASES (Harmonized Light Theme) */}
+                <View style={styles.heroRow}>
+                  {/* Sales Card */}
+                  <TouchableOpacity
+                    style={styles.heroCard}
+                    onPress={handleOpenSaleDetail}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.heroHeaderRow}>
+                      <View style={styles.salesIconBadge}>
+                        <Feather name="trending-up" size={15} color="#0047AB" />
+                      </View>
+                      <Text style={styles.heroCardLabel}>Sales</Text>
+                    </View>
+                    <Text style={styles.heroCardSalesValue} numberOfLines={1}>
+                      {formatMetric(dashboardData?.totalSale ?? 288000, true)}
+                    </Text>
+                    <View style={styles.salesAccentIndicator} />
+                  </TouchableOpacity>
+
+                  {/* Purchases Card */}
+                  <TouchableOpacity
+                    style={styles.heroCard}
+                    onPress={handleOpenPurchaseDetail}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.heroHeaderRow}>
+                      <View style={styles.purchasesIconBadge}>
+                        <Feather name="shopping-cart" size={15} color="#FF6E00" />
+                      </View>
+                      <Text style={styles.heroCardLabel}>Purchases</Text>
+                    </View>
+                    <Text style={styles.heroCardPurchasesValue} numberOfLines={1}>
+                      {formatMetric(dashboardData?.totalPurchase ?? 451000, true)}
+                    </Text>
+                    <View style={styles.purchasesAccentIndicator} />
+                  </TouchableOpacity>
+                </View>
 
               {/* SECTION: COLLECTIONS */}
               <Text style={styles.sectionTitle}>Collections</Text>
@@ -355,8 +372,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#132644' }]}>
-                      <Ionicons name="cash-outline" size={18} color="#3B82F6" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#EFF6FF' }]}>
+                      <Ionicons name="cash-outline" size={18} color="#0047AB" />
                     </View>
                     <Text style={styles.insightLabel}>Cash{'\n'}Collected</Text>
                   </View>
@@ -372,8 +389,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#1C2050' }]}>
-                      <MaterialCommunityIcons name="bank-outline" size={18} color="#6366F1" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#EEF2FF' }]}>
+                      <MaterialCommunityIcons name="bank-outline" size={18} color="#4F46E5" />
                     </View>
                     <Text style={styles.insightLabel}>Bank{'\n'}Collected</Text>
                   </View>
@@ -389,8 +406,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#2A1748' }]}>
-                      <Ionicons name="wallet-outline" size={18} color="#A855F7" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#FFF2E5' }]}>
+                      <Ionicons name="wallet-outline" size={18} color="#FF6E00" />
                     </View>
                     <Text style={styles.insightLabel}>To Collect</Text>
                   </View>
@@ -406,8 +423,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#38151D' }]}>
-                      <MaterialCommunityIcons name="currency-inr" size={18} color="#EF4444" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#FEF2F2' }]}>
+                      <MaterialCommunityIcons name="currency-inr" size={18} color="#DC2626" />
                     </View>
                     <Text style={styles.insightLabel}>To Pay</Text>
                   </View>
@@ -427,8 +444,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E2D2C' }]}>
-                      <Ionicons name="receipt-outline" size={18} color="#14B8A6" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#E6F7F5' }]}>
+                      <Ionicons name="receipt-outline" size={18} color="#0D9488" />
                     </View>
                     <Text style={styles.insightLabel}>Total Invoice</Text>
                   </View>
@@ -444,8 +461,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#332414' }]}>
-                      <Feather name="file-text" size={18} color="#F59E0B" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#FFF8E6' }]}>
+                      <Feather name="file-text" size={18} color="#D97706" />
                     </View>
                     <Text style={styles.insightLabel}>Credit{'\n'}Invoices</Text>
                   </View>
@@ -461,8 +478,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E2D2C' }]}>
-                      <Feather name="check-square" size={18} color="#14B8A6" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#E0F2FE' }]}>
+                      <Feather name="check-square" size={18} color="#0284C7" />
                     </View>
                     <Text style={styles.insightLabel}>DSR Approval</Text>
                   </View>
@@ -478,8 +495,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#341C14' }]}>
-                      <Feather name="inbox" size={18} color="#F97316" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#FFEDD5' }]}>
+                      <Feather name="inbox" size={18} color="#EA580C" />
                     </View>
                     <Text style={styles.insightLabel}>Pending{'\n'}Stock</Text>
                   </View>
@@ -495,8 +512,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#0E3024' }]}>
-                      <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#DCFCE7' }]}>
+                      <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
                     </View>
                     <Text style={styles.insightLabel}>Stock{'\n'}Approved</Text>
                   </View>
@@ -512,8 +529,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#231744' }]}>
-                      <Ionicons name="people" size={18} color="#8B5CF6" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#EFF6FF' }]}>
+                      <Ionicons name="people" size={18} color="#0047AB" />
                     </View>
                     <Text style={styles.insightLabel}>FSE</Text>
                   </View>
@@ -529,8 +546,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#132644' }]}>
-                      <Ionicons name="briefcase" size={18} color="#3B82F6" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#E0F2FE' }]}>
+                      <Ionicons name="briefcase" size={18} color="#0284C7" />
                     </View>
                     <Text style={styles.insightLabel}>Submitted{'\n'}DSR</Text>
                   </View>
@@ -547,13 +564,13 @@ export default function DashboardScreen() {
                       title: 'Total Expenses',
                       subtitle: 'Operational and petty cash payments',
                       iconName: 'trending-down',
-                      iconColor: '#EF4444',
-                      iconBg: '#38151D',
+                      iconColor: '#DC2626',
+                      iconBg: '#FEF2F2',
                       items: [
                         {
                           label: 'Total Expenses',
                           value: dashboardData?.expenseAmt ?? 12,
-                          highlightColor: '#EF4444',
+                          highlightColor: '#DC2626',
                         },
                       ],
                     });
@@ -561,8 +578,8 @@ export default function DashboardScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
-                    <View style={[styles.insightIconBadge, { backgroundColor: '#38151D' }]}>
-                      <MaterialCommunityIcons name="currency-inr" size={18} color="#EF4444" />
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#FEF2F2' }]}>
+                      <MaterialCommunityIcons name="currency-inr" size={18} color="#DC2626" />
                     </View>
                     <Text style={styles.insightLabel}>Total{'\n'}Expenses</Text>
                   </View>
@@ -574,7 +591,8 @@ export default function DashboardScreen() {
             </View>
           )}
         </ScrollView>
-      )}
+      </View>
+    )}
 
       {/* 2. SALES TAB */}
       {activeTab === 'sales' && (
@@ -591,6 +609,8 @@ export default function DashboardScreen() {
         <PartiesView
           data={dashboardData}
           onAddParty={() => setShowAddPartySheet(true)}
+          onOpenDrawer={() => setShowDrawer(true)}
+          onOpenSettings={() => setActiveTab('settings')}
         />
       )}
 
@@ -674,13 +694,24 @@ export default function DashboardScreen() {
         onClose={() => setShowQrScanner(false)}
       />
     </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  rootWrapper: {
+    flex: 1,
+    backgroundColor: '#F4F8FD',
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F101E',
+    backgroundColor: 'transparent',
+  },
+  dashboardView: {
+    flex: 1,
+  },
+  dashboardScrollView: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -692,10 +723,10 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#26131D',
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#5C1D24',
-    borderRadius: 12,
+    borderColor: '#FCA5A5',
+    borderRadius: 14,
     padding: 12,
     marginHorizontal: 16,
     marginBottom: 16,
@@ -704,18 +735,19 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 13,
-    color: '#FF5C6C',
+    color: '#DC2626',
+    fontWeight: '500',
   },
   retryBtn: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 6,
-    backgroundColor: '#3E1922',
+    backgroundColor: '#FEE2E2',
   },
   retryText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FF5C6C',
+    color: '#DC2626',
   },
   heroRow: {
     flexDirection: 'row',
@@ -724,51 +756,79 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     flex: 1,
-    backgroundColor: '#313774',
-    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     padding: 16,
-    minHeight: 110,
+    minHeight: 114,
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   heroHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  greenCircleBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#0E332A',
+  salesIconBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#E8F1FC',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  orangeCircleBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#352512',
+  purchasesIconBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFF2E5',
     justifyContent: 'center',
     alignItems: 'center',
   },
   heroCardLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#CFD3F7',
+    color: '#5A6B87',
   },
-  heroCardValue: {
+  heroCardSalesValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0047AB',
     letterSpacing: -0.3,
     marginTop: 8,
   },
-  sectionTitle: {
-    fontSize: 20,
+  heroCardPurchasesValue: {
+    fontSize: 24,
     fontWeight: '800',
-    color: '#F2F2FA',
-    marginBottom: 14,
+    color: '#0E204E',
     letterSpacing: -0.3,
+    marginTop: 8,
+  },
+  salesAccentIndicator: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#0047AB',
+    width: 36,
+    marginTop: 8,
+  },
+  purchasesAccentIndicator: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#FF6E00',
+    width: 36,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0E204E',
+    marginBottom: 14,
+    letterSpacing: -0.2,
   },
   grid2x2: {
     flexDirection: 'row',
@@ -778,13 +838,18 @@ const styles = StyleSheet.create({
   },
   insightCard: {
     width: '48%',
-    backgroundColor: '#161D32',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#1E2744',
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 104,
+    borderColor: '#DFE7F2',
+    borderRadius: 18,
+    padding: 14,
+    minHeight: 106,
     justifyContent: 'space-between',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   insightTopRow: {
     flexDirection: 'row',
@@ -799,17 +864,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   insightLabel: {
-    fontSize: 13,
-    color: '#9AA0BF',
-    fontWeight: '500',
-    lineHeight: 17,
+    fontSize: 12,
+    color: '#5A6B87',
+    fontWeight: '600',
+    lineHeight: 16,
     flex: 1,
   },
   insightValue: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F2F2FA',
-    letterSpacing: -0.2,
+    color: '#0E204E',
+    letterSpacing: -0.3,
     marginTop: 6,
   },
   chatPlaceholder: {
@@ -821,26 +886,31 @@ const styles = StyleSheet.create({
   chatTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#F2F2FA',
+    color: '#0E204E',
     marginTop: 16,
     marginBottom: 8,
   },
   chatSubtitle: {
     fontSize: 14,
-    color: '#9AA0BF',
+    color: '#5A6B87',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
   },
   backHomeBtn: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingVertical: 12,
     borderRadius: 9999,
-    backgroundColor: '#2A3D6E',
+    backgroundColor: '#0047AB',
+    shadowColor: '#FF6E00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   backHomeText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F2F2FA',
+    color: '#FFFFFF',
   },
 });

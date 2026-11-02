@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Theme } from '@/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { BthawkLogo } from '@/components/BthawkLogo';
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
@@ -29,11 +30,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <View style={styles.container}>
       {/* BRAND BAR */}
       <View style={styles.topBar}>
-        <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <BthawkLogo size={36} showText={true} textSize={18} />
 
         <View style={styles.actionsGroup}>
           <TouchableOpacity

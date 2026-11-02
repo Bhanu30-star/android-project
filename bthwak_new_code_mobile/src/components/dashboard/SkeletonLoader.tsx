@@ -1,25 +1,22 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Colors, Shapes, Shadows } from '@/theme';
 
 export const SkeletonLoader: React.FC = () => {
   return (
     <View style={styles.container}>
-      {/* 1. Hero Card Skeleton */}
-      <View style={styles.heroSkeleton}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroLabelPlaceholder} />
-          <View style={styles.heroPillPlaceholder} />
+      {/* 1. Hero Cards Skeleton */}
+      <View style={styles.heroRow}>
+        <View style={styles.heroSkeletonCard}>
+          <View style={styles.heroBadgePlaceholder} />
+          <View style={styles.heroValuePlaceholder} />
         </View>
-        <View style={styles.heroAmountPlaceholder} />
-        <View style={styles.heroDivider} />
-        <View style={styles.heroBottomRow}>
-          <View style={styles.heroColPlaceholder} />
-          <View style={styles.heroColPlaceholder} />
+        <View style={styles.heroSkeletonCard}>
+          <View style={styles.heroBadgePlaceholder} />
+          <View style={styles.heroValuePlaceholder} />
         </View>
       </View>
 
-      {/* 2. Overview 2x2 Grid Skeleton */}
+      {/* 2. Grid Skeleton */}
       <View style={styles.gridRow}>
         <View style={styles.cardSkeleton}>
           <View style={styles.chipPlaceholder} />
@@ -43,14 +40,6 @@ export const SkeletonLoader: React.FC = () => {
           <View style={styles.statLabelPlaceholder} />
           <View style={styles.statValPlaceholder} />
         </View>
-      </View>
-
-      {/* 3. Invoices & Payments Skeleton */}
-      <View style={styles.listCardSkeleton}>
-        <View style={styles.listHeaderPlaceholder} />
-        <View style={styles.listLinePlaceholder} />
-        <View style={styles.listLinePlaceholder} />
-        <View style={styles.listLinePlaceholder} />
       </View>
     </View>
   );
@@ -58,104 +47,66 @@ export const SkeletonLoader: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    gap: Shapes.verticalGap,
-    paddingVertical: 4,
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  heroSkeleton: {
-    backgroundColor: '#352E7E',
-    borderRadius: Shapes.heroRadius,
-    padding: Shapes.heroPadding,
-    minHeight: 180,
-    ...Shadows.hero,
-  },
-  heroTopRow: {
+  heroRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    gap: 12,
   },
-  heroLabelPlaceholder: {
+  heroSkeletonCard: {
+    flex: 1,
+    height: 110,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  heroBadgePlaceholder: {
+    width: 60,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E8F1FC',
+  },
+  heroValuePlaceholder: {
     width: 100,
-    height: 14,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  heroPillPlaceholder: {
-    width: 90,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  heroAmountPlaceholder: {
-    width: 180,
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginBottom: 20,
-  },
-  heroDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginBottom: 16,
-  },
-  heroBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  heroColPlaceholder: {
-    width: 110,
     height: 28,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
   },
   gridRow: {
     flexDirection: 'row',
-    gap: Shapes.gridGap,
+    gap: 12,
   },
   cardSkeleton: {
     flex: 1,
-    backgroundColor: Colors.card,
-    borderRadius: Shapes.cardRadius,
-    padding: Shapes.cardPadding,
-    minHeight: 110,
-    ...Shadows.card,
+    height: 104,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    padding: 16,
+    justifyContent: 'space-between',
   },
   chipPlaceholder: {
-    width: Shapes.iconChipSize,
-    height: Shapes.iconChipSize,
-    borderRadius: Shapes.iconChipRadius,
-    backgroundColor: '#ECEBFA',
-    marginBottom: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#E8F1FC',
   },
   statLabelPlaceholder: {
     width: 70,
     height: 12,
-    borderRadius: 4,
-    backgroundColor: '#ECEBFA',
-    marginBottom: 6,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
   },
   statValPlaceholder: {
-    width: 90,
+    width: 60,
     height: 22,
     borderRadius: 6,
-    backgroundColor: '#E3E1F7',
-  },
-  listCardSkeleton: {
-    backgroundColor: Colors.card,
-    borderRadius: Shapes.cardRadius,
-    padding: Shapes.cardPadding,
-    gap: 16,
-    ...Shadows.card,
-  },
-  listHeaderPlaceholder: {
-    width: 140,
-    height: 18,
-    borderRadius: 6,
-    backgroundColor: '#ECEBFA',
-  },
-  listLinePlaceholder: {
-    width: '100%',
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: '#F5F4FF',
+    backgroundColor: '#E2E8F0',
   },
 });

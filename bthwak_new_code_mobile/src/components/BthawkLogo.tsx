@@ -15,12 +15,14 @@ export interface BthawkLogoProps {
   size?: number;
   showText?: boolean;
   textSize?: number;
+  textColor?: string;
 }
 
 export const BthawkLogo: React.FC<BthawkLogoProps> = ({
   size = 56,
   showText = false,
   textSize = 20,
+  textColor = '#0E204E',
 }) => {
   return (
     <View style={styles.container}>
@@ -110,7 +112,7 @@ export const BthawkLogo: React.FC<BthawkLogoProps> = ({
 
       {showText && (
         <View style={styles.textContainer}>
-          <Text style={[styles.brandText, { fontSize: textSize }]}>
+          <Text style={[styles.brandText, { fontSize: textSize, color: textColor }]}>
             BTHAWK<Text style={styles.brandAccent}>+</Text>
           </Text>
         </View>

@@ -10,6 +10,7 @@ import {
   PanResponder,
   BackHandler,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -137,10 +138,73 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       router.push('/profile');
     } else if (route === '/generate-invoice') {
       router.push('/generate-invoice');
+    } else if (
+      route === '/purchase/credit_list' ||
+      route === '/purchase/credit-list' ||
+      route === '/purchase-credit'
+    ) {
+      router.push('/purchase-credit');
+    } else if (
+      route === '/purchase/add_stock' ||
+      route === '/purchase/add-stock' ||
+      route === '/add-stock'
+    ) {
+      router.push('/purchase/add_stock' as any);
+    } else if (route === '/purchase/generate_debit_note' || route === '/generate-debit-note') {
+      router.push('/purchase/generate_debit_note' as any);
+    } else if (
+      route === '/master/customer' ||
+      route === '/master/sales_executive' ||
+      route === '/master/sales-executive' ||
+      route === '/sales-executive'
+    ) {
+      router.push('/master/sales-executive' as any);
+    } else if (
+      route === '/master/buyer_seller' ||
+      route === '/master/buyer-seller' ||
+      route === '/buyer-seller'
+    ) {
+      router.push('/master/buyer-seller' as any);
+    } else if (
+      route === '/master/beat' ||
+      route === '/master/beat-management' ||
+      route === '/beat'
+    ) {
+      router.push('/master/beat' as any);
+    } else if (
+      route === '/master/bulkretailer' ||
+      route === '/master/bulk-retailer' ||
+      route === '/bulkretailer'
+    ) {
+      router.push('/master/bulkretailer' as any);
+    } else if (
+      route === '/generate-receipt' ||
+      route === '/sale/generate-receipt' ||
+      route === '/sale-generate-receipt' ||
+      route === '/sale/generate_receipt'
+    ) {
+      router.push('/generate-receipt' as any);
+    } else if (
+      route === '/sale_return' ||
+      route === '/sale-return' ||
+      route === '/sale/return'
+    ) {
+      router.push('/sale-return' as any);
+    } else if (
+      route === '/master/Creditnote' ||
+      route === '/master/credit-note' ||
+      route === '/credit-note-detail' ||
+      route === '/credit-note'
+    ) {
+      router.push('/master/Creditnote' as any);
+    } else if (route === '/product/waste_damage' || route === '/waste-damage') {
+      router.push('/product/waste_damage' as any);
+    } else if (route === '/product/add' || route === '/product-master' || route.startsWith('/product')) {
+      router.push('/product-master');
     } else if (route === '/dashboard') {
       onNavigateTab?.('dashboard');
     } else if (route === '/invoice' || route.startsWith('/invoice')) {
-      onNavigateTab?.('sales');
+      router.push('/invoice' as any);
     } else if (route.startsWith('/purchase') || route.startsWith('/master')) {
       onNavigateTab?.('parties');
     } else if (
@@ -159,6 +223,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       visible={visible}
       transparent
       animationType="none"
+      statusBarTranslucent={true}
       onRequestClose={onClose}
     >
       <View style={styles.modalRoot}>
@@ -172,7 +237,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
             styles.drawer,
             {
               width: drawerWidth,
-              paddingTop: Math.max(insets.top, 12),
+              paddingTop: Platform.OS === 'ios' ? insets.top : Math.max(insets.top, 8),
               transform: [{ translateX: slideAnim }],
             },
           ]}
@@ -250,14 +315,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(10, 37, 88, 0.45)',
   },
   drawer: {
-    backgroundColor: '#121829',
+    backgroundColor: '#FFFFFF',
     height: '100%',
-    shadowColor: '#000000',
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
+    borderRightWidth: 1,
+    borderRightColor: '#DFE7F2',
+    shadowColor: '#0047AB',
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
     shadowOffset: { width: 4, height: 0 },
     elevation: 16,
   },

@@ -71,7 +71,7 @@ export const MenuGroup: React.FC<MenuGroupProps> = ({
           <Feather
             name={icon}
             size={18}
-            color={isExpanded ? '#FFFFFF' : '#F2F2FA'}
+            color={isExpanded ? '#FFFFFF' : '#0E204E'}
           />
           <Text style={[styles.headerLabel, isExpanded && styles.headerLabelExpanded]}>
             {label}
@@ -81,7 +81,7 @@ export const MenuGroup: React.FC<MenuGroupProps> = ({
         <Feather
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color={isExpanded ? '#FFFFFF' : '#8E95B3'}
+          color={isExpanded ? '#FFFFFF' : '#5A6B87'}
         />
       </TouchableOpacity>
 
@@ -103,7 +103,7 @@ export const MenuGroup: React.FC<MenuGroupProps> = ({
                 <Feather
                   name={subIcon}
                   size={16}
-                  color={isSubActive ? '#6C7CFF' : '#8E95B3'}
+                  color={isSubActive ? '#0047AB' : '#5A6B87'}
                   style={{ marginRight: 12 }}
                 />
                 <Text
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   headerRowExpanded: {
-    backgroundColor: '#5B35C2',
+    backgroundColor: '#0A2558',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   headerLabel: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#F2F2FA',
+    color: '#0E204E',
   },
   headerLabelExpanded: {
     color: '#FFFFFF',
@@ -167,15 +167,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   subItemRowActive: {
-    backgroundColor: '#1E2540',
+    backgroundColor: '#EFF6FF',
   },
   subItemLabel: {
     fontSize: 14,
-    color: '#8E95B3',
+    color: '#5A6B87',
     fontWeight: '500',
   },
   subItemLabelActive: {
-    color: '#6C7CFF',
+    color: '#0047AB',
     fontWeight: '600',
   },
 });

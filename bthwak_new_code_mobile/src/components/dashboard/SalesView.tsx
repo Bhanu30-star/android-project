@@ -14,6 +14,7 @@ import { DashboardData } from '@/api/dashboard';
 import { fetchInvoicesApi, InvoiceItem } from '@/api/invoices';
 import { formatReadable } from '@/utils/dateUtils';
 import { useApp } from '@/context/AppContext';
+import { useRouter } from 'expo-router';
 
 interface SalesViewProps {
   data: DashboardData | null;
@@ -28,6 +29,7 @@ export const SalesView: React.FC<SalesViewProps> = ({
   endDate,
   onNewInvoice,
 }) => {
+  const router = useRouter();
   const { formatAmount } = useApp();
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -146,7 +148,11 @@ export const SalesView: React.FC<SalesViewProps> = ({
           <Text style={styles.actionDesc}>Create delivery & dispatch note</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/sale-return' as any)}
+        >
           <View style={[styles.actionIcon, { backgroundColor: '#FEF3C7' }]}>
             <Feather name="rotate-ccw" size={20} color="#D97706" />
           </View>

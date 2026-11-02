@@ -29,15 +29,17 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => onTabChange('sales')}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityLabel="Sale tab"
         accessibilityRole="button"
       >
-        <Ionicons
-          name="receipt-outline"
-          size={20}
-          color={isSalesActive ? '#6C7CFF' : '#8E95B3'}
-        />
+        <View style={[styles.iconCapsule, isSalesActive && styles.iconCapsuleActive]}>
+          <Ionicons
+            name={isSalesActive ? 'receipt' : 'receipt-outline'}
+            size={20}
+            color={isSalesActive ? '#0047AB' : '#64748B'}
+          />
+        </View>
         <Text
           style={[
             styles.tabLabel,
@@ -46,21 +48,28 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
         >
           Sale
         </Text>
+        {isSalesActive ? (
+          <View style={styles.activeDot} />
+        ) : (
+          <View style={styles.dotPlaceholder} />
+        )}
       </TouchableOpacity>
 
       {/* 2. PURCHASE TAB */}
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => onTabChange('parties')}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityLabel="Purchase tab"
         accessibilityRole="button"
       >
-        <Feather
-          name="shopping-cart"
-          size={20}
-          color={isPurchaseActive ? '#6C7CFF' : '#8E95B3'}
-        />
+        <View style={[styles.iconCapsule, isPurchaseActive && styles.iconCapsuleActive]}>
+          <Feather
+            name="shopping-cart"
+            size={20}
+            color={isPurchaseActive ? '#0047AB' : '#64748B'}
+          />
+        </View>
         <Text
           style={[
             styles.tabLabel,
@@ -69,21 +78,31 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
         >
           Purchase
         </Text>
+        {isPurchaseActive ? (
+          <View style={styles.activeDot} />
+        ) : (
+          <View style={styles.dotPlaceholder} />
+        )}
       </TouchableOpacity>
 
-      {/* 3. HOME TAB (ACTIVE PURPLE PILL) */}
+      {/* 3. HOME TAB (FLAGSHIP CENTER TAB) */}
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => onTabChange('dashboard')}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityLabel="Home tab"
         accessibilityRole="button"
       >
-        <View style={[styles.homePillWrapper, isHomeActive && styles.homePillActive]}>
+        <View
+          style={[
+            styles.homeButtonWrapper,
+            isHomeActive ? styles.homeButtonActive : styles.homeButtonInactive,
+          ]}
+        >
           <Ionicons
-            name="home"
+            name={isHomeActive ? 'home' : 'home-outline'}
             size={20}
-            color={isHomeActive ? '#FFFFFF' : '#8E95B3'}
+            color={isHomeActive ? '#FFFFFF' : '#64748B'}
           />
         </View>
         <Text
@@ -94,21 +113,28 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
         >
           Home
         </Text>
+        {isHomeActive ? (
+          <View style={styles.activeDot} />
+        ) : (
+          <View style={styles.dotPlaceholder} />
+        )}
       </TouchableOpacity>
 
       {/* 4. REPORTS TAB */}
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => onTabChange('reports')}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityLabel="Reports tab"
         accessibilityRole="button"
       >
-        <Feather
-          name="alert-octagon"
-          size={20}
-          color={isReportsActive ? '#6C7CFF' : '#8E95B3'}
-        />
+        <View style={[styles.iconCapsule, isReportsActive && styles.iconCapsuleActive]}>
+          <Feather
+            name="bar-chart-2"
+            size={20}
+            color={isReportsActive ? '#0047AB' : '#64748B'}
+          />
+        </View>
         <Text
           style={[
             styles.tabLabel,
@@ -117,21 +143,28 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
         >
           Reports
         </Text>
+        {isReportsActive ? (
+          <View style={styles.activeDot} />
+        ) : (
+          <View style={styles.dotPlaceholder} />
+        )}
       </TouchableOpacity>
 
       {/* 5. CHAT TAB */}
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => onTabChange('chat')}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityLabel="Chat tab"
         accessibilityRole="button"
       >
-        <Feather
-          name="message-square"
-          size={20}
-          color={isChatActive ? '#6C7CFF' : '#8E95B3'}
-        />
+        <View style={[styles.iconCapsule, isChatActive && styles.iconCapsuleActive]}>
+          <Ionicons
+            name={isChatActive ? 'chatbubbles' : 'chatbubbles-outline'}
+            size={20}
+            color={isChatActive ? '#0047AB' : '#64748B'}
+          />
+        </View>
         <Text
           style={[
             styles.tabLabel,
@@ -140,6 +173,11 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
         >
           Chat
         </Text>
+        {isChatActive ? (
+          <View style={styles.activeDot} />
+        ) : (
+          <View style={styles.dotPlaceholder} />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -151,41 +189,79 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 68,
-    backgroundColor: '#111628',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     borderTopWidth: 1,
-    borderTopColor: '#1E2540',
+    borderTopColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
+    paddingTop: 8,
     paddingHorizontal: 8,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 12,
   },
   tabBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
+    paddingVertical: 2,
   },
-  homePillWrapper: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 16,
+  iconCapsule: {
+    width: 40,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  iconCapsuleActive: {
+    backgroundColor: '#E8F1FC',
+  },
+  homeButtonWrapper: {
+    width: 40,
+    height: 30,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  homePillActive: {
-    backgroundColor: '#5B35C2',
+  homeButtonActive: {
+    backgroundColor: '#0A2558',
+    shadowColor: '#0A2558',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  homeButtonInactive: {
+    backgroundColor: '#F1F5F9',
   },
   tabLabel: {
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 3,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: '#8B98F8',
+    color: '#0A2558',
     fontWeight: '700',
   },
   tabLabelInactive: {
-    color: '#8E95B3',
+    color: '#64748B',
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FF6E00',
+    marginTop: 3,
+  },
+  dotPlaceholder: {
+    width: 4,
+    height: 4,
+    marginTop: 3,
   },
 });

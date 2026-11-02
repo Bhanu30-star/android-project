@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Theme } from '@/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/context/AppContext';
+import { BthawkLogo } from '@/components/BthawkLogo';
 
 interface HeaderBarProps {
   onPressProfile: () => void;
@@ -24,11 +25,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     <View style={styles.container}>
       {/* LEFT: BRAND LOGO & FIRM NAME */}
       <View style={styles.leftGroup}>
-        <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <BthawkLogo size={32} showText={false} />
         <View style={styles.firmPill}>
           <View style={styles.liveDot} />
           <Text style={styles.firmText} numberOfLines={1}>

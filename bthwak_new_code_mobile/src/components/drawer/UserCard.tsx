@@ -65,24 +65,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E2540',
+    borderBottomColor: '#DFE7F2',
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#8B98F8',
+    backgroundColor: '#0047AB',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#100F1D',
+    color: '#FFFFFF',
   },
   infoWrapper: {
     flex: 1,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#F2F2FA',
+    color: '#0E204E',
     marginBottom: 4,
   },
   metaRow: {
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8E95B3',
+    color: '#5A6B87',
     fontWeight: '500',
   },
   settingsButton: {

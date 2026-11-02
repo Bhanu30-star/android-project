@@ -14,7 +14,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export const AuthBackgroundDecorations: React.FC = () => {
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* ============================================================== */}
       {/* 1. TOP-LEFT WAVE RIBBONS & TOP-RIGHT DOT MATRIX               */}
       {/* ============================================================== */}

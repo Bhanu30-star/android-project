@@ -10,27 +10,57 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Theme } from '@/theme';
 import { DashboardData } from '@/api/dashboard';
 import { fetchPartiesApi, PartyItem } from '@/api/parties';
 import { useApp } from '@/context/AppContext';
+import { PurchaseAddStockScreen } from '@/components/purchase/PurchaseAddStockScreen';
+import { PurchaseCreditScreen } from '@/components/purchase/PurchaseCreditScreen';
 
 interface PartiesViewProps {
   data: DashboardData | null;
   onAddParty: () => void;
+  onOpenDrawer?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const PartiesView: React.FC<PartiesViewProps> = ({
   data,
   onAddParty,
+  onOpenDrawer,
+  onOpenSettings,
 }) => {
+  const router = useRouter();
   const { formatAmount } = useApp();
+  const [subTab, setSubTab] = useState<'add_stock' | 'credit_list' | 'parties'>('add_stock');
   const [parties, setParties] = useState<PartyItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'All' | 'Buyer' | 'Seller'>('All');
+
+  // If subTab is 'add_stock', render the main Purchase Add Stock screen
+  if (subTab === 'add_stock') {
+    return (
+      <PurchaseAddStockScreen
+        onOpenDrawer={onOpenDrawer}
+        onOpenSettings={onOpenSettings}
+        onNavigateToCreditList={() => setSubTab('credit_list')}
+        onNavigateToParties={() => setSubTab('parties')}
+      />
+    );
+  }
+
+  // If subTab is 'credit_list', render the Party Credit Screen with adjustment and bill details
+  if (subTab === 'credit_list') {
+    return (
+      <PurchaseCreditScreen
+        onBack={() => setSubTab('add_stock')}
+      />
+    );
+  }
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -102,6 +132,32 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
         />
       }
     >
+      {/* TOP SUB-SEGMENT NAVIGATION */}
+      <View style={styles.subSegmentNavRow}>
+        <TouchableOpacity
+          style={styles.subSegmentNavBtn}
+          onPress={() => setSubTab('add_stock')}
+        >
+          <MaterialCommunityIcons name="cart-plus" size={15} color="#0047AB" />
+          <Text style={styles.subSegmentNavText}>Add Stock</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.subSegmentNavBtn}
+          onPress={() => setSubTab('credit_list')}
+        >
+          <MaterialCommunityIcons name="credit-card-clock-outline" size={15} color="#0047AB" />
+          <Text style={styles.subSegmentNavText}>Party Credit</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.subSegmentNavBtn, styles.subSegmentNavBtnActive]}
+        >
+          <Feather name="users" size={15} color="#FFFFFF" />
+          <Text style={styles.subSegmentNavTextActive}>Parties</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* HEADER */}
       <View style={styles.headerRow}>
         <View>
@@ -131,6 +187,26 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
           </Text>
         </View>
       </View>
+
+      {/* QUICK ACCESS: PARTY CREDIT LIST */}
+      <TouchableOpacity
+        style={styles.creditListBannerBtn}
+        onPress={() => router.push('/purchase-credit')}
+        activeOpacity={0.88}
+      >
+        <View style={styles.creditListBannerLeft}>
+          <View style={styles.creditListIconCircle}>
+            <MaterialCommunityIcons name="credit-card-clock-outline" size={20} color="#0047AB" />
+          </View>
+          <View>
+            <Text style={styles.creditListBannerTitle}>Party Credit List</Text>
+            <Text style={styles.creditListBannerSub}>
+              Supplier balances, payments & credit adjustments
+            </Text>
+          </View>
+        </View>
+        <Feather name="chevron-right" size={20} color="#0047AB" />
+      </TouchableOpacity>
 
       {/* SEARCH BAR */}
       <View style={styles.searchBar}>
@@ -547,5 +623,77 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '700',
+  },
+  creditListBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    marginBottom: 14,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  creditListBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  creditListIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#E8F1FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  creditListBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0A2558',
+  },
+  creditListBannerSub: {
+    fontSize: 11,
+    color: '#5A6B87',
+    marginTop: 2,
+  },
+  subSegmentNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 14,
+  },
+  subSegmentNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  subSegmentNavBtnActive: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
+  },
+  subSegmentNavText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0047AB',
+  },
+  subSegmentNavTextActive: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

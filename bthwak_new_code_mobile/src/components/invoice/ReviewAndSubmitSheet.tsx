@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   heroTotalCard: {
-    backgroundColor: '#2A2470',
+    backgroundColor: '#0A2558',
     borderRadius: 18,
     padding: 16,
     marginTop: 12,

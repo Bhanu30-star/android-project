@@ -26,7 +26,7 @@ export const MenuItem: React.FC<MenuItemProps> = ({
       <Feather
         name={icon}
         size={18}
-        color={isActive ? '#6C7CFF' : '#F2F2FA'}
+        color={isActive ? '#0047AB' : '#0E204E'}
       />
       <Text
         style={[
@@ -52,15 +52,15 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   rowActive: {
-    backgroundColor: '#1E2540',
+    backgroundColor: '#EFF6FF',
   },
   label: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#F2F2FA',
+    color: '#0E204E',
   },
   labelActive: {
-    color: '#6C7CFF',
-    fontWeight: '600',
+    color: '#0047AB',
+    fontWeight: '700',
   },
 });

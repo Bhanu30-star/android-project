@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { BthawkLogo } from '@/components/BthawkLogo';
 
 interface DrawerHeaderProps {
   onClose: () => void;
@@ -9,14 +10,9 @@ interface DrawerHeaderProps {
 export const DrawerHeader: React.FC<DrawerHeaderProps> = ({ onClose }) => {
   return (
     <View style={styles.header}>
-      {/* Brand Logo Tile (48x48 radius 15, showing shield emblem without text) */}
+      {/* Brand Logo Tile showing new emblem */}
       <View style={styles.logoTile}>
-        <Image
-          source={require('../../../assets/images/logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-          accessibilityLabel="BTHAWK Emblem"
-        />
+        <BthawkLogo size={36} showText={false} />
       </View>
 
       {/* 44px round close button */}
@@ -27,7 +23,7 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({ onClose }) => {
         accessibilityLabel="Close navigation drawer"
         accessibilityRole="button"
       >
-        <Feather name="x" size={20} color="#2A2470" />
+        <Feather name="x" size={20} color="#0E204E" />
       </TouchableOpacity>
     </View>
   );
@@ -46,16 +42,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 15,
-    backgroundColor: '#F1F0FF',
+    backgroundColor: '#F0F5FC',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
     overflow: 'hidden',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingLeft: 4,
-  },
-  logoImage: {
-    width: 150,
-    height: 38,
-    marginLeft: -4,
   },
   closeBtn: {
     width: 44,
