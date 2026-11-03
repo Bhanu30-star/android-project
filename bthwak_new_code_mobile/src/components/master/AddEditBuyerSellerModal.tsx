@@ -56,6 +56,7 @@ export const AddEditBuyerSellerModal: React.FC<AddEditBuyerSellerModalProps> = (
   const [outstandingType, setOutstandingType] = useState<'To Pay' | 'To Receive'>('To Receive');
   const [outstandingAmount, setOutstandingAmount] = useState('');
   const [selectedFosIds, setSelectedFosIds] = useState<number[]>([]);
+  const [pincode, setPincode] = useState('');
 
   // Remote data
   const [states, setStates] = useState<StateOption[]>([]);
@@ -147,6 +148,9 @@ export const AddEditBuyerSellerModal: React.FC<AddEditBuyerSellerModalProps> = (
           setAddress(addr);
           if (sameAsBilling) setShippingAddress(addr);
         }
+        if (data.pincode || data.pin_code) {
+          setPincode(String(data.pincode || data.pin_code));
+        }
         if (data.state_code || data.state) {
           const found = states.find(
             (s) =>
@@ -234,6 +238,7 @@ export const AddEditBuyerSellerModal: React.FC<AddEditBuyerSellerModalProps> = (
           opening_balance: parsedAmount,
           opening_balance_type: outstandingType,
           fos_ids: recordType === 'Seller' ? selectedFosIds : undefined,
+          pincode: pincode.trim(),
         });
         Alert.alert('Success', `${recordType} updated successfully!`);
       } else {
@@ -250,6 +255,7 @@ export const AddEditBuyerSellerModal: React.FC<AddEditBuyerSellerModalProps> = (
           opening_balance: parsedAmount,
           opening_balance_type: outstandingType,
           fos_ids: recordType === 'Seller' ? selectedFosIds : undefined,
+          pincode: pincode.trim(),
         });
         Alert.alert('Success', `${recordType} created successfully!`);
       }

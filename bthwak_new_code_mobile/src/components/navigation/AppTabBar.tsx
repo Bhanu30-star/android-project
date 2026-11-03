@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { AppTabType } from '@/context/AppContext';
 
 interface AppTabBarProps {
@@ -14,6 +15,7 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 10);
 
@@ -28,7 +30,9 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
       {/* 1. SALE TAB */}
       <TouchableOpacity
         style={styles.tabBtn}
-        onPress={() => onTabChange('sales')}
+        onPress={() => {
+          router.push('/generate-invoice' as any);
+        }}
         activeOpacity={0.75}
         accessibilityLabel="Sale tab"
         accessibilityRole="button"

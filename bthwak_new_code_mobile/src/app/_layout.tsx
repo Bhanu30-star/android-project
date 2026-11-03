@@ -61,10 +61,17 @@ function RootStack() {
         <Stack.Screen name="beat" />
         <Stack.Screen name="master/bulkretailer" />
         <Stack.Screen name="bulkretailer" />
+        <Stack.Screen name="sale" />
+        <Stack.Screen name="sale/index" />
         <Stack.Screen name="generate-receipt" />
         <Stack.Screen name="sale/generate-receipt" />
+        <Stack.Screen name="receipt-book" />
+        <Stack.Screen name="sale/receipt-book" />
         <Stack.Screen name="sale-return" />
         <Stack.Screen name="sale/return" />
+        <Stack.Screen name="sales-register" />
+        <Stack.Screen name="sale/sales-register" />
+        <Stack.Screen name="report-viewer" />
         <Stack.Screen name="credit-note-detail" />
         <Stack.Screen name="master/Creditnote" />
         <Stack.Screen name="master/credit-note" />
@@ -74,6 +81,8 @@ function RootStack() {
         <Stack.Screen name="purchase/add-stock" />
         <Stack.Screen name="add-stock" />
         <Stack.Screen name="purchase/credit_list" />
+        <Stack.Screen name="waste-damage" />
+        <Stack.Screen name="product/waste_damage" />
       </Stack>
     </>
   );

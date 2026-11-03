@@ -657,7 +657,7 @@ export default function GenerateInvoiceScreen() {
 
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => router.push('/dashboard' as any)}
+          onPress={() => router.push({ pathname: '/dashboard', params: { tab: 'dashboard' } } as any)}
           activeOpacity={0.8}
         >
           <Feather name="home" size={18} color="#5A6B87" />
@@ -666,16 +666,16 @@ export default function GenerateInvoiceScreen() {
 
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => router.push('/dashboard' as any)}
+          onPress={() => router.push({ pathname: '/dashboard', params: { tab: 'reports' } } as any)}
           activeOpacity={0.8}
         >
-          <Feather name="alert-circle" size={18} color="#5A6B87" />
+          <Feather name="bar-chart-2" size={18} color="#5A6B87" />
           <Text style={styles.tabLabel}>Reports</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => router.push('/dashboard' as any)}
+          onPress={() => router.push({ pathname: '/dashboard', params: { tab: 'chat' } } as any)}
           activeOpacity={0.8}
         >
           <Feather name="message-square" size={18} color="#5A6B87" />

@@ -185,6 +185,12 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
     ) {
       router.push('/generate-receipt' as any);
     } else if (
+      route === '/receipt-book' ||
+      route === '/sale/receipt-book' ||
+      route === '/receipt_book'
+    ) {
+      router.push('/receipt-book' as any);
+    } else if (
       route === '/sale_return' ||
       route === '/sale-return' ||
       route === '/sale/return'

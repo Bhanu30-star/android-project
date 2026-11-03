@@ -10,7 +10,7 @@ import {
   PanResponder,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/hooks/useAuth';
@@ -69,9 +69,16 @@ const formatMetric = (val: number | string | undefined | null, isCurrency = fals
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string }>();
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { activeTab, setActiveTab } = useApp();
+
+  useEffect(() => {
+    if (params.tab) {
+      setActiveTab(params.tab as any);
+    }
+  }, [params.tab, setActiveTab]);
 
   // Time Filter State - Default to 'FTD' (Today) as in screenshot
   const [selectedPreset, setSelectedPreset] = useState<PresetKey>('FTD');
@@ -624,6 +631,8 @@ export default function DashboardScreen() {
             else if (reportName === 'ExpenseMaster') handleOpenPurchaseDetail();
             else handleOpenSaleDetail();
           }}
+          onOpenDrawer={() => setShowDrawer(true)}
+          onOpenSettings={() => setActiveTab('settings')}
         />
       )}
 
@@ -655,7 +664,13 @@ export default function DashboardScreen() {
       {/* BOTTOM TAB BAR */}
       <AppTabBar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          if (tab === 'sales') {
+            router.push('/generate-invoice');
+            return;
+          }
+          setActiveTab(tab);
+        }}
       />
 
       {/* APP DRAWER (MATCHES SCREENSHOT 3 & 4) */}

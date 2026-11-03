@@ -35,12 +35,14 @@ export interface AddBuyerSellerPayload {
   email?: string;
   gst_number?: string;
   state: string; // Place of supply
+  state_code?: string;
   address: string;
   shipping_address?: string;
   party_type?: 'Retailer' | 'Dealer';
   opening_balance?: number;
   opening_balance_type?: 'To Pay' | 'To Receive';
   fos_ids?: number[];
+  pincode?: string;
 }
 
 export interface EditBuyerSellerPayload extends AddBuyerSellerPayload {
@@ -129,38 +131,106 @@ export async function fetchAllFosApi(): Promise<Array<{ userId: number; userName
 }
 
 /**
+ * Extract 2-digit Indian State code
+ */
+export function extractStateCode(stateStr?: string, gstStr?: string): string {
+  if (gstStr && gstStr.trim().length >= 2) {
+    const code = gstStr.trim().slice(0, 2);
+    if (/^\d{2}$/.test(code)) return code;
+  }
+  if (stateStr) {
+    const match = stateStr.match(/^(\d{2})/);
+    if (match) return match[1];
+  }
+  return '08'; // Default Rajasthan '08'
+}
+
+/**
  * Add Buyer or Seller
  */
 export async function addBuyerSellerApi(payload: AddBuyerSellerPayload): Promise<{ message: string }> {
   try {
+    const stateCode = extractStateCode(payload.state, payload.gst_number);
+    const rawGst = (payload.gst_number || '').trim().toUpperCase();
+    const isGstValid = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][A-Z][0-9A-Z]$/.test(rawGst);
+    const validGst = isGstValid ? rawGst : '';
+
+    const panCandidate = isGstValid ? rawGst.slice(2, 12) : '';
+    const isPanValid = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panCandidate);
+    const validPan = isPanValid ? panCandidate : '';
+
+    const rawPhone = (payload.phone_number || '').trim();
+    const isPhoneValid = /^[6-9]\d{9}$/.test(rawPhone);
+    const validPhone = isPhoneValid ? rawPhone : (rawPhone ? rawPhone : '');
+
+    const rawEmail = (payload.email || '').trim();
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail);
+    const validEmail = isEmailValid ? rawEmail : '';
+
+    const openingBalance = Number(payload.opening_balance || 0);
+
     if (payload.record_type === 'Buyer') {
-      const res = await apiClient.post('master/add_buyer', {
-        currancy: 'INR',
+      const buyerBody = {
         name: payload.name.trim(),
-        phone_number: payload.phone_number.trim(),
-        email: payload.email?.trim() || '',
-        gst_number: payload.gst_number?.trim() || '',
-        state: payload.state || '',
+        currancy: 'INR',
+        phone: isPhoneValid ? rawPhone : '',
+        email: validEmail,
+        gst_no: validGst,
+        placesupply: payload.state || '08 - Rajasthan',
         address: payload.address?.trim() || '',
-        shipping_address: payload.shipping_address?.trim() || payload.address?.trim() || '',
-        opening_balance: payload.opening_balance || 0,
-        opening_balance_type: payload.opening_balance_type || 'To Receive',
-      });
+        party_outstanding: openingBalance,
+        outstanding_type: payload.opening_balance_type || 'To Receive',
+        tradename: '',
+        pincode: payload.pincode?.trim() || '',
+        legalname: '',
+        location: '',
+        api_error: '',
+        state_code: stateCode,
+        dln_no: '',
+        bankstatement_name: '',
+      };
+      const res = await apiClient.post('master/add_buyer', buyerBody);
       return res.data;
     } else {
-      const res = await apiClient.post('master/add_seller', {
-        name: payload.name.trim(),
-        phone_number: payload.phone_number.trim(),
-        email: payload.email?.trim() || '',
-        gst_number: payload.gst_number?.trim() || '',
-        state: payload.state || '',
-        address: payload.address?.trim() || '',
-        shipping_address: payload.shipping_address?.trim() || payload.address?.trim() || '',
-        party_type: payload.party_type || 'Retailer',
-        opening_balance: payload.opening_balance || 0,
-        opening_balance_type: payload.opening_balance_type || 'To Pay',
-        fos_ids: payload.fos_ids || [],
-      });
+      // Seller expects AddSellerPartyDto with pname (NOT name), partytype, pphone, etc.
+      const ptyuser = Array.isArray(payload.fos_ids) ? payload.fos_ids.map(Number) : [];
+      const sellerBody = {
+        pname: payload.name.trim(),
+        partytype: payload.party_type === 'Dealer' ? 'Dealer' : 'Retailer',
+        paddress: payload.address?.trim() || '',
+        shipaddress: payload.shipping_address?.trim() || payload.address?.trim() || '',
+        placecountry: 'India',
+        placesupply: payload.state || '08 - Rajasthan',
+        pnamehindi: '',
+        pgstin: validGst,
+        gst_effect_date: '',
+        ppanno: validPan,
+        p_dob: '',
+        pphone: validPhone,
+        beatvalue: '',
+        beatdetails: '',
+        beat_detail: '',
+        paddresshindi: '',
+        shipaddresshindi: '',
+        state_effect_date: '',
+        latitude: 0,
+        partylatitude: 0,
+        longitude: 0,
+        partylongitude: 0,
+        einvoice_applicable: 'No',
+        owner_name: '',
+        party_outstanding: openingBalance,
+        ptyuser: ptyuser,
+        tradename: '',
+        pincode: payload.pincode?.trim() || '',
+        legalname: '',
+        location: '',
+        state_code: stateCode,
+        api_error: '',
+        tcs_applicable: 'No',
+        dln_no: '',
+      };
+      const res = await apiClient.post('master/add_seller', sellerBody);
       return res.data;
     }
   } catch (err: any) {
@@ -173,35 +243,85 @@ export async function addBuyerSellerApi(payload: AddBuyerSellerPayload): Promise
  */
 export async function editBuyerSellerApi(payload: EditBuyerSellerPayload): Promise<{ message: string }> {
   try {
+    const stateCode = extractStateCode(payload.state, payload.gst_number);
+    const rawGst = (payload.gst_number || '').trim().toUpperCase();
+    const isGstValid = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][A-Z][0-9A-Z]$/.test(rawGst);
+    const validGst = isGstValid ? rawGst : '';
+
+    const panCandidate = isGstValid ? rawGst.slice(2, 12) : '';
+    const isPanValid = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panCandidate);
+    const validPan = isPanValid ? panCandidate : '';
+
+    const rawPhone = (payload.phone_number || '').trim();
+    const isPhoneValid = /^[6-9]\d{9}$/.test(rawPhone);
+    const validPhone = isPhoneValid ? rawPhone : (rawPhone ? rawPhone : '');
+
+    const rawEmail = (payload.email || '').trim();
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail);
+    const validEmail = isEmailValid ? rawEmail : '';
+
+    const openingBalance = Number(payload.opening_balance || 0);
+
     if (payload.record_type === 'Buyer') {
-      const res = await apiClient.post('master/edit_buyer', {
+      const editBuyerBody = {
         partid: Number(payload.party_id),
         name: payload.name.trim(),
-        phone_number: payload.phone_number.trim(),
-        email: payload.email?.trim() || '',
-        gst_number: payload.gst_number?.trim() || '',
-        state: payload.state || '',
+        placesupply: payload.state || '08 - Rajasthan',
+        party_outstanding: openingBalance,
+        phone: isPhoneValid ? rawPhone : '9876543210',
+        email: validEmail,
+        gst_no: validGst,
         address: payload.address?.trim() || '',
-        shipping_address: payload.shipping_address?.trim() || payload.address?.trim() || '',
-        opening_balance: payload.opening_balance || 0,
-        opening_balance_type: payload.opening_balance_type || 'To Receive',
-      });
+        state_code: stateCode,
+        legalname: '',
+        tradename: '',
+        pincode: payload.pincode?.trim() || '',
+        location: '',
+        dln_no: '',
+        bank_statement_name: '',
+      };
+      const res = await apiClient.post('master/edit_buyer', editBuyerBody);
       return res.data;
     } else {
-      const res = await apiClient.post('master/edit_seller', {
-        partid: Number(payload.party_id),
-        name: payload.name.trim(),
-        phone_number: payload.phone_number.trim(),
-        email: payload.email?.trim() || '',
-        gst_number: payload.gst_number?.trim() || '',
-        state: payload.state || '',
-        address: payload.address?.trim() || '',
-        shipping_address: payload.shipping_address?.trim() || payload.address?.trim() || '',
-        party_type: payload.party_type || 'Retailer',
-        opening_balance: payload.opening_balance || 0,
-        opening_balance_type: payload.opening_balance_type || 'To Pay',
-        fos_ids: payload.fos_ids || [],
-      });
+      const ptyuser = Array.isArray(payload.fos_ids) ? payload.fos_ids.map(Number) : [];
+      const editSellerBody = {
+        pid: Number(payload.party_id),
+        placecurrency: 'INR',
+        pname: payload.name.trim(),
+        pnamehindi: '',
+        pgstin: validGst,
+        gst_effect_date: '',
+        ppanno: validPan,
+        dob: '',
+        pphone: validPhone,
+        paddress: payload.address?.trim() || '',
+        paddresshindi: '',
+        shipaddress: payload.shipping_address?.trim() || payload.address?.trim() || '',
+        shipaddresshindi: '',
+        placecountry: 'India',
+        psupply: payload.state || '08 - Rajasthan',
+        state_code: stateCode,
+        partytype: payload.party_type === 'Dealer' ? 'Dealer' : 'Retailer',
+        beatvalue: '',
+        beatdetails: '',
+        beat_detail: '',
+        state_effect_date: '',
+        latitude: 0,
+        longitude: 0,
+        partylatitude: 0,
+        partylongitude: 0,
+        einvoice_applicable: 'No',
+        owner_name: '',
+        party_outstanding: openingBalance,
+        ptyuser: ptyuser,
+        tradename: '',
+        pincode: payload.pincode?.trim() || '',
+        legalname: '',
+        location: '',
+        dln_no: '',
+        api_error: '',
+      };
+      const res = await apiClient.post('master/edit_seller', editSellerBody);
       return res.data;
     }
   } catch (err: any) {

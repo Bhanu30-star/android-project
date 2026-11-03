@@ -160,7 +160,11 @@ export const SalesView: React.FC<SalesViewProps> = ({
           <Text style={styles.actionDesc}>Manage returned goods & credit note</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/sales-register' as any)}
+        >
           <View style={[styles.actionIcon, { backgroundColor: '#FAF5FF' }]}>
             <Ionicons name="receipt-outline" size={20} color="#9333EA" />
           </View>

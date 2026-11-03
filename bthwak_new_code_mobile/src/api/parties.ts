@@ -63,22 +63,41 @@ export async function fetchPartiesApi(
   }
 }
 
+import { extractStateCode } from './buyerSeller';
+
 /**
  * Add a new real party / customer to backend
  */
 export async function addBuyerPartyApi(payload: AddPartyPayload): Promise<boolean> {
+  const stateCode = extractStateCode(payload.placesupply, payload.gst_no);
+  const gstNo = (payload.gst_no || '').trim().toUpperCase();
+  const validGst = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][A-Z][0-9A-Z]$/.test(gstNo) ? gstNo : '';
+  const phone = (payload.phone || '').trim();
+  const validPhone = /^[6-9]\d{9}$/.test(phone) ? phone : '';
+  const email = (payload.email || '').trim();
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+
   const response = await apiClient.post<{
     status: number;
     message: string;
   }>('/master/add_buyer', {
-    name: payload.name,
-    phone: payload.phone || '',
-    email: payload.email || '',
-    gst_no: payload.gst_no || '',
+    name: payload.name.trim(),
+    currancy: 'INR',
+    phone: validPhone,
+    email: validEmail,
+    gst_no: validGst,
+    placesupply: payload.placesupply || '08 - Rajasthan',
     address: payload.address || 'Local',
-    party_outstanding: payload.party_outstanding || 0,
-    outstanding_type: payload.outstanding_type || 'To Collect',
-    placesupply: payload.placesupply || '',
+    party_outstanding: Number(payload.party_outstanding || 0),
+    outstanding_type: payload.outstanding_type || 'To Receive',
+    tradename: '',
+    pincode: '',
+    legalname: '',
+    location: '',
+    api_error: '',
+    state_code: stateCode,
+    dln_no: '',
+    bankstatement_name: '',
   });
 
   return response.status === 200 || response.status === 201;

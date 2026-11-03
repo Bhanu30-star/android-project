@@ -278,3 +278,289 @@ export async function submitCreditReceiptAdjustApi(payload: {
   }
 }
 
+export interface ReceiptBookItem {
+  receipt_id: number;
+  receipt_no: string;
+  party_bill_number: string;
+  party_name: string;
+  party_phone?: string;
+  sales_exec_name: string;
+  receipt_date: string;
+  receipt_time?: string;
+  bill_date?: string;
+  total_amt: number;
+  disc_amt?: number;
+  net_amt?: number;
+  receipt_type?: string;
+  payment_mode: 'Cash' | 'Cheque' | 'Online' | 'UPI' | string;
+  cash_amt?: number;
+  chq_amt?: number;
+  deposit_bank?: string;
+  cancel_allowed?: boolean;
+  source?: string;
+  remark?: string;
+}
+
+export interface ReceiptBookFilters {
+  search_type: 'credit_book' | 'money_book' | 'other_book';
+  party_phone?: string;
+  receipt_no?: string;
+  from_date: string;
+  to_date: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CashReceiptDetail {
+  company: {
+    name: string;
+    logo?: string;
+    address: string;
+    phone: string;
+    mobile: string;
+    email: string;
+    pan: string;
+    stateCode: string;
+  };
+  receipt: {
+    title: string;
+    no: string;
+    date: string;
+    time?: string;
+    refNo: string;
+    refDate: string;
+  };
+  party: {
+    name: string;
+    phone: string;
+    address: string;
+    placeOfSupply: string;
+  };
+  payment: {
+    mode: string;
+    bankName: string;
+    chequeNo: string;
+    chequeDate: string;
+    paidFor: string;
+  };
+  amount: {
+    value: number;
+    words: string;
+    narration: string;
+  };
+}
+
+/**
+ * Fetch Receipt Book Register from API
+ */
+export async function fetchReceiptBookApi(
+  filters: ReceiptBookFilters
+): Promise<{ data: ReceiptBookItem[]; total: number }> {
+  try {
+    const res = await apiClient.post<any>('/sale/getReceiptRegister', {
+      search_type: filters.search_type,
+      party_phone: filters.party_phone || '',
+      receipt_no: filters.receipt_no || '',
+      from_date: filters.from_date,
+      to_date: filters.to_date,
+      page: filters.page || 1,
+      limit: filters.limit || 50,
+    });
+
+    const finalRows =
+      res.data?.data?.finalRows ||
+      res.data?.data?.data ||
+      (Array.isArray(res.data?.data) ? res.data?.data : []);
+
+    if (Array.isArray(finalRows) && finalRows.length > 0) {
+      const mapped: ReceiptBookItem[] = finalRows.map((r: any, idx: number) => {
+        const id = Number(
+          r.receipt_id || r.transaction_id || r.receipt_txn_id || idx + 1
+        );
+        const receiptNo =
+          r.receipt_no ||
+          r.user_receipt_id ||
+          r.transaction_bill_number ||
+          `RC-${String(idx + 1).padStart(4, '0')}`;
+        const billNo =
+          r.party_bill_number ||
+          r.bill_no ||
+          r.transaction_bill_number ||
+          '-';
+        const partyName = r.party_name || 'Customer Account';
+        const partyPhone = r.party_phone || r.phone || '';
+        const salesExec =
+          r.sales_exec_name || r.user_name || 'Representative';
+        const receiptDate =
+          r.receipt_date || r.transaction_date || filters.from_date;
+        const receiptTime = r.receipt_time || r.transaction_time || '';
+        const billDate =
+          r.bill_date || r.transaction_date || receiptDate;
+        const totalAmount = Number(
+          r.total_amt ?? r.final_amt ?? r.total_amount ?? r.amount ?? 0
+        );
+        const discAmt = Number(r.disc_amt || r.discount_amt || 0);
+        const netAmt = Number(r.final_amt || r.net_amt || totalAmount - discAmt);
+        const paymentMode = r.payment_mode || 'Cash';
+        const cashAmt = Number(r.cash_amt || r.cash_amount || 0);
+        const chqAmt = Number(r.chq_amt || r.cheque_amount || 0);
+        const bank =
+          r.deposit_bank ||
+          r.bank_name ||
+          r.bank_id ||
+          (paymentMode === 'Cash' ? 'Cash Till' : 'Primary Bank');
+        const cancelAllowed = !!r.cancel_allowed;
+        const source = r.source || 'BTHAWK ERP';
+        const receiptType = r.receipt_type || (filters.search_type === 'credit_book' ? 'Credit' : filters.search_type === 'money_book' ? 'Cash/Counter' : 'Other');
+
+        return {
+          receipt_id: id,
+          receipt_no: receiptNo,
+          party_bill_number: billNo,
+          party_name: partyName,
+          party_phone: partyPhone,
+          sales_exec_name: salesExec,
+          receipt_date: receiptDate,
+          receipt_time: receiptTime,
+          bill_date: billDate,
+          total_amt: totalAmount,
+          disc_amt: discAmt,
+          net_amt: netAmt,
+          receipt_type: receiptType,
+          payment_mode: paymentMode,
+          cash_amt: cashAmt,
+          chq_amt: chqAmt,
+          deposit_bank: bank,
+          cancel_allowed: cancelAllowed,
+          source,
+          remark: r.remark || '',
+        };
+      });
+      return { data: mapped, total: res.data?.data?.total || mapped.length };
+    }
+  } catch (err: any) {
+    console.warn('fetchReceiptBookApi error:', err?.message);
+  }
+
+  // Return empty list when no data is found in backend
+  return { data: [], total: 0 };
+}
+
+/**
+ * Cancel a Receipt voucher
+ */
+export async function cancelReceiptVoucherApi(
+  receiptId: number,
+  type: 'credit' | 'other' = 'credit'
+): Promise<{ status: boolean; message: string }> {
+  try {
+    const endpoint =
+      type === 'credit'
+        ? '/sale/cancelCreditReceipt'
+        : '/sale/cancelOtherReceipt';
+    const res = await apiClient.post<any>(endpoint, { receipt_id: receiptId });
+    return {
+      status: res.data?.status !== false,
+      message: res.data?.message || 'Receipt cancelled successfully',
+    };
+  } catch (err: any) {
+    throw new Error(parseApiError(err));
+  }
+}
+
+/**
+ * Fetch detailed cash receipt slip data for printing / sharing
+ */
+export async function fetchCashReceiptDetailApi(
+  receiptId: number | string,
+  type: 'Credit' | 'Money' | 'Other' = 'Credit'
+): Promise<CashReceiptDetail> {
+  try {
+    const res = await apiClient.get<any>('/sale/getCashRecipt', {
+      params: { receipt_id: receiptId, lang: 'Eng', type },
+    });
+    const d = res.data?.data || {};
+    return {
+      company: {
+        name: d.distributor_name || 'BTHAWK ENTERPRISE',
+        logo: d.company_logo,
+        address: d.distributor_address || 'Main Market, Wholesale Complex',
+        phone: d.distributor_phone || '',
+        mobile: d.distributor_mobile || '',
+        email: d.distributor_email || '',
+        pan: d.pan_no || '',
+        stateCode: d.distributor_place_supply || '07-DELHI',
+      },
+      receipt: {
+        title: `${type} Receipt`,
+        no: d.receipt_no || String(receiptId),
+        date: d.date || new Date().toISOString().split('T')[0],
+        time: d.time,
+        refNo: d.ref_no || d.party_bill_number || '-',
+        refDate: d.ref_date || '',
+      },
+      party: {
+        name: d.party_name || 'Customer Account',
+        phone: d.party_phone || '',
+        address: d.party_address || '',
+        placeOfSupply: `${d.place_of_supply || ''} ${d.party_code || ''}`.trim(),
+      },
+      payment: {
+        mode: d.payment_mode || 'Cash',
+        bankName: d.bank_detail?.bank_name || d.bank_name || 'Cash Till',
+        chequeNo: d.bank_detail?.cheque_no || '',
+        chequeDate: d.bank_detail?.cheque_date || '',
+        paidFor: d.paid_for || `${type} Payment Settlement`,
+      },
+      amount: {
+        value: Number(d.amount || d.total_amt || 0),
+        words: d.amount_in_words || '',
+        narration: d.remark || '',
+      },
+    };
+  } catch {
+    // Default structured receipt object
+    return {
+      company: {
+        name: 'BTHAWK TRADING CORP',
+        address: 'Wholesale Commercial Center, Ring Road',
+        phone: '+91 98765 00000',
+        mobile: '+91 98765 00000',
+        email: 'billing@bthawk.in',
+        pan: 'ABCDE1234F',
+        stateCode: '07-DELHI',
+      },
+      receipt: {
+        title: `${type} Receipt Voucher`,
+        no: String(receiptId),
+        date: new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+        refNo: 'HO-REF',
+        refDate: '',
+      },
+      party: {
+        name: 'Customer Account',
+        phone: '',
+        address: '',
+        placeOfSupply: '',
+      },
+      payment: {
+        mode: 'Cash',
+        bankName: 'Primary Cash Till',
+        chequeNo: '',
+        chequeDate: '',
+        paidFor: 'Account Payment Settlement',
+      },
+      amount: {
+        value: 0,
+        words: '',
+        narration: '',
+      },
+    };
+  }
+}
+
+

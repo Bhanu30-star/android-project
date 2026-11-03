@@ -90,7 +90,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
       { id: 'inv-multi', label: 'Multi Recharge', route: '/multi_recharge' },
       { id: 'inv-eway', label: 'Generate E-Way', route: '/ewaybill' },
       { id: 'inv-payout', label: 'Payout Invoice', route: '/payout_invoice' },
-      { id: 'inv-return', label: 'Sales Return', route: '/sale_return' },
+      { id: 'inv-return', label: 'Sales Return', route: '/sale-return' },
     ],
   },
   {
