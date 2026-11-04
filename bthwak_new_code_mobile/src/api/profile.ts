@@ -36,20 +36,20 @@ export interface ProfileDetails {
 }
 
 export const FALLBACK_PROFILE: ProfileDetails = {
-  distributor_id: '42',
-  user_name: 'Bhanu',
-  distributor_name: 'Bhanu',
-  distributor_name_in_hindi: 'भानु',
-  distributor_email: 'bhanu.appyzio30@gmail.com',
-  mobile_no: '7726990856',
-  primary_no: '7726990856',
+  distributor_id: '',
+  user_name: '',
+  distributor_name: '',
+  distributor_name_in_hindi: '',
+  distributor_email: '',
+  mobile_no: '',
+  primary_no: '',
   secondary_no: '',
-  distributor_phone: '7726990856',
-  place_of_supply: 'Rajasthan',
+  distributor_phone: '',
+  place_of_supply: '',
   country: 'India',
-  pan_no: 'ILOPB4292I',
-  gstin: '36AALFD7157J1Z0',
-  gstin_no: '36AALFD7157J1Z0',
+  pan_no: '',
+  gstin: '',
+  gstin_no: '',
   food_license: '',
   udyam_no: '',
   dln_no: '',
@@ -57,16 +57,16 @@ export const FALLBACK_PROFILE: ProfileDetails = {
   gst_password: '',
   itr_username: '',
   itr_password: '',
-  distributor_address: 'Bamda Mandir Colony Jaipur',
-  distributor_address_in_hindi: 'बामड़ा मंदिर कॉलोनी जयपुर',
-  description: 'Leading FMCG & retail distribution specialist.',
-  business_description: 'Leading FMCG & retail distribution specialist.',
+  distributor_address: '',
+  distributor_address_in_hindi: '',
+  description: '',
+  business_description: '',
   tcs_applicable: 'No',
   company_logo: '',
   bank_qr_code: '',
   profile_image: '',
   app_version: '1.0.0',
-  renew_date: 'Active Plan',
+  renew_date: '',
 };
 
 // GET profile details API
@@ -112,12 +112,7 @@ export async function updateProfileDetailsApi(formData: FormData): Promise<{ sta
     }
     return res.data;
   } catch (err: unknown) {
-    // If error is network error in demo/dev mode, simulate success if needed or throw parsed error
     const msg = parseApiError(err);
-    if (msg.includes('Unable to connect') || msg.includes('timeout')) {
-      // In offline/mock development, simulate successful save
-      return { status: true, message: 'Profile updated successfully (local sync)' };
-    }
     throw new Error(msg);
   }
 }

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Theme } from '@/theme';
 
 export default function IndexScreen() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -16,6 +16,10 @@ export default function IndexScreen() {
   }
 
   if (isAuthenticated) {
+    const role = (user?.user_role || (user as any)?.userRole || '').toLowerCase();
+    if (role === 'fse') {
+      return <Redirect href="/fse" />;
+    }
     return <Redirect href="/dashboard" />;
   }
 

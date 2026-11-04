@@ -10,11 +10,20 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { invoiceService, RetailerParty } from '@/api/invoiceService';
-import { Colors, Typography, Shapes, Shadows } from '@/theme/tokens';
+import { Colors } from '@/theme/tokens';
+
+export const CASH_PARTY: RetailerParty = {
+  partyId: 0,
+  partyName: 'Cash',
+  partyPhone: '',
+  partyGst: '',
+  partyAddress: 'Cash Sale',
+};
 
 interface PartySearchSheetProps {
   visible: boolean;
@@ -51,9 +60,47 @@ export const PartySearchSheet: React.FC<PartySearchSheetProps> = ({
     );
   }, [allParties, search]);
 
-  const handleSelectParty = (party: RetailerParty) => {
+  const isCashSelected = useMemo(() => {
+    if (!selectedPartyId || selectedPartyId <= 0) return false;
+    const cur = allParties.find((p) => p.partyId === selectedPartyId);
+    return cur ? (cur.partyName || '').toLowerCase().includes('cash') : false;
+  }, [allParties, selectedPartyId]);
+
+  const handleSelect = (party: RetailerParty) => {
+    if (!party || !party.partyId || party.partyId <= 0) {
+      Alert.alert('Invalid Party', 'Please select a valid registered customer.');
+      return;
+    }
     onSelect(party);
     onClose();
+  };
+
+  const handleCashOption = () => {
+    const cashParty = allParties.find(
+      (p) =>
+        (p.partyName || '').toLowerCase().includes('cash') ||
+        (p.partyName || '').toLowerCase().includes('counter')
+    );
+    if (cashParty && cashParty.partyId > 0) {
+      handleSelect(cashParty);
+    } else if (onAddNew) {
+      Alert.alert(
+        'Cash Customer Not Found',
+        'No "Cash" customer exists in your customer records. Would you like to create one now?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Add Customer',
+            onPress: () => {
+              onClose();
+              onAddNew();
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert('Customer Required', 'Please select a registered customer from the list below.');
+    }
   };
 
   return (
@@ -66,10 +113,11 @@ export const PartySearchSheet: React.FC<PartySearchSheetProps> = ({
         <View style={styles.sheetContainer}>
           <View style={styles.handle} />
 
+          {/* Header */}
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>Select Customer / Party</Text>
-              <Text style={styles.subtitle}>Choose an existing party or create a new one</Text>
+              <Text style={styles.subtitle}>Choose an existing party or select Cash Sale</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
               <Feather name="x" size={20} color={Colors.textSecondary} />
@@ -78,11 +126,11 @@ export const PartySearchSheet: React.FC<PartySearchSheetProps> = ({
 
           {/* Search Box */}
           <View style={styles.searchBar}>
-            <Feather name="search" size={18} color={Colors.textSecondary} />
+            <Feather name="search" size={18} color={Colors.primary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by party name, phone, or GST..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholder="Search by name, phone, or GST..."
+              placeholderTextColor="#94A3B8"
               value={search}
               onChangeText={setSearch}
               autoCapitalize="none"
@@ -90,108 +138,135 @@ export const PartySearchSheet: React.FC<PartySearchSheetProps> = ({
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch('')}>
-                <Feather name="x-circle" size={16} color={Colors.textSecondary} />
+                <Feather name="x-circle" size={16} color="#94A3B8" />
               </TouchableOpacity>
             )}
           </View>
 
-          {/* Quick Add Party Bar if onAddNew provided */}
-          {onAddNew && (
+          {/* Top Options: Cash Sale & Add New Party */}
+          <View style={styles.topOptionsRow}>
+            {/* Cash Sale Option */}
             <TouchableOpacity
-              style={styles.quickAddPartyBar}
-              onPress={() => {
-                onClose();
-                onAddNew();
-              }}
+              style={[styles.topOptionBtn, isCashSelected && styles.topOptionBtnActive]}
+              onPress={handleCashOption}
               activeOpacity={0.8}
             >
-              <View style={styles.quickAddPartyIcon}>
-                <Feather name="user-plus" size={16} color={Colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.quickAddPartyTitle}>Add New Customer / Party</Text>
-                <Text style={styles.quickAddPartySub}>Register a new retailer profile</Text>
-              </View>
-              <Feather name="arrow-right" size={16} color={Colors.primary} />
+              <Ionicons
+                name="cash-outline"
+                size={18}
+                color={isCashSelected ? '#FFFFFF' : Colors.primary}
+              />
+              <Text
+                style={[
+                  styles.topOptionBtnText,
+                  isCashSelected && styles.topOptionBtnTextActive,
+                ]}
+              >
+                Cash Customer
+              </Text>
             </TouchableOpacity>
-          )}
 
-          {/* List */}
+            {/* Quick Add Party */}
+            {onAddNew && (
+              <TouchableOpacity
+                style={styles.addNewPartyBtn}
+                onPress={() => {
+                  onClose();
+                  onAddNew();
+                }}
+                activeOpacity={0.8}
+              >
+                <Feather name="user-plus" size={16} color="#0047AB" />
+                <Text style={styles.addNewPartyBtnText}>+ Add New</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* List of Parties */}
           {isLoading ? (
             <View style={styles.centerContainer}>
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Loading customers...</Text>
             </View>
           ) : (
             <FlatList
               data={filteredParties}
               keyExtractor={(item) => String(item.partyId)}
               contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => {
                 const isSelected = item.partyId === selectedPartyId;
+                const initial = (item.partyName || 'P').charAt(0).toUpperCase();
+
                 return (
                   <TouchableOpacity
-                    style={[styles.partyItem, isSelected && styles.selectedPartyItem]}
-                    onPress={() => handleSelectParty(item)}
+                    style={[styles.partyCard, isSelected && styles.partyCardSelected]}
+                    onPress={() => handleSelect(item)}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
+                    {/* Avatar Icon */}
+                    <View style={[styles.avatarBox, isSelected && styles.avatarBoxSelected]}>
                       <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
-                        {(item.partyName || 'P').charAt(0).toUpperCase()}
+                        {initial}
                       </Text>
                     </View>
 
-                    <View style={styles.partyInfo}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.partyName} numberOfLines={1}>
+                    {/* Party Details */}
+                    <View style={styles.partyDetailsCol}>
+                      <View style={styles.nameRow}>
+                        <Text style={styles.partyNameText} numberOfLines={1}>
                           {item.partyName}
                         </Text>
                         {isSelected && (
-                          <View style={styles.selectedPill}>
-                            <Text style={styles.selectedPillText}>Selected</Text>
+                          <View style={styles.selectedBadge}>
+                            <Feather name="check" size={11} color="#FFFFFF" style={{ marginRight: 2 }} />
+                            <Text style={styles.selectedBadgeText}>Selected</Text>
                           </View>
                         )}
                       </View>
 
-                      <View style={styles.partyBadgesRow}>
+                      {/* Phone & GST Chips */}
+                      <View style={styles.chipsRow}>
                         {item.partyPhone ? (
-                          <View style={styles.partyBadge}>
+                          <View style={styles.infoChip}>
                             <Feather name="phone" size={10} color={Colors.textSecondary} />
-                            <Text style={styles.partyBadgeText}>{item.partyPhone}</Text>
+                            <Text style={styles.infoChipText}>{item.partyPhone}</Text>
                           </View>
                         ) : null}
 
                         {item.partyGst ? (
-                          <View style={[styles.partyBadge, styles.partyGstBadge]}>
-                            <Feather name="file-text" size={10} color={Colors.primary} />
-                            <Text style={[styles.partyBadgeText, styles.partyGstBadgeText]}>
-                              GST: {item.partyGst}
-                            </Text>
+                          <View style={[styles.infoChip, styles.gstChip]}>
+                            <Text style={styles.gstChipText}>GST: {item.partyGst}</Text>
                           </View>
-                        ) : null}
+                        ) : (
+                          <View style={styles.infoChip}>
+                            <Text style={styles.infoChipText}>Unregistered</Text>
+                          </View>
+                        )}
                       </View>
 
+                      {/* Address */}
                       {item.partyAddress ? (
-                        <View style={styles.partyAddressRow}>
-                          <Feather name="map-pin" size={10} color={Colors.textSecondary} />
-                          <Text style={styles.partyAddressText} numberOfLines={1}>
+                        <View style={styles.addressRow}>
+                          <Feather name="map-pin" size={10} color="#94A3B8" />
+                          <Text style={styles.addressText} numberOfLines={1}>
                             {item.partyAddress}
                           </Text>
                         </View>
                       ) : null}
                     </View>
 
-                    <View style={[styles.radioCircle, isSelected && styles.radioCircleActive]}>
-                      {isSelected ? (
-                        <Feather name="check" size={12} color="#FFFFFF" />
-                      ) : null}
+                    {/* Radio Checkmark */}
+                    <View style={[styles.radioBox, isSelected && styles.radioBoxSelected]}>
+                      {isSelected && <Feather name="check" size={14} color="#FFFFFF" />}
                     </View>
                   </TouchableOpacity>
                 );
               }}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Feather name="users" size={36} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>No parties found</Text>
+                  <Feather name="users" size={36} color="#CBD5E1" />
+                  <Text style={styles.emptyText}>No matching parties found</Text>
                 </View>
               }
             />
@@ -205,236 +280,263 @@ export const PartySearchSheet: React.FC<PartySearchSheetProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(27, 24, 64, 0.45)',
+    backgroundColor: 'rgba(14, 32, 78, 0.45)',
     justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
   },
   sheetContainer: {
-    backgroundColor: Colors.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '85%',
-    paddingBottom: 24,
-    ...Shadows.card,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '88%',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
   },
   handle: {
-    width: 44,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.tabBorder,
+    backgroundColor: '#DFE7F2',
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 10,
   },
   title: {
-    fontFamily: Typography.sectionTitle.fontFamily,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    color: Colors.text,
+    color: '#0E204E',
   },
   subtitle: {
-    fontFamily: Typography.small.fontFamily,
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    color: '#5A6B87',
     marginTop: 2,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.background,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F4F8FD',
     justifyContent: 'center',
     alignItems: 'center',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: Shapes.radiusLarge,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
     paddingHorizontal: 14,
-    height: 46,
-    marginHorizontal: 20,
-    marginBottom: 12,
+    height: 44,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    gap: 10,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 10,
-    fontFamily: Typography.body.fontFamily,
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
+    color: '#0E204E',
+    paddingVertical: 0,
   },
-  quickAddPartyBar: {
+  topOptionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    borderRadius: Shapes.radiusMedium,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E0E7FF',
     gap: 10,
   },
-  quickAddPartyIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickAddPartyTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  quickAddPartySub: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  partyItem: {
+  topOptionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    gap: 6,
+  },
+  topOptionBtnActive: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
+  },
+  topOptionBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0E204E',
+  },
+  topOptionBtnTextActive: {
+    color: '#FFFFFF',
+  },
+  addNewPartyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 6,
+  },
+  addNewPartyBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    gap: 10,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#5A6B87',
+  },
+  partyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    marginBottom: 4,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    gap: 12,
   },
-  selectedPartyItem: {
-    backgroundColor: '#F3F0FF',
-    borderBottomWidth: 0,
+  partyCardSelected: {
+    borderColor: '#0047AB',
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    backgroundColor: '#F8FAFF',
   },
-  avatar: {
+  avatarBox: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#E8E6FF',
-    justifyContent: 'center',
+    backgroundColor: '#E8F1FC',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
   },
-  avatarSelected: {
-    backgroundColor: Colors.primary,
+  avatarBoxSelected: {
+    backgroundColor: '#0047AB',
   },
   avatarText: {
-    fontFamily: Typography.sectionTitle.fontFamily,
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.primary,
+    color: '#0047AB',
   },
   avatarTextSelected: {
     color: '#FFFFFF',
   },
-  partyInfo: {
+  partyDetailsCol: {
     flex: 1,
+    gap: 4,
   },
-  partyName: {
-    fontFamily: Typography.body.fontFamily,
-    fontSize: 14,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  selectedPill: {
-    backgroundColor: '#EDE9FE',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  selectedPillText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  partyBadgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  partyBadge: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#F8FAFC',
+    gap: 6,
+  },
+  partyNameText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0E204E',
+    flex: 1,
+  },
+  selectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0047AB',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  selectedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  infoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    gap: 4,
   },
-  partyBadgeText: {
+  infoChipText: {
     fontSize: 11,
+    color: '#5A6B87',
     fontWeight: '600',
-    color: Colors.textSecondary,
   },
-  partyGstBadge: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#D9D7F9',
+  gstChip: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
-  partyGstBadgeText: {
-    color: Colors.primary,
+  gstChipText: {
+    fontSize: 10,
     fontWeight: '700',
+    color: '#0047AB',
   },
-  partyAddressRow: {
+  addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 3,
+    marginTop: 2,
   },
-  partyAddressText: {
+  addressText: {
     fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: '500',
+    color: '#94A3B8',
+    flex: 1,
   },
-  radioCircle: {
+  radioBox: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 2,
-    borderColor: Colors.tabBorder,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    backgroundColor: '#FFFFFF',
   },
-  radioCircleActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  centerContainer: {
-    paddingVertical: 40,
-    alignItems: 'center',
+  radioBoxSelected: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
   emptyContainer: {
     paddingVertical: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   emptyText: {
-    fontFamily: Typography.body.fontFamily,
     fontSize: 14,
+    color: '#94A3B8',
     fontWeight: '600',
-    color: Colors.textSecondary,
-    marginTop: 8,
   },
 });

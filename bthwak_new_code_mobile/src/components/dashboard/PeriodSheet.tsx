@@ -152,7 +152,9 @@ const styles = StyleSheet.create({
     minHeight: Shapes.buttonMinHeight,
   },
   optionRowSelected: {
-    backgroundColor: '#F5F4FF',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   optionLabel: {
     ...Typography.bodySemiBold,

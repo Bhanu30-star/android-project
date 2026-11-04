@@ -53,27 +53,27 @@ interface ReportsViewProps {
 export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   {
     key: 'sale',
-    title: 'SALE',
-    accentColor: '#2563EB',
-    badgeBg: '#EFF6FF',
-    badgeText: '#2563EB',
+    title: "REPORT'S - SALE",
+    accentColor: '#FF6E00',
+    badgeBg: '#FFF2E5',
+    badgeText: '#FF6E00',
     filterKey: 'Sale',
     items: [
       {
         id: 'sales_register',
-        label: 'Sales\nRegister',
+        label: 'Sales Register',
         fullName: 'Sales Register',
         description: 'Item-wise sales invoices, tax breakdown & customer ledger summaries.',
         iconName: 'cart-outline',
         iconType: 'ionicons',
-        iconColor: '#2563EB',
-        iconBg: '#EFF6FF',
+        iconColor: '#FF6E00',
+        iconBg: '#FFF2E5',
         category: 'SALE',
         route: '/sales-register',
       },
       {
         id: 'sales_cancel_edit',
-        label: 'Cancel/\nEdit Hi...',
+        label: 'Cancel / Edit',
         fullName: 'Cancel / Edit History Register',
         description: 'Audit log of modified, revised, or cancelled sales invoices.',
         iconName: 'ban',
@@ -84,7 +84,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'sales_receipt_cancel',
-        label: 'Sale\nReceip...',
+        label: 'Receipt Cancel',
         fullName: 'Sale Receipt Cancel Register',
         description: 'Detailed log of voided payment receipts and reversed vouchers.',
         iconName: 'close-circle-outline',
@@ -95,7 +95,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'sale_return',
-        label: 'Sale\nReturn...',
+        label: 'Sale Return',
         fullName: 'Sale Return Register',
         description: 'Customer credit notes, returned inventory and refund transactions.',
         iconName: 'arrow-undo-outline',
@@ -106,9 +106,9 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'receipt_register',
-        label: 'Receipt\nBook',
-        fullName: 'Receipt Book Register',
-        description: 'Customer credit settlements, counter cash receipts, and payment slips.',
+        label: 'Receipt Register',
+        fullName: 'Sales Receipt Register',
+        description: 'Customer credit settlements, counter receipts, payment modes and bank deposits.',
         iconName: 'book-outline',
         iconType: 'ionicons',
         iconColor: '#059669',
@@ -118,7 +118,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'money_report',
-        label: 'Money\nReport',
+        label: 'Money Report',
         fullName: 'Money Report',
         description: 'Daily cash collections, bank inflows, and settlement balances.',
         iconName: 'cash-outline',
@@ -129,7 +129,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'sales_executive',
-        label: 'Sales\nExecut...',
+        label: 'Sales Executive',
         fullName: 'Sales Executive Sale Summary',
         description: 'Field representative revenue generation, order metrics and target tracking.',
         iconName: 'bar-chart-outline',
@@ -140,7 +140,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'advance_payment',
-        label: 'Advanc\ne Pay...',
+        label: 'Advance Payment',
         fullName: 'Advance Payment Detail',
         description: 'Customer advance deposits, unadjusted receipts and pending allocations.',
         iconName: 'wallet-outline',
@@ -151,7 +151,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'cheque_txn',
-        label: 'Cheque\nDetail',
+        label: 'Cheque Detail',
         fullName: 'Cheque Transaction Detail',
         description: 'Clearing status, bouncing logs, and deposited cheques breakdown.',
         iconName: 'card-outline',
@@ -164,7 +164,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'stocks',
-    title: 'STOCKS',
+    title: "REPORT'S - STOCKS",
     accentColor: '#0D9488',
     badgeBg: '#F0FDFA',
     badgeText: '#0D9488',
@@ -172,7 +172,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
     items: [
       {
         id: 'dtr_txn',
-        label: 'DTR\nTXN R...',
+        label: 'DTR TXN',
         fullName: 'DTR TXN Register',
         description: 'Daily Transaction Register for raw stock intake and daily consumption.',
         iconName: 'list-outline',
@@ -183,7 +183,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'distributor_stock',
-        label: 'Distribut\nor Sto...',
+        label: 'Distributor Stock',
         fullName: 'Distributor Stock Register',
         description: 'Current on-hand warehouse stock balances and valuation summary.',
         iconName: 'grid-outline',
@@ -194,7 +194,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'stock_transfer',
-        label: 'Stock\nTransf...',
+        label: 'Stock Transfer',
         fullName: 'Stock Transfer Register',
         description: 'Inter-warehouse transfers, godown shifts and transit items.',
         iconName: 'swap-horizontal-outline',
@@ -205,7 +205,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'stock_summary',
-        label: 'Stock\nSumm...',
+        label: 'Stock Summary',
         fullName: 'Stock Summary Register',
         description: 'Opening inventory, purchases, sales deductions, and closing stock.',
         iconName: 'archive-outline',
@@ -216,7 +216,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'stock_detail_exec',
-        label: 'Stock\nDetail...',
+        label: 'Exec Stock',
         fullName: 'Stock Details Executive Wise',
         description: 'Carried product inventory for field representatives & van sales.',
         iconName: 'person-outline',
@@ -227,7 +227,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'all_sales_stock',
-        label: 'All\nSales ...',
+        label: 'All Sales Stock',
         fullName: 'All Sales Executive Stock Report',
         description: 'Consolidated field stock allocation across all sales routes.',
         iconName: 'layers-outline',
@@ -238,7 +238,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'autofill_stock',
-        label: 'Autofill\nStock',
+        label: 'Autofill Stock',
         fullName: 'Autofill Stock Transfer',
         description: 'Automated reorder triggers and replenishment transfers.',
         iconName: 'sync-outline',
@@ -249,7 +249,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'damage_stock_cat',
-        label: 'Damage\nStock',
+        label: 'Damage Stock',
         fullName: 'Damage & Waste Stock Register',
         description: 'Damaged, broken, expired, or non-salable inventory write-offs.',
         iconName: 'warning-outline',
@@ -262,15 +262,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'retailer',
-    title: 'RETAILER',
-    accentColor: '#7C3AED',
-    badgeBg: '#F5F3FF',
-    badgeText: '#7C3AED',
+    title: "REPORT'S - RETAILER",
+    accentColor: '#16A34A',
+    badgeBg: '#F0FDF4',
+    badgeText: '#16A34A',
     filterKey: 'Party',
     items: [
       {
         id: 'retailer_tds',
-        label: 'Retailer\nTDS R...',
+        label: 'Retailer TDS',
         fullName: 'Retailer TDS Report',
         description: 'Tax Deducted at Source statements for registered retailer accounts.',
         iconName: 'percent',
@@ -281,7 +281,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'retailer_credit',
-        label: 'Retailer\nCredit ...',
+        label: 'Retailer Credit',
         fullName: 'Retailer Credit Book',
         description: 'Outstanding market credits, aging breakdown and payment dues.',
         iconName: 'book-outline',
@@ -292,7 +292,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'retailer_ledger',
-        label: 'Retailer\nLedge...',
+        label: 'Retailer Ledger',
         fullName: 'Retailer Ledger Book',
         description: 'Complete double-entry accounting ledger for individual retail parties.',
         iconName: 'library-outline',
@@ -303,7 +303,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'retailer_monthly',
-        label: 'Retailer\nMonthl...',
+        label: 'Retailer Monthly',
         fullName: 'Retailer Monthly Sales Register',
         description: 'Monthly buying trends and purchase frequency analysis per retailer.',
         iconName: 'calendar-outline',
@@ -314,7 +314,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'item_sale_party',
-        label: 'Item\nSale-P...',
+        label: 'Item Sales',
         fullName: 'Item Sale-Purchase Report',
         description: 'Item-wise consumption and margin analysis broken down by retailer.',
         iconName: 'cube-outline',
@@ -325,7 +325,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'retailer_sales_exec',
-        label: 'Retailer/\nSales ...',
+        label: 'Retailer / Exec',
         fullName: 'Retailer / Sales Executive Register',
         description: 'Sales representative mapping to customer beats and visit frequency.',
         iconName: 'people-outline',
@@ -336,7 +336,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'retailer_returnable',
-        label: 'Retailer\nReturn...',
+        label: 'Returnable Stock',
         fullName: 'Retailer Returnable Product Report',
         description: 'Empty crates, containers, and returnable packaging materials tracking.',
         iconName: 'refresh-outline',
@@ -347,7 +347,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'free_scheme',
-        label: 'Free\nSchem...',
+        label: 'Free Scheme',
         fullName: 'Free Scheme Sales Register',
         description: 'Free units, promotional discounts, and trade loyalty scheme claims.',
         iconName: 'gift-outline',
@@ -360,15 +360,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'purchase',
-    title: 'PURCHASE',
-    accentColor: '#D97706',
-    badgeBg: '#FFFBEB',
-    badgeText: '#D97706',
+    title: "REPORT'S - PURCHASE",
+    accentColor: '#2563EB',
+    badgeBg: '#EFF6FF',
+    badgeText: '#2563EB',
     filterKey: 'Purchase',
     items: [
       {
         id: 'purchase_register',
-        label: 'Purchas\ne Regi...',
+        label: 'Purchase Register',
         fullName: 'Purchase Register',
         description: 'Inbound supplier bills, inward tax invoices and purchases summary.',
         iconName: 'clipboard-outline',
@@ -379,7 +379,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_cancel',
-        label: 'Purchas\ne Can...',
+        label: 'Purchase Cancel',
         fullName: 'Purchase Cancel Register',
         description: 'Cancelled supplier purchase orders and rejected inward materials.',
         iconName: 'ban',
@@ -390,7 +390,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_credit',
-        label: 'Purchas\ne Cred...',
+        label: 'Purchase Credit',
         fullName: 'Purchase Credit Summary',
         description: 'Vendor payables, credit limits, and upcoming settlement deadlines.',
         iconName: 'card-outline',
@@ -402,7 +402,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_receipt',
-        label: 'Purchas\ne Rece...',
+        label: 'Purchase Receipt',
         fullName: 'Purchase Receipt Summary',
         description: 'Goods receipt notes (GRN) and payment receipts issued to suppliers.',
         iconName: 'receipt-outline',
@@ -413,7 +413,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_ledger',
-        label: 'Purchas\ne Led...',
+        label: 'Purchase Ledger',
         fullName: 'Purchase Ledger Book',
         description: 'Vendor double-entry account ledger with balance carryforwards.',
         iconName: 'book-outline',
@@ -424,7 +424,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_tds',
-        label: 'Purchas\ne TDS ...',
+        label: 'Purchase TDS',
         fullName: 'Purchase TDS Register',
         description: 'Section 194Q TDS deductions from wholesale supplier payments.',
         iconName: 'percent',
@@ -435,7 +435,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_advance',
-        label: 'Purchas\ne Adv...',
+        label: 'Purchase Advance',
         fullName: 'Purchase Advance Txn Detail',
         description: 'Advance payments remitted to suppliers for upcoming consignments.',
         iconName: 'arrow-up',
@@ -448,15 +448,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'miscellaneous',
-    title: 'MISCELLANEOUS',
-    accentColor: '#6366F1',
-    badgeBg: '#EEF2FF',
-    badgeText: '#6366F1',
+    title: "REPORT'S - MISCELLANEOUS",
+    accentColor: '#8B5CF6',
+    badgeBg: '#F5F3FF',
+    badgeText: '#8B5CF6',
     filterKey: 'Miscellaneous',
     items: [
       {
         id: 'damage_stock_misc',
-        label: 'Damage\nStock ...',
+        label: 'Damage Stock',
         fullName: 'Damage Stock Register',
         description: 'Comprehensive scrap, leakage, and damaged product records.',
         iconName: 'alert-triangle',
@@ -467,7 +467,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'receipt_payment_mode',
-        label: 'Receipt\nPayme...',
+        label: 'Payment Modes',
         fullName: 'Receipt Payment Mode Detail',
         description: 'Split between UPI, Cash, Cheque, NEFT/RTGS, and Card collections.',
         iconName: 'card-outline',
@@ -478,7 +478,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'bulk_upload',
-        label: 'Bulk\nUploa...',
+        label: 'Bulk Uploader',
         fullName: 'Bulk Uploader Register',
         description: 'Import logs for Excel party lists, price lists, and opening stocks.',
         iconName: 'upload-cloud',
@@ -489,7 +489,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'serial_return',
-        label: 'Serial\nNo Ret...',
+        label: 'Serial Return',
         fullName: 'Serial No Return Report',
         description: 'Serialized product and warranty barcode returns history.',
         iconName: 'swap-horizontal-outline',
@@ -500,7 +500,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'product_serial',
-        label: 'Product\nSerial ...',
+        label: 'Product Serial',
         fullName: 'Product Serial No Detail',
         description: 'Tracking barcodes, batch numbers, and expiry timeline data.',
         iconName: 'list-outline',
@@ -511,7 +511,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'same_gstin',
-        label: 'Same\nGSTIN...',
+        label: 'Same GSTIN Bills',
         fullName: 'Same GSTIN-No Bills Detail',
         description: 'Consolidated invoices billed across branches sharing the same GSTIN.',
         iconName: 'document-text-outline',
@@ -524,15 +524,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'cash_bank',
-    title: 'CASH / BANK',
-    accentColor: '#16A34A',
-    badgeBg: '#F0FDF4',
-    badgeText: '#16A34A',
+    title: "REPORT'S - CASH / BANK",
+    accentColor: '#059669',
+    badgeBg: '#ECFDF5',
+    badgeText: '#059669',
     filterKey: 'Cash',
     items: [
       {
         id: 'cash_in_hand',
-        label: 'Cash In\nHand',
+        label: 'Cash in Hand',
         fullName: 'Cash In Hand Register',
         description: 'Physical vault cash tally, petty cash balances and denomination notes.',
         iconName: 'wallet-outline',
@@ -543,7 +543,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'other_cash',
-        label: 'Other\nCash ...',
+        label: 'Other Cash Txn',
         fullName: 'Other Cash Txn Master',
         description: 'Internal cash transfers, partner drawings, and miscellaneous receipts.',
         iconName: 'cash-outline',
@@ -554,7 +554,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'cash_at_bank',
-        label: 'Cash At\nBank',
+        label: 'Cash at Bank',
         fullName: 'Cash At Bank Register',
         description: 'Bank current account balances, reconciliation slips and statements.',
         iconName: 'business-outline',
@@ -565,7 +565,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'bank_deposit',
-        label: 'Bank\nDepos...',
+        label: 'Bank Contra',
         fullName: 'Bank Deposit / Withdrawal',
         description: 'Cash deposit contra slips, ATM withdrawals and bank charges.',
         iconName: 'arrow-up-right',
@@ -576,7 +576,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'expense_master',
-        label: 'Expense\nMaster',
+        label: 'Expense Master',
         fullName: 'Expense Master Register',
         description: 'Daily operational expenses: fuel, rent, office supplies, and meals.',
         iconName: 'document-text-outline',
@@ -587,7 +587,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'expense_head',
-        label: 'Expense\nHead ...',
+        label: 'Expense Head',
         fullName: 'Expense Head Master',
         description: 'Category-wise spending analysis and monthly departmental overheads.',
         iconName: 'list-outline',
@@ -600,7 +600,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'financial_year',
-    title: 'FINANCIAL YEAR',
+    title: "REPORT'S - FINANCIAL YEAR",
     accentColor: '#0284C7',
     badgeBg: '#E0F2FE',
     badgeText: '#0284C7',
@@ -608,7 +608,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
     items: [
       {
         id: 'sale_register_fy',
-        label: 'Sale\nRegist...',
+        label: 'Sale Register FY',
         fullName: 'Sale Register Financial Year',
         description: 'Audited yearly sales consolidation with HSN breakdown for CA review.',
         iconName: 'calendar-outline',
@@ -619,7 +619,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'purchase_register_fy',
-        label: 'Purchas\ne Regi...',
+        label: 'Purchase Reg FY',
         fullName: 'Purchase Register FY',
         description: 'Annual input tax credit (ITC) statement and vendor procurement summary.',
         iconName: 'cart-outline',
@@ -630,7 +630,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'money_report_fy',
-        label: 'Money\nReport...',
+        label: 'Money Report FY',
         fullName: 'Money Report FY',
         description: 'Annual cash flow statement, bank reconciliations and net liquidity.',
         iconName: 'cash-outline',
@@ -641,7 +641,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'challan_register_fy',
-        label: 'Challan\nRegist...',
+        label: 'Challan Reg FY',
         fullName: 'Challan Register FY',
         description: 'Yearly delivery challans, job work dispatches, and material transfers.',
         iconName: 'document-text-outline',
@@ -652,7 +652,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'gst_summary_report',
-        label: 'GST\nSumm...',
+        label: 'GST Summary',
         fullName: 'GST (GSTR-1 & 3B) Summary',
         description: 'Government compliance filing sheets ready for GST portal uploading.',
         iconName: 'shield-checkmark-outline',
@@ -663,7 +663,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'profit_loss_report',
-        label: 'Profit &\nLoss',
+        label: 'Profit & Loss',
         fullName: 'Profit & Loss Statement',
         description: 'Gross profit, EBITDA, operating margins and annual net earnings.',
         iconName: 'trending-up-outline',
@@ -676,15 +676,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'credits',
-    title: 'CREDITS',
-    accentColor: '#EC4899',
-    badgeBg: '#FDF2F8',
-    badgeText: '#EC4899',
+    title: "REPORT'S - CREDITS",
+    accentColor: '#4F46E5',
+    badgeBg: '#EEF2FF',
+    badgeText: '#4F46E5',
     filterKey: 'Credits',
     items: [
       {
         id: 'dtr_credit',
-        label: 'DTR\nCredit ...',
+        label: 'DTR Credit Book',
         fullName: 'DTR Credit Book',
         description: 'Distributor-level credit notes and credit transaction registers.',
         iconName: 'person-outline',
@@ -695,7 +695,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'credit_summary_report',
-        label: 'Credit\nSumm...',
+        label: 'Credit Summary',
         fullName: 'Credit Summary Register',
         description: 'Total market outstanding, risk categorization, and aging buckets.',
         iconName: 'checkmark-done-circle-outline',
@@ -706,7 +706,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'exec_outstanding_report',
-        label: 'Exec\nOutstand',
+        label: 'Executive Dues',
         fullName: 'Executive Outstanding Report',
         description: 'Field representative route-wise market dues and recovery targets.',
         iconName: 'time-outline',
@@ -719,15 +719,15 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
   },
   {
     key: 'attendance',
-    title: 'ATTENDANCE & TEAMS',
-    accentColor: '#4F46E5',
-    badgeBg: '#EEF2FF',
-    badgeText: '#4F46E5',
+    title: "REPORT'S - ATTENDANCE & TEAMS",
+    accentColor: '#E11D48',
+    badgeBg: '#FFE4E6',
+    badgeText: '#E11D48',
     filterKey: 'Attendance',
     items: [
       {
         id: 'exec_attendance',
-        label: 'Exec\nAttend...',
+        label: 'Exec Attendance',
         fullName: 'Sales Executive Attendance',
         description: 'Daily GPS check-in logs, market route visits, and call logs.',
         iconName: 'checkmark-circle-outline',
@@ -738,7 +738,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'shift_master',
-        label: 'Shift\nMaster',
+        label: 'Shift Master',
         fullName: 'Shift Master Register',
         description: 'Working shift rosters, timing configurations and overtime tracking.',
         iconName: 'time-outline',
@@ -749,7 +749,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'leave_history',
-        label: 'Leave\nHistory',
+        label: 'Leave History',
         fullName: 'Executive Leave History',
         description: 'Approved sick leaves, casual time-off, and holiday schedules.',
         iconName: 'calendar-outline',
@@ -760,7 +760,7 @@ export const REPORT_CATEGORIES: ReportCategoryDef[] = [
       },
       {
         id: 'material_transfer',
-        label: 'Material\nTransf...',
+        label: 'Material Transfer',
         fullName: 'Material Transfer Register',
         description: 'Assembly material transfers between shop floor and main stock godowns.',
         iconName: 'repeat-outline',
@@ -798,6 +798,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Active Selected Report for Bottom Sheet Preview
   const [selectedReport, setSelectedReport] = useState<ReportItemDef | null>(null);
@@ -977,7 +978,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* 2. SEARCH BAR */}
+      {/* 2. SEARCH BAR & VIEW TOGGLE */}
       <View style={styles.searchBarWrapper}>
         <View style={styles.searchInputContainer}>
           <Feather name="search" size={18} color="#5A6B87" style={styles.searchIcon} />
@@ -1000,6 +1001,20 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </TouchableOpacity>
           )}
         </View>
+
+        {/* WEB STYLE / GRID TOGGLE BUTTON */}
+        <TouchableOpacity
+          style={styles.viewModeToggleBtn}
+          onPress={() => setViewMode((prev) => (prev === 'grid' ? 'list' : 'grid'))}
+          activeOpacity={0.8}
+          accessibilityLabel={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+        >
+          <Feather
+            name={viewMode === 'grid' ? 'list' : 'grid'}
+            size={18}
+            color="#0047AB"
+          />
+        </TouchableOpacity>
       </View>
 
       {/* 3. HORIZONTAL FILTER PILLS */}
@@ -1122,13 +1137,29 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </View>
         )}
 
-        {/* CATEGORY SECTIONS LIST - ALL REPORTS DISPLAYED (NO VIEW ALL/LESS TOGGLE) */}
+        {/* CATEGORY SECTIONS LIST - ALL REPORTS DISPLAYED (SUPPORTS GRID & WEB-STYLE LIST) */}
         {filteredCategories.map((category) => (
-          <View key={category.key} style={styles.categoryCard}>
+          <View
+            key={category.key}
+            style={[
+              styles.categoryCard,
+              viewMode === 'list' && {
+                borderLeftWidth: 4,
+                borderLeftColor: category.accentColor,
+              },
+            ]}
+          >
             {/* CATEGORY HEADER */}
             <View style={styles.categoryHeader}>
               <View style={styles.categoryTitleGroup}>
-                <Text style={styles.categoryTitle}>{category.title}</Text>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    viewMode === 'list' && { color: category.accentColor },
+                  ]}
+                >
+                  {category.title}
+                </Text>
                 <View style={[styles.categoryBadge, { backgroundColor: category.badgeBg }]}>
                   <Text style={[styles.categoryBadgeText, { color: category.badgeText }]}>
                     {category.items.length} Reports
@@ -1137,29 +1168,55 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               </View>
             </View>
 
-            {/* 4-COLUMN RESPONSIVE GRID */}
-            <View style={styles.reportGrid}>
-              {category.items.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.gridItem}
-                  activeOpacity={0.7}
-                  onPress={() => handleItemPress(item)}
-                  accessibilityLabel={item.fullName}
-                  accessibilityRole="button"
-                >
-                  {/* CIRCULAR / SQUIRCLE ICON BADGE */}
-                  <View style={[styles.itemIconBadge, { backgroundColor: item.iconBg }]}>
-                    {renderItemIcon(item)}
-                  </View>
+            {/* VIEW MODE: WEB-STYLE LIST */}
+            {viewMode === 'list' ? (
+              <View style={styles.reportListContainer}>
+                {category.items.map((item, idx) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.listItemRow, idx > 0 && styles.listItemBorder]}
+                    activeOpacity={0.7}
+                    onPress={() => handleItemPress(item)}
+                    accessibilityLabel={item.fullName}
+                  >
+                    <View style={[styles.listItemIconWrap, { backgroundColor: item.iconBg }]}>
+                      {renderItemIcon(item)}
+                    </View>
+                    <View style={styles.listItemTextGroup}>
+                      <Text style={styles.listItemTitle}>{item.fullName}</Text>
+                      <Text style={styles.listItemSub} numberOfLines={1}>
+                        {item.description}
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color="#94A3B8" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              /* VIEW MODE: 3-COLUMN RESPONSIVE GRID */
+              <View style={styles.reportGrid}>
+                {category.items.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.gridItem}
+                    activeOpacity={0.7}
+                    onPress={() => handleItemPress(item)}
+                    accessibilityLabel={item.fullName}
+                    accessibilityRole="button"
+                  >
+                    {/* CIRCULAR / SQUIRCLE ICON BADGE */}
+                    <View style={[styles.itemIconBadge, { backgroundColor: item.iconBg }]}>
+                      {renderItemIcon(item)}
+                    </View>
 
-                  {/* TWO-LINE TRUNCATED LABEL */}
-                  <Text style={styles.itemLabel} numberOfLines={2} ellipsizeMode="tail">
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    {/* TWO-LINE CLEAN LABEL */}
+                    <Text style={styles.itemLabel} numberOfLines={2} ellipsizeMode="tail">
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         ))}
       </ScrollView>
@@ -1248,6 +1305,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                     );
                   })}
                 </View>
+
+                {/* ACCOUNTING PATTERN SELECTOR (FROM WEB FRONTEND) */}
+                <Text style={styles.modalSectionHeading}>ACCOUNTING EXPORT PATTERN</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.modalPatternScroll}
+                >
+                  {['MARG', 'BUSY', 'TALLY', 'TFD', 'SARAL', 'STD.INV', 'STD.ITEM'].map((pat, idx) => (
+                    <View
+                      key={pat}
+                      style={[styles.modalPatternBadge, idx === 0 && styles.modalPatternBadgeActive]}
+                    >
+                      <Text
+                        style={[styles.modalPatternText, idx === 0 && styles.modalPatternTextActive]}
+                      >
+                        {pat}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
 
                 {/* SUMMARY HIGHLIGHTS CARD */}
                 <View style={styles.modalMetricsCard}>
@@ -1365,13 +1443,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  // 2. SEARCH BAR
+  // 2. SEARCH BAR & VIEW TOGGLE
   searchBarWrapper: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   searchInputContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4F8FD',
@@ -1380,6 +1462,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
+  },
+  viewModeToggleBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchIcon: {
     marginRight: 8,
@@ -1655,35 +1747,81 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // 4-COLUMN RESPONSIVE REPORT GRID
+  // RESPONSIVE REPORT GRID (3 COLUMNS)
   reportGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
+    marginHorizontal: -2,
   },
   gridItem: {
-    width: '25%', // 4 items per row
+    width: '33.33%', // 3 items per row for clean, unclipped display
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 3,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
   },
   itemIconBadge: {
-    width: 48,
-    height: 48,
+    width: 50,
+    height: 50,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
+    borderColor: 'rgba(0,0,0,0.04)',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   itemLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: '#0E204E',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 16,
     paddingHorizontal: 2,
+  },
+
+  // WEB-STYLE LIST VIEW (INSPIRED BY FRONTEND)
+  reportListContainer: {
+    paddingVertical: 2,
+  },
+  listItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  listItemBorder: {
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  listItemIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  listItemTextGroup: {
+    flex: 1,
+    marginRight: 8,
+  },
+  listItemTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0E204E',
+    marginBottom: 2,
+  },
+  listItemSub: {
+    fontSize: 11,
+    color: '#5A6B87',
+    lineHeight: 15,
   },
 
 
@@ -1854,6 +1992,32 @@ const styles = StyleSheet.create({
     height: 28,
     backgroundColor: '#CBD5E1',
     marginHorizontal: 12,
+  },
+
+  modalPatternScroll: {
+    gap: 6,
+    paddingVertical: 2,
+    marginBottom: 14,
+  },
+  modalPatternBadge: {
+    backgroundColor: '#F4F8FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+  },
+  modalPatternBadgeActive: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
+  },
+  modalPatternText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#5A6B87',
+  },
+  modalPatternTextActive: {
+    color: '#FFFFFF',
   },
 
   modalPrimaryBtn: {

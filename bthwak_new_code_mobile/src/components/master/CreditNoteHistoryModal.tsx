@@ -73,7 +73,7 @@ export const CreditNoteHistoryModal: React.FC<CreditNoteHistoryModalProps> = ({
         </View>
 
         <View style={styles.billRow}>
-          <Feather name="file-text" size={13} color="#818EF8" />
+          <Feather name="file-text" size={13} color="#0047AB" />
           <Text style={styles.billText}>
             Bill: {item.bill_no || item.credit_note_bill_no || 'N/A'}
           </Text>

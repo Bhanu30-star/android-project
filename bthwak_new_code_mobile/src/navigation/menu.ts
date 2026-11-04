@@ -24,6 +24,12 @@ export interface MenuSectionConfig {
 
 export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
   {
+    id: 'fse',
+    label: 'FSE Live & Stock',
+    icon: 'activity',
+    route: '/fse',
+  },
+  {
     id: 'business-detail',
     label: 'Business details',
     icon: 'briefcase',
@@ -38,7 +44,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
       { id: 'master-buyer-seller', label: 'Buyer and seller', route: '/master/buyer_seller' },
       { id: 'master-beat', label: 'Beat list', route: '/master/beat' },
       { id: 'master-bulk-retailer', label: 'Bulk Retailer Movement', route: '/master/bulkretailer' },
-      { id: 'master-credit-note', label: 'Credit Note Detail', route: '/master/Creditnote' },
+      { id: 'master-credit-note', label: 'Credit Note Detail', route: '/credit-note-detail' },
     ],
   },
   {
@@ -79,6 +85,8 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
     children: [
       { id: 'sale-generate-invoice', label: 'Generate invoice', route: '/generate-invoice' },
       { id: 'sale-generate-receipt', label: 'Generate receipt', route: '/generate-receipt' },
+      { id: 'sale-receipt-register', label: 'Receipt Register', route: '/receipt-book' },
+      { id: 'sale-register', label: 'Sale Register', route: '/sales-register' },
     ],
   },
   {
@@ -95,7 +103,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
   },
   {
     id: 'receipt-book',
-    label: 'Receipt book',
+    label: 'Receipt Register',
     icon: 'book-open',
     route: '/receipt-book',
   },

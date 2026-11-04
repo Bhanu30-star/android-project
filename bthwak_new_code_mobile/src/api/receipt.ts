@@ -134,13 +134,40 @@ export async function submitAdvanceReceiptApi(payload: {
   chequeNumber?: string;
   chequeDate?: string;
   bankId?: number;
+  bankName?: string;
+  issueBankName?: string;
   remark?: string;
 }): Promise<{ message: string }> {
   try {
-    const res = await apiClient.post('/sale/advance-receipt-submit', {
-      ...payload,
+    const rawPartyId = Number(payload.partyId || (payload as any).party_id || (payload as any).searchparty || 0);
+    const dateStr = payload.receiptDate ? payload.receiptDate.split('T')[0] : new Date().toISOString().split('T')[0];
+    const totAmt = Number(payload.totalAmount || (payload as any).tot_amt_val || 0);
+    const pmodeVal = payload.paymentMode === 'Cheque' ? 'Online' : (payload.paymentMode || 'Cash');
+
+    const body = {
+      // Backend DTO (AdvanceReceiptSubmitDto) exact keys
+      searchparty: rawPartyId,
+      receiptdate: dateStr,
+      pmode: pmodeVal,
+      tot_amt_val: totAmt,
+      cheque_amt: Number(payload.chequeAmount) || 0,
+      bnk_id: payload.bankId ? Number(payload.bankId) : undefined,
+      cheque_bank: payload.issueBankName || payload.bankName || '',
+      cheque_number: payload.chequeNumber || '',
+      cheque_date: payload.chequeDate ? payload.chequeDate.split('T')[0] : '0000-00-00',
+      remark: (payload.remark || '').trim(),
+
+      // Aliases and camelCase keys for maximum API compatibility
+      partyId: rawPartyId,
+      party_id: rawPartyId,
+      receiptDate: dateStr,
+      paymentMode: pmodeVal,
+      totalAmount: totAmt,
+      cashAmount: payload.paymentMode === 'Cash' ? totAmt : (payload.cashAmount || 0),
       source: 'Mobile',
-    });
+    };
+
+    const res = await apiClient.post('/sale/advance-receipt-submit', body);
     return res.data;
   } catch (err: any) {
     throw new Error(parseApiError(err));
@@ -224,8 +251,14 @@ export async function submitReturnReceiptApi(payload: {
 export async function fetchRetailerPartiesApi(): Promise<RetailerOption[]> {
   try {
     const res = await apiClient.get<any>('/sale/fetchRetailerparty');
-    const parties = res.data?.data?.parties || [];
-    return Array.isArray(parties) ? parties : [];
+    const parties = res.data?.data?.parties || res.data?.parties || res.data?.data || [];
+    if (!Array.isArray(parties)) return [];
+    return parties.map((item: any) => ({
+      partyId: Number(item.partyId ?? item.party_id ?? item.id ?? 0),
+      partyName: String(item.partyName ?? item.party_name ?? item.name ?? 'Customer'),
+      partyPhone: item.partyPhone ?? item.party_phone ?? item.phone_no ?? '',
+      partyShipAddress: item.partyShipAddress ?? item.party_address ?? item.address ?? '',
+    }));
   } catch {
     return [];
   }

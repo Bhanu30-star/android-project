@@ -20,16 +20,25 @@ export interface PurchaseBagDetail {
 export interface PurchaseItemApiRecord {
   product_id: number;
   product_name: string;
-  product_type: 'Service' | 'FMCG' | 'Serial No' | 'Commission' | 'RET PAYOUT';
+  product_type: 'Service' | 'FMCG' | 'Serial No' | 'Commission' | 'RET PAYOUT' | string;
   purchase_price: number;
   purchase_price_exc: number;
-  invoice_bill_type: '' | 'Inclusive' | 'Exclusive';
+  invoice_bill_type: '' | 'Inclusive' | 'Exclusive' | string;
   bagjson_detail?: PurchaseBagDetail[];
-  decimal_allow?: 'Yes' | 'No';
-  serial_type?: 'IMEI' | 'Serial' | 'Accessories';
-  serialno_configuration?: 'Configure';
+  decimal_allow?: 'Yes' | 'No' | number | string;
+  serial_type?: 'IMEI' | 'Serial' | 'Accessories' | 'Mobile' | string;
+  serialno_configuration?: 'Configure' | 'Manual' | 'Auto' | string;
   stock_qty?: number | string;
   stock?: number | string;
+  maintain_inventory?: string;
+  new_quantity?: number;
+  product_price_inc?: number;
+  product_price_exc?: number;
+  product_dealer_price?: number;
+  unit?: string;
+  dist_negative_allow?: string;
+  mrp_price?: number;
+  proSerialno_imei?: Array<{ IMEI: string }>;
 }
 
 export interface CartImeiItem {
@@ -182,17 +191,54 @@ export async function fetchPurchaseItemListApi(params: {
       search: params.search || '',
       user_id: 0,
       last_product_id: params.lastProductId || 0,
-      return_rows: params.returnRows || 50,
+      return_rows: params.returnRows || 60,
     });
     const records = res.data?.data?.records;
-    if (Array.isArray(records)) {
+    if (Array.isArray(records) && records.length > 0) {
       return records;
     }
-    return [];
   } catch (err) {
-    console.warn('fetchPurchaseItemListApi error:', parseApiError(err));
-    return [];
+    console.warn('fetchPurchaseItemListApi endpoint failed, attempting product catalog fallback:', parseApiError(err));
   }
+
+  // Reliable Fallback to distributor product catalog API (/sale/getSaleProductList)
+  try {
+    const res = await apiClient.post<any>('/sale/getSaleProductList', {
+      searchSource: 'admin',
+      purchase_type: '',
+      search_product: params.search || '',
+      last_product_id: params.lastProductId || 0,
+      return_rows: params.returnRows || 60,
+    });
+    const list = res.data?.data?.cart_list || [];
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((p: any) => ({
+        product_id: Number(p.product_id ?? p.productId ?? 0),
+        product_name: String(p.product_name ?? p.productName ?? 'Product'),
+        product_type: (p.product_type ?? p.productType ?? 'Service') as any,
+        maintain_inventory: String(p.maintain_inventory ?? p.maintainInventory ?? 'Yes'),
+        new_quantity: Number(p.new_quantity ?? 0),
+        invoice_bill_type: p.invoice_bill_type || 'Inclusive',
+        product_price_inc: Number(p.product_price_inc ?? p.product_price ?? p.productPrice ?? 0),
+        product_price_exc: Number(p.product_price_exc ?? p.productPriceExc ?? 0),
+        purchase_price: Number(p.purchase_price ?? p.purchasePrice ?? p.product_price_inc ?? p.product_price ?? 0),
+        purchase_price_exc: Number(p.purchase_price_exc ?? p.purchasePriceExc ?? p.product_price_exc ?? 0),
+        product_dealer_price: Number(p.product_dealer_price ?? p.dealer_price ?? p.dealerPrice ?? 0),
+        decimal_allow: Number(p.decimal_allow ?? p.decimalCategory ?? 0),
+        unit: String(p.unit ?? 'PCS'),
+        dist_negative_allow: String(p.dist_negative_allow ?? 'No'),
+        mrp_price: Number(p.mrp_price ?? p.mrpPrice ?? 0),
+        serial_type: String(p.serial_type ?? p.serialType ?? 'Mobile'),
+        serialno_configuration: String(p.serialno_configuration ?? 'Manual'),
+        bagjson_detail: Array.isArray(p.bagjson_detail) ? p.bagjson_detail : [],
+        proSerialno_imei: Array.isArray(p.proSerialno_imei) ? p.proSerialno_imei : [],
+      }));
+    }
+  } catch (fallbackErr) {
+    console.warn('Fallback product catalog search error:', parseApiError(fallbackErr));
+  }
+
+  return [];
 }
 
 // ---------------------------------------------------------------------------

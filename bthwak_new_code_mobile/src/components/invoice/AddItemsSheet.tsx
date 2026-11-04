@@ -28,10 +28,9 @@ import {
   BillType,
   DiscountType,
   formatIndianCurrency,
-  calculateLineItem,
 } from '@/features/invoice/calc';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
-import { Colors, Shadows } from '@/theme/tokens';
+import { Colors } from '@/theme/tokens';
 
 interface AddItemsSheetProps {
   visible: boolean;
@@ -145,7 +144,6 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     [data]
   );
 
-  // Reset or clear on close
   useEffect(() => {
     if (!visible) {
       setSearch('');
@@ -190,9 +188,9 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
         : p.product_price_inc || p.mrp_price;
 
     return {
-      qtyStr: '0',
+      qtyStr: '1.0',
       priceStr: String(defaultPrice),
-      discountStr: '0',
+      discountStr: '',
       price: defaultPrice,
       mrp: p.mrp_price,
       priceType: 'Retailer',
@@ -280,7 +278,7 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
       setSelectedProductIds((prev) => [...prev, productId]);
       const current = getItemState(product);
       if (parseFloat(current.qtyStr) === 0) {
-        updateItemState(productId, { qtyStr: '1' }, product);
+        updateItemState(productId, { qtyStr: '1.0' }, product);
       }
       setExpandedId(productId);
     }
@@ -314,7 +312,7 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
       return;
     }
 
-    updateItemState(product.product_id, { qtyStr: String(newQty) }, product);
+    updateItemState(product.product_id, { qtyStr: newQty.toFixed(1) }, product);
 
     if (newQty > 0 && !selectedProductIds.includes(product.product_id)) {
       setSelectedProductIds((prev) => [...prev, product.product_id]);
@@ -323,49 +321,6 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     }
   };
 
-  // Commit typed Quantity
-  const handleCommitQty = (product: ApiProductItem) => {
-    const s = getItemState(product);
-    let val = parseFloat(s.qtyStr);
-
-    if (isNaN(val) || val < 0) {
-      val = 0;
-    }
-
-    // Check decimal allowed
-    if (product.decimal_allow !== 'Yes') {
-      val = Math.floor(val);
-    }
-
-    const inCart = getProductInCartQty(product);
-    const maintainsStock = isStockMaintained(product);
-    const availableStock = maintainsStock
-      ? Math.max(0, product.new_quantity - inCart)
-      : Infinity;
-
-    const bagUnit = s.bagVal > 0 ? s.bagVal : 1;
-    const maxAllowed = maintainsStock
-      ? Math.floor(availableStock / bagUnit)
-      : Infinity;
-
-    if (maintainsStock && val > maxAllowed) {
-      Alert.alert(
-        'Stock Limit Reached',
-        `Quantity exceeds available stock (${availableStock} ${product.unit || 'PCS'}). Adjusted to ${maxAllowed}.`
-      );
-      val = maxAllowed;
-    }
-
-    updateItemState(product.product_id, { qtyStr: String(val) }, product);
-
-    if (val > 0 && !selectedProductIds.includes(product.product_id)) {
-      setSelectedProductIds((prev) => [...prev, product.product_id]);
-    } else if (val === 0 && selectedProductIds.includes(product.product_id)) {
-      setSelectedProductIds((prev) => prev.filter((id) => id !== product.product_id));
-    }
-  };
-
-  // Commit typed Price
   const handleCommitPrice = (product: ApiProductItem) => {
     const s = getItemState(product);
     let val = parseFloat(s.priceStr);
@@ -376,7 +331,6 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     updateItemState(product.product_id, { price: val, priceStr: String(val) }, product);
   };
 
-  // Commit typed Discount
   const handleCommitDiscount = (product: ApiProductItem) => {
     const s = getItemState(product);
     let val = parseFloat(s.discountStr);
@@ -396,10 +350,9 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     }
 
     val = Number(val.toFixed(2));
-    updateItemState(product.product_id, { discountStr: String(val) }, product);
+    updateItemState(product.product_id, { discountStr: val > 0 ? String(val) : '' }, product);
   };
 
-  // Handle Barcode Scan Result
   const handleBarcodeScanned = (code: string) => {
     if (!scanningProductId) {
       setSearch(code);
@@ -428,30 +381,6 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     }
   };
 
-  // Handle Serial TextArea change
-  const handleImeiTextChange = (text: string, p: ApiProductItem) => {
-    const list = text
-      .split(/[\n,]/)
-      .map((x) => x.trim())
-      .filter((x) => x.length > 0);
-
-    updateItemState(
-      p.product_id,
-      {
-        imeiText: text,
-        selectedSerials: list,
-        qtyStr: String(list.length),
-      },
-      p
-    );
-    if (list.length > 0 && !selectedProductIds.includes(p.product_id)) {
-      setSelectedProductIds((prev) => [...prev, p.product_id]);
-    } else if (list.length === 0 && selectedProductIds.includes(p.product_id)) {
-      setSelectedProductIds((prev) => prev.filter((id) => id !== p.product_id));
-    }
-  };
-
-  // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: (payload: AddToCartItemPayload[]) =>
       invoiceService.addProductsToCart(payload, searchSource),
@@ -507,13 +436,6 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     };
   };
 
-  const handleSingleAdd = (p: ApiProductItem) => {
-    const item = getFormattedPayloadItem(p);
-    if (item) {
-      addToCartMutation.mutate([item]);
-    }
-  };
-
   const handleSubmitSelected = () => {
     if (selectedProductIds.length === 0) {
       Alert.alert('Selection', 'Please select at least one item');
@@ -525,7 +447,7 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
       const p = products.find((prod) => prod.product_id === id);
       if (!p) continue;
       const item = getFormattedPayloadItem(p);
-      if (!item) return; // validation stopped
+      if (!item) return;
       payloadList.push(item);
     }
 
@@ -546,112 +468,76 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
 
           {/* Sheet Header */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Add items</Text>
-              <Text style={styles.subtitle}>Select products to add to cart</Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Feather name="x" size={20} color={Colors.textSecondary} />
+            <Text style={styles.title}>Add Items</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Feather name="x" size={22} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          {/* Global Cart Bill Type Segmented Control (Inclusive | Exclusive) */}
-          <View style={styles.taxPrefContainer}>
-            <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text style={styles.taxPrefLabel}>Tax preference</Text>
-              <Text style={styles.taxPrefSub}>
-                {hasExistingCartItems
-                  ? `Locked to ${cartBillType} (Clear cart to change)`
-                  : 'Applies to all products'}
-              </Text>
-            </View>
-            <View style={styles.taxPrefSegments}>
-              {(['Inclusive', 'Exclusive'] as const).map((billType) => {
-                const isActive = cartBillType === billType;
-                const isLocked = hasExistingCartItems && !isActive;
-                return (
-                  <TouchableOpacity
-                    key={billType}
-                    style={[
-                      styles.taxPrefBtn,
-                      isActive && styles.taxPrefBtnActive,
-                      isLocked && styles.taxPrefBtnDisabled,
-                    ]}
-                    onPress={() => {
-                      if (hasExistingCartItems && !isActive) {
-                        Alert.alert(
-                          'Tax Preference Locked',
-                          `All items in the cart are currently ${cartBillType}. Clear the cart to switch to ${billType}.`,
-                          [
-                            { text: 'OK' },
-                            ...(onClearCart
-                              ? [
-                                  {
-                                    text: 'Clear Cart Now',
-                                    style: 'destructive' as const,
-                                    onPress: onClearCart,
-                                  },
-                                ]
-                              : []),
-                          ]
-                        );
-                        return;
-                      }
-                      onBillTypeChange(billType);
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    {isActive && hasExistingCartItems && (
-                      <Feather name="lock" size={10} color="#FFFFFF" style={{ marginRight: 3 }} />
-                    )}
-                    <Text
-                      style={[
-                        styles.taxPrefBtnText,
-                        isActive && styles.taxPrefBtnTextActive,
-                        isLocked && styles.taxPrefBtnTextDisabled,
-                      ]}
-                    >
-                      {billType}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Search Bar with Camera Barcode Scan */}
+          {/* Search Bar matching Home Theme */}
           <View style={styles.searchBar}>
-            <Feather name="search" size={18} color={Colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search products by name or code..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholder="Search Product"
+              placeholderTextColor="#94A3B8"
               value={search}
               onChangeText={setSearch}
               autoCapitalize="none"
               autoCorrect={false}
             />
             {search.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearch('')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather name="x-circle" size={16} color={Colors.textSecondary} />
+              <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Feather name="x-circle" size={16} color="#94A3B8" style={{ marginRight: 6 }} />
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              onPress={() => {
-                setScanningProductId(null);
-                setScannerOpen(true);
-              }}
-              style={styles.searchScanBtn}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Feather name="camera" size={16} color={Colors.primary} />
-            </TouchableOpacity>
+            <Feather name="search" size={18} color={Colors.primary} />
           </View>
 
-          {/* Catalog List */}
+          {/* Inclusive / Exclusive Pill Row */}
+          <View style={styles.taxPillRow}>
+            {(['Inclusive', 'Exclusive'] as const).map((billType) => {
+              const isActive = cartBillType === billType;
+              return (
+                <TouchableOpacity
+                  key={billType}
+                  style={[
+                    styles.taxPill,
+                    isActive ? styles.taxPillActive : styles.taxPillInactive,
+                  ]}
+                  onPress={() => {
+                    if (hasExistingCartItems && !isActive) {
+                      Alert.alert(
+                        'Tax Preference Locked',
+                        `All items in the cart are currently ${cartBillType}. Clear the cart to switch to ${billType}.`,
+                        [
+                          { text: 'OK' },
+                          ...(onClearCart
+                            ? [
+                                {
+                                  text: 'Clear Cart Now',
+                                  style: 'destructive' as const,
+                                  onPress: onClearCart,
+                                },
+                              ]
+                            : []),
+                        ]
+                      );
+                      return;
+                    }
+                    onBillTypeChange(billType);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  {isActive && <Feather name="check" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />}
+                  <Text style={[styles.taxPillText, isActive ? styles.taxPillTextActive : styles.taxPillTextInactive]}>
+                    {billType}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Product Catalog List */}
           {isLoading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={Colors.primary} />
@@ -677,664 +563,290 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
                 const availableStock = maintainsStock
                   ? Math.max(0, item.new_quantity - inCartQty)
                   : Infinity;
-                const bagUnit = state.bagVal > 0 ? state.bagVal : 1;
-
-                // Live calculation for preview
-                const currentQty =
-                  item.product_type === 'Serial No' && state.selectedSerials.length > 0
-                    ? state.selectedSerials.length
-                    : parseFloat(state.qtyStr) || 0;
-                const currentDiscVal = parseFloat(state.discountStr) || 0;
-
-                const remainingStock = maintainsStock
-                  ? Math.max(0, availableStock - currentQty * bagUnit)
-                  : Infinity;
-
-                const isOutOfStock = maintainsStock && availableStock <= 0;
-                const isLowStock = maintainsStock && availableStock > 0 && availableStock <= 10;
-                const isMaxStockReached = maintainsStock && currentQty > 0 && remainingStock <= 0;
-
-                const liveCalc = calculateLineItem({
-                  billType: cartBillType,
-                  price: state.price,
-                  quantity: currentQty,
-                  gstRate: item.product_gst || 0,
-                  cessRate: item.product_cess || 0,
-                  discountType: state.discountType,
-                  discountValue: currentDiscVal,
-                  freeScheme: state.freeScheme,
-                });
 
                 return (
-                  <View
-                    style={[
-                      styles.productCard,
-                      isSelected && styles.productCardSelected,
-                    ]}
-                  >
-                    {/* REDESIGNED HEADER:
-                        Row 1: Checkbox + Product Name + Expand chevron
-                        Row 2: Price, MRP (strikethrough), Dynamic Remaining Stock Chip
-                        Row 3: Stepper on its own row below (or Add button) - never overlaps stock chip! */}
-                    <View style={styles.cardHeaderArea}>
-                      {/* Row 1 */}
+                  <View style={[styles.productCard, isSelected && styles.productCardSelected]}>
+                    {/* Header Row: Checkbox, Name, Expand Chevron */}
+                    <TouchableOpacity
+                      style={styles.cardHeaderRow}
+                      onPress={() => setExpandedId(isExpanded ? null : item.product_id)}
+                      activeOpacity={0.7}
+                    >
                       <TouchableOpacity
-                        style={styles.headerRow1}
-                        onPress={() => setExpandedId(isExpanded ? null : item.product_id)}
-                        activeOpacity={0.7}
+                        style={[styles.checkbox, isSelected && styles.checkboxActive]}
+                        onPress={() => toggleSelect(item.product_id, item)}
                       >
-                        <TouchableOpacity
-                          style={[styles.checkbox, isSelected && styles.checkboxActive]}
-                          onPress={() => toggleSelect(item.product_id, item)}
-                          disabled={isOutOfStock}
-                        >
-                          {isSelected && <Feather name="check" size={14} color="#FFFFFF" />}
-                        </TouchableOpacity>
-
-                        <Text style={styles.productName} numberOfLines={1}>
-                          {item.product_name}
-                        </Text>
-
-                        <Feather
-                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                          size={18}
-                          color={Colors.textSecondary}
-                        />
+                        {isSelected && <Feather name="check" size={14} color="#FFFFFF" />}
                       </TouchableOpacity>
 
-                      {/* Row 2 */}
-                      <View style={styles.headerRow2}>
-                        <View style={styles.pricingRow}>
-                          <Text style={styles.priceText}>
-                            {formatIndianCurrency(state.price)}
+                      <Text style={styles.productTitle} numberOfLines={1}>
+                        {item.product_name}
+                      </Text>
+
+                      <Feather
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={20}
+                        color={Colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+
+                    {/* Badges Row: Service / Stock / Serial No */}
+                    <View style={styles.badgesRow}>
+                      {!maintainsStock ? (
+                        <View style={styles.serviceBadge}>
+                          <Text style={styles.serviceBadgeText}>Service</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.stockBadge}>
+                          <Text style={styles.stockBadgeText}>
+                            Stock: {availableStock.toFixed(1)}
                           </Text>
-                          {item.mrp_price > 0 && item.mrp_price !== state.price && (
-                            <Text style={styles.mrpText}>
-                              MRP: {formatIndianCurrency(item.mrp_price)}
-                            </Text>
-                          )}
                         </View>
+                      )}
 
-                        <View style={styles.stockChipsContainer}>
-                          {maintainsStock ? (
-                            <>
-                              <View
-                                style={[
-                                  styles.stockChip,
-                                  isOutOfStock
-                                    ? styles.stockChipOut
-                                    : isLowStock
-                                    ? styles.stockChipLow
-                                    : styles.stockChipIn,
-                                ]}
-                              >
-                                <Feather
-                                  name={
-                                    isOutOfStock
-                                      ? 'slash'
-                                      : isLowStock
-                                      ? 'alert-triangle'
-                                      : 'check-circle'
-                                  }
-                                  size={10}
-                                  color={
-                                    isOutOfStock
-                                      ? '#B01E25'
-                                      : isLowStock
-                                      ? '#D97706'
-                                      : '#0B7A4D'
-                                  }
-                                  style={{ marginRight: 3 }}
-                                />
-                                <Text
-                                  style={[
-                                    styles.stockChipText,
-                                    isOutOfStock
-                                      ? styles.stockChipTextOut
-                                      : isLowStock
-                                      ? styles.stockChipTextLow
-                                      : styles.stockChipTextIn,
-                                  ]}
-                                >
-                                  {isOutOfStock
-                                    ? 'Out of stock'
-                                    : currentQty > 0
-                                    ? `${remainingStock} ${item.unit || 'PCS'} left`
-                                    : `Stock: ${availableStock} ${item.unit || 'PCS'}`}
-                                </Text>
-                              </View>
-                              {inCartQty > 0 && (
-                                <View style={styles.inCartBadge}>
-                                  <Text style={styles.inCartBadgeText}>
-                                    {inCartQty} in cart
-                                  </Text>
-                                </View>
-                              )}
-                            </>
-                          ) : (
-                            <View style={[styles.stockChip, styles.stockChipService]}>
-                              <Text style={styles.stockChipServiceText}>Service</Text>
-                            </View>
-                          )}
+                      {item.product_type === 'Serial No' && (
+                        <View style={styles.serialBadge}>
+                          <Text style={styles.serialBadgeText}>Serial No</Text>
                         </View>
-                      </View>
+                      )}
+                    </View>
 
-                      {/* Row 3: Stepper or Add button on dedicated row */}
-                      <View style={styles.headerRow3}>
-                        <View style={styles.stepperContainer}>
-                          <TouchableOpacity
-                            style={[
-                              styles.stepperBtn,
-                              currentQty <= 0 && styles.stepperBtnDisabled,
-                            ]}
-                            onPress={() => handleStepperChange(item, -1)}
-                            disabled={currentQty <= 0}
-                          >
-                            <Feather
-                              name="minus"
-                              size={14}
-                              color={
-                                currentQty <= 0
-                                  ? Colors.textSecondary
-                                  : Colors.text
-                              }
-                            />
-                          </TouchableOpacity>
-
-                          <TextInput
-                            style={styles.stepperInput}
-                            keyboardType="numeric"
-                            selectTextOnFocus
-                            value={state.qtyStr}
-                            onChangeText={(val) => {
-                              // Keep raw string while typing, allow empty
-                              updateItemState(
-                                item.product_id,
-                                { qtyStr: val },
-                                item
-                              );
-                            }}
-                            onBlur={() => handleCommitQty(item)}
-                            onSubmitEditing={() => handleCommitQty(item)}
-                          />
-
-                          <TouchableOpacity
-                            style={[
-                              styles.stepperBtn,
-                              (isOutOfStock || isMaxStockReached) &&
-                                styles.stepperBtnDisabled,
-                            ]}
-                            onPress={() => handleStepperChange(item, 1)}
-                            disabled={isOutOfStock || isMaxStockReached}
-                          >
-                            <Feather
-                              name="plus"
-                              size={14}
-                              color={
-                                isOutOfStock || isMaxStockReached
-                                  ? Colors.textSecondary
-                                  : Colors.primary
-                              }
-                            />
-                          </TouchableOpacity>
-                        </View>
-
-                        {isMaxStockReached ? (
-                          <View style={styles.maxReachedBadge}>
-                            <Text style={styles.maxReachedBadgeText}>Max Stock</Text>
-                          </View>
-                        ) : null}
-
-                        {/* Quick single-add button */}
+                    {/* Quantity Row */}
+                    <View style={styles.quantitySection}>
+                      <Text style={styles.fieldLabel}>Quantity</Text>
+                      <View style={styles.stepperRow}>
                         <TouchableOpacity
-                          style={[
-                            styles.quickAddBtn,
-                            (isOutOfStock || currentQty <= 0) &&
-                              styles.quickAddBtnDisabled,
-                          ]}
-                          onPress={() => handleSingleAdd(item)}
-                          disabled={
-                            isOutOfStock ||
-                            currentQty <= 0 ||
-                            addToCartMutation.isPending
-                          }
+                          style={styles.stepperMinusBtn}
+                          onPress={() => handleStepperChange(item, -1)}
                         >
-                          <Feather
-                            name="shopping-cart"
-                            size={14}
-                            color={
-                              isOutOfStock || currentQty <= 0
-                                ? Colors.textSecondary
-                                : Colors.primary
-                            }
-                          />
-                          <Text
-                            style={[
-                              styles.quickAddText,
-                              (isOutOfStock || currentQty <= 0) &&
-                                styles.quickAddTextDisabled,
-                            ]}
-                          >
-                            {addToCartMutation.isPending
-                              ? 'Adding...'
-                              : 'Add to cart'}
-                          </Text>
+                          <Feather name="minus" size={16} color={Colors.text} />
+                        </TouchableOpacity>
+
+                        <Text style={styles.stepperValueText}>{state.qtyStr}</Text>
+
+                        <TouchableOpacity
+                          style={styles.stepperPlusBtn}
+                          onPress={() => handleStepperChange(item, 1)}
+                        >
+                          <Feather name="plus" size={16} color="#FFFFFF" />
                         </TouchableOpacity>
                       </View>
                     </View>
 
-                    {/* EXPANDABLE SECTION */}
-                    {isExpanded && (
-                      <View style={styles.expandedSection}>
-                        {/* Live Calculation Preview (Requirement 3) */}
-                        <View style={styles.calcPreviewBox}>
-                          <View style={styles.calcPreviewRow}>
-                            <Text style={styles.calcPreviewLabel}>
-                              {currentQty} × {formatIndianCurrency(state.price)}
-                            </Text>
-                            <Text style={styles.calcPreviewVal}>
-                              {formatIndianCurrency(liveCalc.baseAmount)}
-                            </Text>
-                          </View>
+                    {/* Row 4: Edit Price & Type dropdown */}
+                    <View style={styles.twoColRow}>
+                      <View style={styles.colHalf}>
+                        <Text style={styles.fieldLabel}>Edit Price</Text>
+                        <TextInput
+                          style={styles.inputBox}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          value={state.priceStr}
+                          onChangeText={(val) =>
+                            updateItemState(item.product_id, { priceStr: val }, item)
+                          }
+                          onBlur={() => handleCommitPrice(item)}
+                          onSubmitEditing={() => handleCommitPrice(item)}
+                        />
+                      </View>
 
-                          {liveCalc.discountAmount > 0 && (
-                            <View style={styles.calcPreviewRow}>
-                              <Text style={styles.calcPreviewLabel}>Discount</Text>
-                              <Text style={[styles.calcPreviewVal, { color: '#0B7A4D' }]}>
-                                -{formatIndianCurrency(liveCalc.discountAmount)}
-                              </Text>
-                            </View>
-                          )}
+                      <View style={styles.colHalf}>
+                        <Text style={styles.fieldLabel}>Type</Text>
+                        <TouchableOpacity
+                          style={styles.dropdownBox}
+                          onPress={() => {
+                            const nextType = state.priceType === 'Retailer' ? 'Dealer' : 'Retailer';
+                            updateItemState(item.product_id, { priceType: nextType }, item);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.dropdownValue}>{state.priceType}</Text>
+                          <Feather name="chevron-down" size={16} color={Colors.textSecondary} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
 
-                          <View style={styles.calcPreviewRow}>
-                            <Text style={styles.calcPreviewLabel}>Taxable Amount</Text>
-                            <Text style={styles.calcPreviewVal}>
-                              {formatIndianCurrency(liveCalc.taxableAmount)}
-                            </Text>
-                          </View>
-
-                          <View style={styles.calcPreviewRow}>
-                            <Text style={styles.calcPreviewLabel}>
-                              CGST ({(item.product_gst || 0) / 2}%)
-                            </Text>
-                            <Text style={styles.calcPreviewVal}>
-                              {formatIndianCurrency(liveCalc.cgstAmount)}
-                            </Text>
-                          </View>
-
-                          <View style={styles.calcPreviewRow}>
-                            <Text style={styles.calcPreviewLabel}>
-                              SGST ({(item.product_gst || 0) / 2}%)
-                            </Text>
-                            <Text style={styles.calcPreviewVal}>
-                              {formatIndianCurrency(liveCalc.sgstAmount)}
-                            </Text>
-                          </View>
-
-                          <View style={styles.calcPreviewRow}>
-                            <Text style={styles.calcPreviewLabel}>
-                              Total GST ({item.product_gst || 0}%)
-                            </Text>
-                            <Text style={styles.calcPreviewVal}>
-                              {formatIndianCurrency(liveCalc.gstAmount)}
-                            </Text>
-                          </View>
-
-                          {liveCalc.cessAmount > 0 && (
-                            <View style={styles.calcPreviewRow}>
-                              <Text style={styles.calcPreviewLabel}>
-                                CESS ({item.product_cess}%):
-                              </Text>
-                              <Text style={styles.calcPreviewVal}>
-                                {formatIndianCurrency(liveCalc.cessAmount)}
-                              </Text>
-                            </View>
-                          )}
-
-                          <View style={[styles.calcPreviewRow, styles.calcPreviewTotalRow]}>
-                            <Text style={styles.calcPreviewTotalLabel}>Line Total</Text>
-                            <Text style={styles.calcPreviewTotalVal}>
-                              {formatIndianCurrency(liveCalc.netAmount)}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Price & Price Type Inputs */}
-                        <View style={styles.inputRow}>
-                          <View style={styles.halfCol}>
-                            <Text style={styles.subLabel}>Price (₹)</Text>
-                            <TextInput
-                              style={styles.inputMini}
-                              keyboardType="numeric"
-                              selectTextOnFocus
-                              value={state.priceStr}
-                              onChangeText={(val) =>
-                                updateItemState(
-                                  item.product_id,
-                                  { priceStr: val },
-                                  item
-                                )
-                              }
-                              onBlur={() => handleCommitPrice(item)}
-                              onSubmitEditing={() => handleCommitPrice(item)}
-                            />
-                          </View>
-
-                          <View style={styles.halfCol}>
-                            <Text style={styles.subLabel}>Price Type</Text>
-                            <View style={styles.segmentRow}>
-                              <TouchableOpacity
-                                style={[
-                                  styles.segmentBtn,
-                                  state.priceType === 'Retailer' && styles.segmentBtnActive,
-                                ]}
-                                onPress={() =>
-                                  updateItemState(
-                                    item.product_id,
-                                    { priceType: 'Retailer' },
-                                    item
-                                  )
-                                }
-                              >
-                                <Text
-                                  style={[
-                                    styles.segmentText,
-                                    state.priceType === 'Retailer' && styles.segmentTextActive,
-                                  ]}
-                                >
-                                  Retailer
-                                </Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                style={[
-                                  styles.segmentBtn,
-                                  state.priceType === 'Dealer' && styles.segmentBtnActive,
-                                ]}
-                                onPress={() =>
-                                  updateItemState(
-                                    item.product_id,
-                                    { priceType: 'Dealer' },
-                                    item
-                                  )
-                                }
-                              >
-                                <Text
-                                  style={[
-                                    styles.segmentText,
-                                    state.priceType === 'Dealer' && styles.segmentTextActive,
-                                  ]}
-                                >
-                                  Dealer
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-
-                        {/* Discount Input & Type Toggle */}
-                        <View style={styles.inputRow}>
-                          <View style={styles.fullCol}>
-                            <Text style={styles.subLabel}>Discount</Text>
-                            <View style={styles.discountInputGroup}>
-                              <TextInput
-                                style={styles.discountInput}
-                                keyboardType="numeric"
-                                selectTextOnFocus
-                                placeholder="0"
-                                placeholderTextColor={Colors.textSecondary}
-                                value={state.discountStr}
-                                onChangeText={(val) =>
-                                  updateItemState(
-                                    item.product_id,
-                                    { discountStr: val },
-                                    item
-                                  )
-                                }
-                                onBlur={() => handleCommitDiscount(item)}
-                                onSubmitEditing={() => handleCommitDiscount(item)}
-                              />
-                              <TouchableOpacity
-                                style={styles.discountTypeToggle}
-                                onPress={() => {
-                                  const nextType =
-                                    state.discountType === 'Amount' ? 'Percent' : 'Amount';
-                                  updateItemState(
-                                    item.product_id,
-                                    { discountType: nextType },
-                                    item
-                                  );
-                                }}
-                              >
-                                <Text style={styles.discountTypeLabel}>
-                                  {state.discountType === 'Amount' ? '₹ (Amt)' : '% (Pct)'}
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-
-                        {/* FMCG Extra: Bag Type */}
-                        {item.product_type === 'FMCG' &&
-                          item.bagjson_detail &&
-                          item.bagjson_detail.length > 0 && (
-                            <View style={styles.extraSection}>
-                              <Text style={styles.subLabel}>Bag Type</Text>
-                              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                {item.bagjson_detail.map((b: BagDetail, idx: number) => {
-                                  const isBagActive = state.bagVal === b.total_unit;
-                                  return (
-                                    <TouchableOpacity
-                                      key={b.id || idx}
-                                      style={[
-                                        styles.bagChip,
-                                        isBagActive && styles.bagChipActive,
-                                      ]}
-                                      onPress={() =>
-                                        updateItemState(
-                                          item.product_id,
-                                          { bagVal: b.total_unit },
-                                          item
-                                        )
-                                      }
-                                    >
-                                      <Text
-                                        style={[
-                                          styles.bagChipText,
-                                          isBagActive && styles.bagChipTextActive,
-                                        ]}
-                                      >
-                                        {b.bag_name || `${b.total_unit} ${b.conversion_unit || 'Pcs'}`} (₹{b.sale_price})
-                                      </Text>
-                                    </TouchableOpacity>
-                                  );
-                                })}
-                              </ScrollView>
-                            </View>
-                          )}
-
-                        {/* FMCG Extra: Returnable (Crate / Bottle) */}
-                        {item.product_type === 'FMCG' && (
-                          <View style={styles.extraSection}>
-                            <Text style={styles.subLabel}>Returnable (Crate / Bottle)</Text>
-                            <View style={styles.inputRow}>
-                              <View style={styles.halfCol}>
-                                <TextInput
-                                  style={styles.inputMini}
-                                  keyboardType="numeric"
-                                  selectTextOnFocus
-                                  placeholder="Crate Qty"
-                                  placeholderTextColor={Colors.textSecondary}
-                                  value={state.crateQtyStr}
-                                  onChangeText={(val) =>
-                                    updateItemState(
-                                      item.product_id,
-                                      { crateQtyStr: val.replace(/[^0-9]/g, '') },
-                                      item
-                                    )
-                                  }
-                                />
-                              </View>
-                              <View style={styles.halfCol}>
-                                <TextInput
-                                  style={styles.inputMini}
-                                  keyboardType="numeric"
-                                  selectTextOnFocus
-                                  placeholder="Bottle Qty"
-                                  placeholderTextColor={Colors.textSecondary}
-                                  value={state.bottleQtyStr}
-                                  onChangeText={(val) =>
-                                    updateItemState(
-                                      item.product_id,
-                                      { bottleQtyStr: val.replace(/[^0-9]/g, '') },
-                                      item
-                                    )
-                                  }
-                                />
-                              </View>
-                            </View>
-                          </View>
-                        )}
-
-                        {/* Serial No Extra: IMEI Multi-select, Scan Button, Textarea */}
-                        {item.product_type === 'Serial No' && (
-                          <View style={styles.extraSection}>
-                            <View style={styles.serialHeaderRow}>
-                              <Text style={styles.subLabel}>
-                                Serial / IMEI Numbers ({state.selectedSerials.length})
-                              </Text>
-                              <TouchableOpacity
-                                style={styles.scanBtn}
-                                onPress={() => {
-                                  setScanningProductId(item.product_id);
-                                  setScannerOpen(true);
-                                }}
-                              >
-                                <Feather name="camera" size={14} color="#FFFFFF" />
-                                <Text style={styles.scanBtnText}>Scan</Text>
-                              </TouchableOpacity>
-                            </View>
-
-                            {/* Dropdown list of pre-configured IMEIs if available */}
-                            {item.proSerialno_imei && item.proSerialno_imei.length > 0 && (
-                              <View style={styles.imeiPillsWrapper}>
-                                {item.proSerialno_imei.map((sObj) => {
-                                  const isSelectedImei = state.selectedSerials.includes(sObj.IMEI);
-                                  return (
-                                    <TouchableOpacity
-                                      key={sObj.IMEI}
-                                      style={[
-                                        styles.imeiPill,
-                                        isSelectedImei && styles.imeiPillActive,
-                                      ]}
-                                      onPress={() => {
-                                        let nextList = [...state.selectedSerials];
-                                        if (isSelectedImei) {
-                                          nextList = nextList.filter((x) => x !== sObj.IMEI);
-                                        } else {
-                                          nextList.push(sObj.IMEI);
-                                        }
-                                        updateItemState(
-                                          item.product_id,
-                                          {
-                                            selectedSerials: nextList,
-                                            imeiText: nextList.join('\n'),
-                                            qtyStr: String(nextList.length),
-                                          },
-                                          item
-                                        );
-                                      }}
-                                    >
-                                      <Text
-                                        style={[
-                                          styles.imeiPillText,
-                                          isSelectedImei && styles.imeiPillTextActive,
-                                        ]}
-                                      >
-                                        {sObj.IMEI}
-                                      </Text>
-                                    </TouchableOpacity>
-                                  );
-                                })}
-                              </View>
-                            )}
-
-                            {/* Text Area for typed/scanned IMEIs */}
-                            <TextInput
-                              style={styles.imeiTextArea}
-                              placeholder="Type or scan IMEIs (one per line)..."
-                              placeholderTextColor={Colors.textSecondary}
-                              multiline
-                              numberOfLines={3}
-                              value={state.imeiText}
-                              onChangeText={(val) => handleImeiTextChange(val, item)}
-                            />
-                          </View>
-                        )}
-
-                        {/* Free Scheme Option */}
-                        <View style={styles.freeSchemeRow}>
+                    {/* Row 5: Disc. Type & Discount input */}
+                    <View style={styles.twoColRow}>
+                      <View style={styles.colHalf}>
+                        <Text style={styles.fieldLabel}>Disc. Type</Text>
+                        <View style={styles.discTypeRow}>
                           <TouchableOpacity
-                            style={styles.freeSchemeCheckbox}
+                            style={[
+                              styles.discPill,
+                              state.discountType === 'Amount' ? styles.discPillActive : styles.discPillInactive,
+                            ]}
                             onPress={() =>
-                              updateItemState(
-                                item.product_id,
-                                {
-                                  freeScheme: state.freeScheme === 'Yes' ? 'No' : 'Yes',
-                                },
-                                item
-                              )
+                              updateItemState(item.product_id, { discountType: 'Amount' }, item)
                             }
                           >
-                            <View
+                            {state.discountType === 'Amount' && (
+                              <Feather name="check" size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+                            )}
+                            <Text
                               style={[
-                                styles.checkboxSmall,
-                                state.freeScheme === 'Yes' && styles.checkboxSmallActive,
+                                styles.discPillText,
+                                state.discountType === 'Amount'
+                                  ? styles.discPillTextActive
+                                  : styles.discPillTextInactive,
                               ]}
                             >
-                              {state.freeScheme === 'Yes' && (
-                                <Feather name="check" size={12} color="#FFFFFF" />
-                              )}
-                            </View>
-                            <Text style={styles.freeSchemeLabel}>Free Scheme</Text>
+                              Amount
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[
+                              styles.discPillSmall,
+                              state.discountType === 'Percent' ? styles.discPillActive : styles.discPillInactive,
+                            ]}
+                            onPress={() =>
+                              updateItemState(item.product_id, { discountType: 'Percent' }, item)
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.discPillText,
+                                state.discountType === 'Percent'
+                                  ? styles.discPillTextActive
+                                  : styles.discPillTextInactive,
+                              ]}
+                            >
+                              %
+                            </Text>
                           </TouchableOpacity>
                         </View>
+                      </View>
 
-                        {state.freeScheme === 'Yes' && (
-                          <View style={styles.freeProductSelectWrapper}>
-                            <Text style={styles.subLabel}>Select Free Product:</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                              {freeSchemeProducts.map((fProd) => {
-                                const isFSelected =
-                                  state.freeSchemeProduct === fProd.product_id;
-                                return (
-                                  <TouchableOpacity
-                                    key={fProd.product_id}
+                      <View style={styles.colHalf}>
+                        <Text style={styles.fieldLabel}>Discount</Text>
+                        <TextInput
+                          style={styles.inputBox}
+                          keyboardType="numeric"
+                          selectTextOnFocus
+                          placeholder="Discount"
+                          placeholderTextColor="#94A3B8"
+                          value={state.discountStr}
+                          onChangeText={(val) =>
+                            updateItemState(item.product_id, { discountStr: val }, item)
+                          }
+                          onBlur={() => handleCommitDiscount(item)}
+                          onSubmitEditing={() => handleCommitDiscount(item)}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Row 6: Free Scheme Checkbox */}
+                    <TouchableOpacity
+                      style={styles.freeSchemeRow}
+                      onPress={() =>
+                        updateItemState(
+                          item.product_id,
+                          { freeScheme: state.freeScheme === 'Yes' ? 'No' : 'Yes' },
+                          item
+                        )
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <View style={[styles.checkboxSmall, state.freeScheme === 'Yes' && styles.checkboxSmallActive]}>
+                        {state.freeScheme === 'Yes' && <Feather name="check" size={12} color="#FFFFFF" />}
+                      </View>
+                      <Text style={styles.freeSchemeLabel}>Free Scheme</Text>
+                    </TouchableOpacity>
+
+                    {/* Free Scheme selection if Yes */}
+                    {state.freeScheme === 'Yes' && freeSchemeProducts.length > 0 && (
+                      <View style={styles.freeProductSelectWrapper}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {freeSchemeProducts.map((fProd) => {
+                            const isFSelected = state.freeSchemeProduct === fProd.product_id;
+                            return (
+                              <TouchableOpacity
+                                key={fProd.product_id}
+                                style={[
+                                  styles.freeProdChip,
+                                  isFSelected && styles.freeProdChipActive,
+                                ]}
+                                onPress={() =>
+                                  updateItemState(
+                                    item.product_id,
+                                    { freeSchemeProduct: fProd.product_id },
+                                    item
+                                  )
+                                }
+                              >
+                                <Text
+                                  style={[
+                                    styles.freeProdChipText,
+                                    isFSelected && styles.freeProdChipTextActive,
+                                  ]}
+                                >
+                                  {fProd.product_name}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+                    )}
+
+                    {/* FMCG Extra: Bag Type */}
+                    {item.product_type === 'FMCG' &&
+                      item.bagjson_detail &&
+                      item.bagjson_detail.length > 0 && (
+                        <View style={styles.extraSection}>
+                          <Text style={styles.fieldLabel}>Bag Type</Text>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {item.bagjson_detail.map((b: BagDetail, idx: number) => {
+                              const isBagActive = state.bagVal === b.total_unit;
+                              return (
+                                <TouchableOpacity
+                                  key={b.id || idx}
+                                  style={[
+                                    styles.bagChip,
+                                    isBagActive && styles.bagChipActive,
+                                  ]}
+                                  onPress={() =>
+                                    updateItemState(
+                                      item.product_id,
+                                      { bagVal: b.total_unit },
+                                      item
+                                    )
+                                  }
+                                >
+                                  <Text
                                     style={[
-                                      styles.freeProdChip,
-                                      isFSelected && styles.freeProdChipActive,
+                                      styles.bagChipText,
+                                      isBagActive && styles.bagChipTextActive,
                                     ]}
-                                    onPress={() =>
-                                      updateItemState(
-                                        item.product_id,
-                                        { freeSchemeProduct: fProd.product_id },
-                                        item
-                                      )
-                                    }
                                   >
-                                    <Text
-                                      style={[
-                                        styles.freeProdChipText,
-                                        isFSelected && styles.freeProdChipTextActive,
-                                      ]}
-                                    >
-                                      {fProd.product_name}
-                                    </Text>
-                                  </TouchableOpacity>
-                                );
-                              })}
-                            </ScrollView>
-                          </View>
-                        )}
+                                    {b.bag_name || `${b.total_unit} Pcs`} (₹{b.sale_price})
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </ScrollView>
+                        </View>
+                      )}
+
+                    {/* Serial No Extra: IMEI Scanning */}
+                    {item.product_type === 'Serial No' && (
+                      <View style={styles.extraSection}>
+                        <View style={styles.serialHeaderRow}>
+                          <Text style={styles.fieldLabel}>
+                            Serial / IMEI ({state.selectedSerials.length})
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.scanBtn}
+                            onPress={() => {
+                              setScanningProductId(item.product_id);
+                              setScannerOpen(true);
+                            }}
+                          >
+                            <Feather name="camera" size={14} color="#FFFFFF" />
+                            <Text style={styles.scanBtnText}>Scan</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     )}
                   </View>
@@ -1352,29 +864,29 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
             />
           )}
 
-          {/* Sticky Bottom Bar */}
+          {/* Sticky Bottom Bar matching Home Theme */}
           <View style={styles.bottomBar}>
-            <View>
-              <Text style={styles.selectedCount}>
-                {selectedCount} item{selectedCount === 1 ? '' : 's'} selected
-              </Text>
-              <TouchableOpacity onPress={onClose}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.itemCountText}>
+              {selectedCount} item{selectedCount === 1 ? '' : 's'}
+            </Text>
+
+            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[
-                styles.submitBtn,
-                selectedCount === 0 && styles.submitBtnDisabled,
+                styles.addToCartBtn,
+                selectedCount === 0 && styles.addToCartBtnDisabled,
               ]}
               onPress={handleSubmitSelected}
               disabled={selectedCount === 0 || addToCartMutation.isPending}
+              activeOpacity={0.8}
             >
               {addToCartMutation.isPending ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.submitBtnText}>Submit selected</Text>
+                <Text style={styles.addToCartBtnText}>Add To Cart</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -1397,132 +909,100 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(27, 24, 64, 0.45)',
+    backgroundColor: 'rgba(14, 32, 78, 0.45)',
     justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
   },
   sheetContainer: {
-    backgroundColor: Colors.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     height: '92%',
-    ...Shadows.card,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 8,
   },
   handle: {
-    width: 44,
+    width: 40,
     height: 4,
-    backgroundColor: Colors.border,
+    backgroundColor: '#DFE7F2',
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingTop: 12,
     paddingBottom: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    color: Colors.text,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
+    color: '#0E204E',
   },
   closeBtn: {
-    padding: 6,
-  },
-  taxPrefContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: 16,
-    borderRadius: 14,
-    marginBottom: 10,
-  },
-  taxPrefLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  taxPrefSub: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  taxPrefLockedNote: {
-    fontSize: 11,
-    color: '#B45309',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  taxPrefSegments: {
-    flexDirection: 'row',
-    backgroundColor: '#E2E8F0',
-    borderRadius: 10,
-    padding: 3,
-  },
-  taxPrefBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  taxPrefBtnActive: {
-    backgroundColor: Colors.primary,
-  },
-  taxPrefBtnDisabled: {
-    opacity: 0.5,
-  },
-  taxPrefBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  taxPrefBtnTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  taxPrefBtnTextDisabled: {
-    color: Colors.textSecondary,
+    padding: 4,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBg,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
+    borderColor: '#DFE7F2',
+    borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 12,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 8,
+    height: 44,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text,
+    color: '#0E204E',
     padding: 0,
   },
-  searchScanBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: '#EEF2FF',
+  taxPillRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 16,
+    gap: 10,
+    marginBottom: 16,
+  },
+  taxPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  taxPillActive: {
+    backgroundColor: '#0047AB',
+  },
+  taxPillInactive: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+  },
+  taxPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  taxPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  taxPillTextInactive: {
+    color: '#5A6B87',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -1535,22 +1015,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   productCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 18,
-    padding: 14,
-    ...Shadows.card,
+    borderColor: '#DFE7F2',
+    borderRadius: 14,
+    padding: 16,
+    gap: 12,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   productCardSelected: {
-    borderColor: Colors.primary,
+    borderColor: '#0047AB',
     borderWidth: 1.5,
-    backgroundColor: '#FAFAFF',
   },
-  cardHeaderArea: {
-    gap: 10,
-  },
-  headerRow1: {
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -1559,292 +1040,217 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 6,
-    borderWidth: 2,
-    borderColor: Colors.border,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
-  productName: {
+  productTitle: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: '#0E204E',
   },
-  headerRow2: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingLeft: 34,
-  },
-  pricingRow: {
+  badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  priceText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.text,
+  serviceBadge: {
+    backgroundColor: '#E8F1FC',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
   },
-  mrpText: {
+  serviceBadgeText: {
+    color: '#0047AB',
     fontSize: 12,
-    color: Colors.textSecondary,
-    textDecorationLine: 'line-through',
+    fontWeight: '700',
   },
-  stockChipsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  stockBadge: {
+    backgroundColor: '#E6F9F0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  stockBadgeText: {
+    color: '#0D9488',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  serialBadge: {
+    backgroundColor: '#FFF2E5',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  serialBadgeText: {
+    color: '#FF6E00',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  quantitySection: {
     gap: 6,
   },
-  stockChip: {
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#5A6B87',
+  },
+  stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  stockChipIn: {
-    backgroundColor: '#E8F5E9',
-  },
-  stockChipLow: {
-    backgroundColor: '#FEF3C7',
-  },
-  stockChipOut: {
-    backgroundColor: '#FDECEC',
-  },
-  stockChipService: {
-    backgroundColor: '#EEF2FF',
-  },
-  stockChipText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  stockChipTextIn: {
-    color: '#0B7A4D',
-  },
-  stockChipTextLow: {
-    color: '#D97706',
-  },
-  stockChipTextOut: {
-    color: '#B01E25',
-  },
-  stockChipServiceText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  inCartBadge: {
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  inCartBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  headerRow3: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingLeft: 34,
-    marginTop: 2,
-    gap: 8,
-  },
-  stepperContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#DFE7F2',
+    height: 42,
+    paddingHorizontal: 4,
+    justifyContent: 'space-between',
   },
-  stepperBtn: {
-    width: 32,
-    height: 32,
+  stepperMinusBtn: {
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperBtnDisabled: {
-    opacity: 0.35,
-  },
-  stepperInput: {
-    minWidth: 42,
-    height: 32,
-    textAlign: 'center',
-    fontSize: 14,
+  stepperValueText: {
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.text,
-    paddingVertical: 0,
-    paddingHorizontal: 4,
-    backgroundColor: '#FFFFFF',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: Colors.border,
+    color: '#0E204E',
   },
-  maxReachedBadge: {
-    backgroundColor: '#FDECEC',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#FED7D7',
-  },
-  maxReachedBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#B01E25',
-  },
-  quickAddBtn: {
-    flexDirection: 'row',
+  stepperPlusBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
+    backgroundColor: '#0047AB',
     alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    gap: 6,
+    justifyContent: 'center',
   },
-  quickAddBtnDisabled: {
-    backgroundColor: '#F1F5F9',
-    opacity: 0.5,
-  },
-  quickAddText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  quickAddTextDisabled: {
-    color: Colors.textSecondary,
-  },
-  expandedSection: {
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+  twoColRow: {
+    flexDirection: 'row',
     gap: 12,
   },
-  calcPreviewBox: {
+  colHalf: {
+    flex: 1,
+    gap: 6,
+  },
+  inputBox: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 10,
-    gap: 4,
+    borderColor: '#DFE7F2',
+    borderRadius: 8,
+    height: 40,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#0E204E',
   },
-  calcPreviewRow: {
+  dropdownBox: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    borderRadius: 8,
+    height: 40,
+    paddingHorizontal: 12,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  calcPreviewLabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  calcPreviewVal: {
-    fontSize: 11,
-    color: Colors.text,
+  dropdownValue: {
+    fontSize: 14,
+    color: '#0E204E',
     fontWeight: '600',
   },
-  calcPreviewTotalRow: {
-    marginTop: 4,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#CBD5E1',
-  },
-  calcPreviewTotalLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  calcPreviewTotalVal: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  inputRow: {
+  discTypeRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 6,
+    height: 40,
   },
-  halfCol: {
+  discPill: {
     flex: 1,
-  },
-  fullCol: {
-    flex: 1,
-  },
-  subLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    color: Colors.textSecondary,
-    marginBottom: 4,
-  },
-  inputMini: {
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 13,
-    color: Colors.text,
-  },
-  segmentRow: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    overflow: 'hidden',
-    height: 34,
-  },
-  segmentBtn: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.card,
+    borderRadius: 8,
+    paddingHorizontal: 8,
   },
-  segmentBtnActive: {
-    backgroundColor: Colors.primary,
+  discPillSmall: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
-  segmentText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+  discPillActive: {
+    backgroundColor: '#0047AB',
   },
-  segmentTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  discountInputGroup: {
-    flexDirection: 'row',
+  discPillInactive: {
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: Colors.inputBg,
+    borderColor: '#DFE7F2',
   },
-  discountInput: {
-    flex: 1,
+  discPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  discPillTextActive: {
+    color: '#FFFFFF',
+  },
+  discPillTextInactive: {
+    color: '#5A6B87',
+  },
+  freeSchemeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 2,
+  },
+  checkboxSmall: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxSmallActive: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
+  },
+  freeSchemeLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0E204E',
+  },
+  freeProductSelectWrapper: {
+    marginTop: 4,
+  },
+  freeProdChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    fontSize: 13,
-    color: Colors.text,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
+    marginRight: 6,
+    backgroundColor: '#F8FAFC',
   },
-  discountTypeToggle: {
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: Colors.border,
+  freeProdChipActive: {
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
-  discountTypeLabel: {
+  freeProdChipText: {
     fontSize: 11,
+    color: '#5A6B87',
+  },
+  freeProdChipTextActive: {
+    color: '#FFFFFF',
     fontWeight: '700',
-    color: Colors.primary,
   },
   extraSection: {
     marginTop: 4,
@@ -1855,17 +1261,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#DFE7F2',
     marginRight: 6,
-    backgroundColor: Colors.card,
+    backgroundColor: '#F8FAFC',
   },
   bagChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
   bagChipText: {
     fontSize: 11,
-    color: Colors.text,
+    color: '#5A6B87',
   },
   bagChipTextActive: {
     color: '#FFFFFF',
@@ -1879,7 +1285,7 @@ const styles = StyleSheet.create({
   scanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: '#0047AB',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
@@ -1890,97 +1296,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  imeiPillsWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  imeiPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: '#F1F5F9',
-  },
-  imeiPillActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  imeiPillText: {
-    fontSize: 10,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color: Colors.text,
-  },
-  imeiPillTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  imeiTextArea: {
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    padding: 8,
-    fontSize: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color: Colors.text,
-    minHeight: 54,
-  },
-  freeSchemeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  freeSchemeCheckbox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkboxSmall: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxSmallActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  freeSchemeLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  freeProductSelectWrapper: {
-    marginTop: 6,
-    gap: 4,
-  },
-  freeProdChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginRight: 6,
-    backgroundColor: Colors.card,
-  },
-  freeProdChipActive: {
-    backgroundColor: '#0B7A4D',
-    borderColor: '#0B7A4D',
-  },
-  freeProdChipText: {
-    fontSize: 11,
-    color: Colors.text,
-  },
-  freeProdChipTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1988,31 +1303,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.card,
+    borderTopColor: '#DFE7F2',
+    backgroundColor: '#FFFFFF',
   },
-  selectedCount: {
-    fontSize: 13,
+  itemCountText: {
+    fontSize: 14,
     fontWeight: '700',
-    color: Colors.text,
+    color: '#0E204E',
   },
-  cancelText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  submitBtn: {
-    backgroundColor: Colors.primary,
+  cancelBtn: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 140,
-    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  submitBtnDisabled: {
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#5A6B87',
+  },
+  addToCartBtn: {
+    backgroundColor: '#0047AB',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  addToCartBtnDisabled: {
     opacity: 0.5,
   },
-  submitBtnText: {
+  addToCartBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',

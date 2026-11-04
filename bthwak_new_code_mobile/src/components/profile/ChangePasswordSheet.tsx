@@ -70,15 +70,8 @@ export const ChangePasswordSheet: React.FC<ChangePasswordSheetProps> = ({
         setError(res.data?.message || 'Failed to update password');
       }
     } catch (err: unknown) {
-      // If mock/offline in demo mode
       const msg = parseApiError(err);
-      if (msg.includes('Unable to connect') || msg.includes('timeout')) {
-        Alert.alert('Success', 'Password updated successfully (local sync).');
-        resetForm();
-        onSuccess();
-      } else {
-        setError(msg);
-      }
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }

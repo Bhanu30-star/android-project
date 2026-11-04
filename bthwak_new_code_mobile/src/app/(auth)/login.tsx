@@ -39,7 +39,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { loginWithToken, isAuthenticated } = useAuth();
+  const { loginWithToken, isAuthenticated, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AuthTabType>('password');
   const [isForgotPasswordView, setIsForgotPasswordView] = useState(false);
@@ -71,9 +71,14 @@ export default function LoginScreen() {
   // Redirect if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard');
+      const role = (user?.user_role || (user as any)?.userRole || '').toLowerCase();
+      if (role === 'fse') {
+        router.replace('/fse' as any);
+      } else {
+        router.replace('/dashboard');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   // OTP Timer countdown
   useEffect(() => {
@@ -140,8 +145,19 @@ export default function LoginScreen() {
         (response as any)?.token;
 
       if (authToken && typeof authToken === 'string') {
-        await loginWithToken(authToken);
-        router.replace('/dashboard');
+        const decoded = await loginWithToken(authToken);
+        const role = (
+          decoded?.user_role ||
+          (decoded as any)?.userRole ||
+          response?.data?.user_role ||
+          (response as any)?.user_role ||
+          ''
+        ).toLowerCase();
+        if (role === 'fse') {
+          router.replace('/fse' as any);
+        } else {
+          router.replace('/dashboard');
+        }
       } else {
         setApiErrorMessage(response?.message || 'Login failed. Please check your credentials.');
       }
@@ -217,8 +233,19 @@ export default function LoginScreen() {
           (response as any)?.token;
 
         if (authToken && typeof authToken === 'string') {
-          await loginWithToken(authToken);
-          router.replace('/dashboard');
+          const decoded = await loginWithToken(authToken);
+          const role = (
+            decoded?.user_role ||
+            (decoded as any)?.userRole ||
+            response?.data?.user_role ||
+            (response as any)?.user_role ||
+            ''
+          ).toLowerCase();
+          if (role === 'fse') {
+            router.replace('/fse' as any);
+          } else {
+            router.replace('/dashboard');
+          }
         } else {
           setApiErrorMessage(response?.message || 'Invalid OTP. Please check and try again.');
         }

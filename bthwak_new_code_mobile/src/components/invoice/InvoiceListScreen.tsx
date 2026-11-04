@@ -23,6 +23,7 @@ import { InvoiceFiltersModal } from './InvoiceFiltersModal';
 import { InvoiceReceiptModal } from './InvoiceReceiptModal';
 import { CancelBillModal } from './CancelBillModal';
 import { FseLocationModal } from './FseLocationModal';
+import { DateRangePickerModal, DatePresetKey } from '@/components/common/DateRangePickerModal';
 
 export const InvoiceListScreen: React.FC = () => {
   const router = useRouter();
@@ -52,6 +53,8 @@ export const InvoiceListScreen: React.FC = () => {
 
   // Modals state
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+  const [datePreset, setDatePreset] = useState<DatePresetKey>('today');
   const [activeBackDateTxn, setActiveBackDateTxn] = useState<number | string | null>(null);
   const [activeReceiptInvoice, setActiveReceiptInvoice] = useState<InvoiceRecord | null>(null);
   const [activeDeleteInvoice, setActiveDeleteInvoice] = useState<InvoiceRecord | null>(null);
@@ -254,53 +257,76 @@ export const InvoiceListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Header Bar */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerBackBtn}
-          onPress={() => {
-            if (router.canGoBack()) router.back();
-            else router.replace('/dashboard');
-          }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Feather name="arrow-left" size={24} color="#0E204E" />
-        </TouchableOpacity>
+        <View style={styles.headerTitleWrap}>
+          <TouchableOpacity
+            style={styles.headerBackBtn}
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/dashboard');
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Feather name="arrow-left" size={22} color="#0E204E" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle} numberOfLines={1}>Invoices</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={1}>{totalRecords} records found</Text>
+          </View>
+        </View>
 
-        <Text style={styles.headerTitle}>Invoice</Text>
-
-        <TouchableOpacity
-          style={styles.filterBtn}
-          onPress={() => setIsFiltersOpen(true)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="filter" size={22} color="#0047AB" />
-          {hasActiveFilters && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={() => setIsFiltersOpen(true)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="filter" size={20} color="#0047AB" />
+            {hasActiveFilters && <View style={styles.filterBadge} />}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Search Input Bar */}
+      {/* Search & Date Filter Bar */}
       <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Feather name="search" size={18} color="#5A6B87" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            placeholderTextColor="#5A6B87"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearch('')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Feather name="x" size={16} color="#5A6B87" />
-            </TouchableOpacity>
-          )}
+        <View style={styles.searchAndDateRow}>
+          {/* Quick Date Range Button */}
+          <TouchableOpacity
+            style={styles.datePickerPill}
+            onPress={() => setIsDateRangeOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Feather name="calendar" size={13} color="#0047AB" />
+            <Text style={styles.datePickerPillText} numberOfLines={1}>
+              {filters.start_date === filters.end_date
+                ? filters.start_date.slice(5)
+                : `${filters.start_date.slice(5)} - ${filters.end_date.slice(5)}`}
+            </Text>
+            <Feather name="chevron-down" size={12} color="#0047AB" />
+          </TouchableOpacity>
+
+          <View style={styles.searchBar}>
+            <Feather name="search" size={16} color="#5A6B87" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by Invoice, Party..."
+              placeholderTextColor="#5A6B87"
+              value={search}
+              onChangeText={setSearch}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearch('')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Feather name="x" size={16} color="#5A6B87" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
 
@@ -405,6 +431,21 @@ export const InvoiceListScreen: React.FC = () => {
         invoice={activeLocationInvoice}
         onClose={() => setActiveLocationInvoice(null)}
       />
+
+      {/* MODAL 6: Interactive Visual Date Range Picker Modal */}
+      <DateRangePickerModal
+        visible={isDateRangeOpen}
+        onClose={() => setIsDateRangeOpen(false)}
+        fromDate={filters.start_date}
+        toDate={filters.end_date}
+        activePreset={datePreset}
+        onApply={(from, to, preset) => {
+          setDatePreset(preset);
+          setFilters((prev) => ({ ...prev, start_date: from, end_date: to }));
+          loadInvoices(false, { ...filters, start_date: from, end_date: to });
+        }}
+        title="Filter Invoices by Date"
+      />
     </SafeAreaView>
   );
 };
@@ -432,8 +473,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: '#5A6B87',
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  datePickerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 44,
+    gap: 5,
+  },
+  datePickerPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
     color: '#0E204E',
     letterSpacing: -0.3,
@@ -462,7 +536,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 14,
   },
+  searchAndDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -470,8 +550,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#DFE7F2',
-    paddingHorizontal: 14,
-    height: 48,
+    paddingHorizontal: 12,
+    height: 44,
     elevation: 2,
     shadowColor: '#0047AB',
     shadowOffset: { width: 0, height: 2 },

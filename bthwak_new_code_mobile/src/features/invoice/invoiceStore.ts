@@ -13,6 +13,7 @@ export interface InvoiceDraftState {
   invoiceType: 'Tax Invoice' | 'Delivery Challan';
   invoiceDate: string; // ISO date string
   taxPreference: BillType;
+  taxRegion?: 'IntraState' | 'InterState'; // IntraState: CGST+SGST, InterState: IGST
   reverseCharge: 'Yes' | 'No';
   deliveryMode: 'Manual' | 'Courier';
   shippingAddress: string;
@@ -44,6 +45,7 @@ export const initialDraftState: InvoiceDraftState = {
   invoiceType: 'Tax Invoice',
   invoiceDate: new Date().toISOString(),
   taxPreference: 'Inclusive',
+  taxRegion: 'IntraState',
   reverseCharge: 'No',
   deliveryMode: 'Manual',
   shippingAddress: '',

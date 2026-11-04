@@ -335,11 +335,11 @@ export const EditInvoiceScreen: React.FC = () => {
 
             <View style={styles.halfCol}>
               <Text style={styles.formLabel}>FSE User</Text>
-              <View style={[styles.dropdownBtn, { backgroundColor: '#162035', opacity: 0.85 }]}>
+              <View style={[styles.dropdownBtn, { backgroundColor: '#F8FAFD' }]}>
                 <Text style={styles.dropdownText} numberOfLines={1}>
                   {fseUser}
                 </Text>
-                <Feather name="chevron-down" size={18} color="#64748B" />
+                <Feather name="chevron-down" size={18} color="#94A3B8" />
               </View>
             </View>
           </View>
@@ -371,7 +371,7 @@ export const EditInvoiceScreen: React.FC = () => {
 
           {isLoading ? (
             <View style={styles.cartLoadingBox}>
-              <ActivityIndicator size="small" color="#818EF8" />
+              <ActivityIndicator size="small" color="#0047AB" />
               <Text style={styles.cartLoadingText}>Loading invoice products...</Text>
             </View>
           ) : cartItems.length === 0 ? (
@@ -407,7 +407,7 @@ export const EditInvoiceScreen: React.FC = () => {
                       style={styles.stepperBtn}
                       onPress={() => handleUpdateQty(item.id, 1)}
                     >
-                      <Feather name="plus" size={14} color="#818EF8" />
+                      <Feather name="plus" size={14} color="#0047AB" />
                     </TouchableOpacity>
                   </View>
 
@@ -437,7 +437,7 @@ export const EditInvoiceScreen: React.FC = () => {
             onPress={() => setIsAddItemsOpen(true)}
             activeOpacity={0.8}
           >
-            <Feather name="plus" size={18} color="#818EF8" />
+            <Feather name="plus" size={18} color="#0047AB" />
             <Text style={styles.addItemBtnText}>Add Item</Text>
           </TouchableOpacity>
         </View>
@@ -528,7 +528,7 @@ export const EditInvoiceScreen: React.FC = () => {
                 >
                   {opt}
                 </Text>
-                {reverseCharges === opt && <Feather name="check" size={16} color="#818EF8" />}
+                {reverseCharges === opt && <Feather name="check" size={16} color="#0047AB" />}
               </TouchableOpacity>
             ))}
           </View>
@@ -566,7 +566,7 @@ export const EditInvoiceScreen: React.FC = () => {
                 >
                   {opt}
                 </Text>
-                {invoiceType === opt && <Feather name="check" size={16} color="#818EF8" />}
+                {invoiceType === opt && <Feather name="check" size={16} color="#0047AB" />}
               </TouchableOpacity>
             ))}
           </View>

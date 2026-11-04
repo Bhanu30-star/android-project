@@ -583,7 +583,7 @@ export const AddItemsModal: React.FC<AddItemsModalProps> = ({
                                 }
                               >
                                 {s.discountType === 'Amount' && (
-                                  <Feather name="check" size={12} color="#818EF8" style={{ marginRight: 4 }} />
+                                  <Feather name="check" size={12} color="#0047AB" style={{ marginRight: 4 }} />
                                 )}
                                 <Text
                                   style={[

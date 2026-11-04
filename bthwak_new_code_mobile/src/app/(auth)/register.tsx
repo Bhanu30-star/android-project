@@ -401,8 +401,19 @@ export default function RegisterScreen() {
 
       if (authToken && typeof authToken === 'string') {
         showToast('Registration successful! Logging you in...', 'success');
-        await loginWithToken(authToken);
-        router.replace('/dashboard');
+        const decoded = await loginWithToken(authToken);
+        const role = (
+          decoded?.user_role ||
+          (decoded as any)?.userRole ||
+          response?.data?.user_role ||
+          (response as any)?.user_role ||
+          ''
+        ).toLowerCase();
+        if (role === 'fse') {
+          router.replace('/fse' as any);
+        } else {
+          router.replace('/dashboard');
+        }
       } else {
         showToast('Registration successful! Please sign in with your credentials.', 'success');
         router.replace('/(auth)/login');

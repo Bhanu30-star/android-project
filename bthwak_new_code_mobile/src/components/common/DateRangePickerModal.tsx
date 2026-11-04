@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
-  TextInput,
   Platform,
   ScrollView,
 } from 'react-native';
@@ -52,6 +51,22 @@ export const formatReadableDate = (isoStr: string): string => {
   return isoStr;
 };
 
+const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
   visible,
   onClose,
@@ -64,6 +79,15 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
   const [tentativeFrom, setTentativeFrom] = useState(fromDate);
   const [tentativeTo, setTentativeTo] = useState(toDate);
   const [tentativePreset, setTentativePreset] = useState<DatePresetKey>(activePreset);
+  const [selectionStep, setSelectionStep] = useState<'from' | 'to'>('from');
+
+  const initialDate = toDate ? new Date(toDate) : new Date();
+  const validInitial = isNaN(initialDate.getTime()) ? new Date() : initialDate;
+
+  const [viewYear, setViewYear] = useState(validInitial.getFullYear());
+  const [viewMonth, setViewMonth] = useState(validInitial.getMonth());
+
+  const todayStr = useMemo(() => formatDateToIso(new Date()), []);
 
   // Synchronize when opening
   useEffect(() => {
@@ -71,12 +95,74 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
       setTentativeFrom(fromDate);
       setTentativeTo(toDate);
       setTentativePreset(activePreset);
+      setSelectionStep('from');
+      const d = toDate ? new Date(toDate) : new Date();
+      if (!isNaN(d.getTime())) {
+        setViewYear(d.getFullYear());
+        setViewMonth(d.getMonth());
+      }
     }
   }, [visible, fromDate, toDate, activePreset]);
+
+  // Navigate months
+  const handlePrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+
+  // Build calendar cells
+  const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const calendarCells: (number | null)[] = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    calendarCells.push(null);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    calendarCells.push(d);
+  }
+
+  // Handle day click
+  const handleDayPress = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day);
+    const dateStr = formatDateToIso(d);
+
+    if (selectionStep === 'from') {
+      setTentativeFrom(dateStr);
+      setTentativeTo(dateStr);
+      setSelectionStep('to');
+      setTentativePreset('custom');
+    } else {
+      // Step is 'to'
+      if (dateStr >= tentativeFrom) {
+        setTentativeTo(dateStr);
+        setSelectionStep('from');
+      } else {
+        setTentativeFrom(dateStr);
+        setTentativeTo(dateStr);
+        setSelectionStep('to');
+      }
+      setTentativePreset('custom');
+    }
+  };
 
   // Handle Preset selection
   const handleSelectPreset = (preset: DatePresetKey) => {
     setTentativePreset(preset);
+    setSelectionStep('from');
     const now = new Date();
 
     if (preset === 'today') {
@@ -105,30 +191,27 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
       setTentativeTo(formatDateToIso(now));
     } else if (preset === 'this_year') {
       const currYear = now.getFullYear();
-      // Indian Financial Year: April 1 of current or previous year
       const fyStartYear = now.getMonth() >= 3 ? currYear : currYear - 1;
       const fyStart = new Date(fyStartYear, 3, 1);
       setTentativeFrom(formatDateToIso(fyStart));
       setTentativeTo(formatDateToIso(now));
     }
+
+    setViewYear(now.getFullYear());
+    setViewMonth(now.getMonth());
   };
 
-  // Adjust date by +/- days
-  const adjustDate = (target: 'from' | 'to', deltaDays: number) => {
+  // Calculate day difference
+  const daysCount = useMemo(() => {
     try {
-      const baseStr = target === 'from' ? tentativeFrom : tentativeTo;
-      const parts = baseStr.split('-');
-      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      d.setDate(d.getDate() + deltaDays);
-      const newStr = formatDateToIso(d);
-      if (target === 'from') {
-        setTentativeFrom(newStr);
-      } else {
-        setTentativeTo(newStr);
-      }
-      setTentativePreset('custom');
-    } catch {}
-  };
+      const f = new Date(tentativeFrom).getTime();
+      const t = new Date(tentativeTo).getTime();
+      const diff = Math.round(Math.abs(t - f) / (1000 * 60 * 60 * 24)) + 1;
+      return diff;
+    } catch {
+      return 1;
+    }
+  }, [tentativeFrom, tentativeTo]);
 
   const handleApply = () => {
     onApply(tentativeFrom, tentativeTo, tentativePreset);
@@ -137,9 +220,9 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
 
   const presetsList: { key: DatePresetKey; label: string; icon: string }[] = [
     { key: 'today', label: 'Today', icon: 'zap' },
-    { key: 'yesterday', label: 'Yesterday', icon: 'rewind' },
+    { key: 'yesterday', label: 'Yesterday', icon: 'rotate-ccw' },
     { key: 'last_7_days', label: 'Last 7 Days', icon: 'calendar' },
-    { key: 'this_month', label: 'This Month', icon: 'calendar' },
+    { key: 'this_month', label: 'This Month', icon: 'grid' },
     { key: 'last_30_days', label: 'Last 30 Days', icon: 'clock' },
     { key: 'this_year', label: 'Financial Year', icon: 'briefcase' },
   ];
@@ -165,11 +248,15 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
           <View style={styles.sheetHeader}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.calendarIconCircle}>
-                <Feather name="calendar" size={17} color="#0047AB" />
+                <Ionicons name="calendar" size={18} color="#0047AB" />
               </View>
               <View>
                 <Text style={styles.sheetTitle}>{title}</Text>
-                <Text style={styles.sheetSubtitle}>Filter report records by date</Text>
+                <Text style={styles.sheetSubtitle}>
+                  {selectionStep === 'from'
+                    ? 'Tap start date on calendar'
+                    : 'Tap end date to complete range'}
+                </Text>
               </View>
             </View>
 
@@ -186,122 +273,150 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
             {/* 2. Active Range Banner */}
             <View style={styles.rangeBanner}>
               <View style={styles.rangeBannerCol}>
-                <Text style={styles.rangeBannerLabel}>FROM DATE</Text>
-                <Text style={styles.rangeBannerValue}>{formatReadableDate(tentativeFrom)}</Text>
-                <Text style={styles.rangeBannerIso}>{tentativeFrom}</Text>
+                <Text style={styles.rangeBannerLabel}>FROM</Text>
+                <Text style={styles.rangeBannerValue} numberOfLines={1}>
+                  {formatReadableDate(tentativeFrom)}
+                </Text>
               </View>
-              <View style={styles.rangeArrow}>
-                <Feather name="arrow-right" size={16} color="#0047AB" />
+
+              <View style={styles.rangeCenterBadge}>
+                <Feather name="arrow-right" size={13} color="#0047AB" />
+                <Text style={styles.rangeDaysText}>{daysCount} {daysCount === 1 ? 'Day' : 'Days'}</Text>
               </View>
+
               <View style={[styles.rangeBannerCol, { alignItems: 'flex-end' }]}>
-                <Text style={styles.rangeBannerLabel}>TO DATE</Text>
-                <Text style={styles.rangeBannerValue}>{formatReadableDate(tentativeTo)}</Text>
-                <Text style={styles.rangeBannerIso}>{tentativeTo}</Text>
+                <Text style={styles.rangeBannerLabel}>TO</Text>
+                <Text style={styles.rangeBannerValue} numberOfLines={1}>
+                  {formatReadableDate(tentativeTo)}
+                </Text>
               </View>
             </View>
 
-            {/* 3. Quick Presets Section */}
-            <Text style={styles.sectionHeading}>QUICK PRESETS</Text>
-            <View style={styles.presetsGrid}>
+            {/* 3. Quick Presets Strip */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.presetsStrip}
+            >
               {presetsList.map((p) => {
                 const isSelected = tentativePreset === p.key;
                 return (
                   <TouchableOpacity
                     key={p.key}
-                    style={[styles.presetCard, isSelected && styles.presetCardActive]}
+                    style={[styles.presetChip, isSelected && styles.presetChipActive]}
                     onPress={() => handleSelectPreset(p.key)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.75}
                   >
-                    <View style={styles.presetCardHeader}>
-                      <Feather
-                        name={p.icon as any}
-                        size={13}
-                        color={isSelected ? '#FFFFFF' : '#0047AB'}
-                      />
-                      {isSelected ? (
-                        <Feather name="check-circle" size={13} color="#FFFFFF" />
-                      ) : null}
-                    </View>
+                    <Feather
+                      name={p.icon as any}
+                      size={12}
+                      color={isSelected ? '#FFFFFF' : '#0047AB'}
+                      style={{ marginRight: 4 }}
+                    />
                     <Text
-                      style={[styles.presetCardText, isSelected && styles.presetCardTextActive]}
-                      numberOfLines={1}
+                      style={[styles.presetChipText, isSelected && styles.presetChipTextActive]}
                     >
                       {p.label}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
 
-            {/* 4. Custom Date Range Inputs */}
-            <Text style={styles.sectionHeading}>CUSTOM DATE RANGE (YYYY-MM-DD)</Text>
-            <View style={styles.customDateBox}>
-              <View style={styles.customDateRow}>
-                {/* From Date Box */}
-                <View style={styles.customDateCol}>
-                  <Text style={styles.inputLabel}>Start Date</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={styles.dateTextInput}
-                      value={tentativeFrom}
-                      onChangeText={(val) => {
-                        setTentativeFrom(val);
-                        setTentativePreset('custom');
-                      }}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#8FA0B8"
-                    />
-                  </View>
-                  <View style={styles.stepperRow}>
-                    <TouchableOpacity
-                      style={styles.stepperBtn}
-                      onPress={() => adjustDate('from', -1)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.stepperBtnText}>-1 Day</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.stepperBtn}
-                      onPress={() => adjustDate('from', 1)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.stepperBtnText}>+1 Day</Text>
-                    </TouchableOpacity>
-                  </View>
+            {/* 4. VISUAL MONTH CALENDAR */}
+            <View style={styles.calendarCard}>
+              {/* Month Navigator */}
+              <View style={styles.monthNavRow}>
+                <TouchableOpacity
+                  onPress={handlePrevMonth}
+                  style={styles.navArrowBtn}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="chevron-left" size={18} color="#0047AB" />
+                </TouchableOpacity>
+
+                <View style={styles.monthTitleWrap}>
+                  <Text style={styles.monthTitleText}>
+                    {MONTH_NAMES[viewMonth]} {viewYear}
+                  </Text>
                 </View>
 
-                {/* To Date Box */}
-                <View style={styles.customDateCol}>
-                  <Text style={styles.inputLabel}>End Date</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={styles.dateTextInput}
-                      value={tentativeTo}
-                      onChangeText={(val) => {
-                        setTentativeTo(val);
-                        setTentativePreset('custom');
-                      }}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#8FA0B8"
-                    />
-                  </View>
-                  <View style={styles.stepperRow}>
-                    <TouchableOpacity
-                      style={styles.stepperBtn}
-                      onPress={() => adjustDate('to', -1)}
-                      activeOpacity={0.7}
+                <TouchableOpacity
+                  onPress={handleNextMonth}
+                  style={styles.navArrowBtn}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="chevron-right" size={18} color="#0047AB" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Day of Week Headers */}
+              <View style={styles.dowRow}>
+                {DAYS_OF_WEEK.map((dow, idx) => (
+                  <View key={dow} style={styles.dowCell}>
+                    <Text
+                      style={[
+                        styles.dowText,
+                        (idx === 0 || idx === 6) && styles.dowWeekend,
+                      ]}
                     >
-                      <Text style={styles.stepperBtnText}>-1 Day</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.stepperBtn}
-                      onPress={() => adjustDate('to', 1)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.stepperBtnText}>+1 Day</Text>
-                    </TouchableOpacity>
+                      {dow}
+                    </Text>
                   </View>
-                </View>
+                ))}
+              </View>
+
+              {/* Days Grid */}
+              <View style={styles.daysGrid}>
+                {calendarCells.map((day, idx) => {
+                  if (day === null) {
+                    return <View key={`empty-${idx}`} style={styles.cellWrapper} />;
+                  }
+
+                  const cellDate = new Date(viewYear, viewMonth, day);
+                  const cellYmd = formatDateToIso(cellDate);
+                  const isStart = cellYmd === tentativeFrom;
+                  const isEnd = cellYmd === tentativeTo;
+                  const isInRange = cellYmd > tentativeFrom && cellYmd < tentativeTo;
+                  const isToday = cellYmd === todayStr;
+
+                  return (
+                    <View
+                      key={`day-${day}`}
+                      style={[
+                        styles.cellWrapper,
+                        isInRange && styles.cellInRange,
+                        isStart && !isEnd && styles.cellRangeStart,
+                        isEnd && !isStart && styles.cellRangeEnd,
+                        isStart && isEnd && styles.cellRangeSingle,
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.dayButton,
+                          (isStart || isEnd) && styles.dayButtonSelected,
+                          isToday && !(isStart || isEnd) && styles.dayButtonToday,
+                        ]}
+                        onPress={() => handleDayPress(day)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.dayText,
+                            (isStart || isEnd) && styles.dayTextSelected,
+                            isInRange && styles.dayTextInRange,
+                            isToday && !(isStart || isEnd) && styles.dayTextToday,
+                          ]}
+                        >
+                          {day}
+                        </Text>
+                        {isToday && !(isStart || isEnd) && (
+                          <View style={styles.todayDot} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           </ScrollView>
@@ -313,13 +428,14 @@ export const DateRangePickerModal: React.FC<DateRangePickerModalProps> = ({
               onPress={() => handleSelectPreset('today')}
               activeOpacity={0.7}
             >
+              <Feather name="rotate-ccw" size={14} color="#5A6B87" style={{ marginRight: 5 }} />
               <Text style={styles.resetBtnText}>Today</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.applyBtn}
               onPress={handleApply}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               <Feather name="check" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
               <Text style={styles.applyBtnText}>Apply Filter</Text>
@@ -342,12 +458,17 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 18,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-    maxHeight: '90%',
+    paddingBottom: Platform.OS === 'ios' ? 36 : 20,
+    maxHeight: '92%',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   sheetHandle: {
     width: 38,
@@ -355,16 +476,16 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#CBD5E1',
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   headerTitleWrap: {
     flexDirection: 'row',
@@ -408,18 +529,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F8FAFD',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#DFE7F2',
-    marginBottom: 14,
+    marginBottom: 10,
   },
   rangeBannerCol: {
     flex: 1,
   },
   rangeBannerLabel: {
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#8FA0B8',
     letterSpacing: 0.5,
   },
@@ -429,126 +551,187 @@ const styles = StyleSheet.create({
     color: '#0E204E',
     marginTop: 2,
   },
-  rangeBannerIso: {
-    fontSize: 10,
-    color: '#5A6B87',
-    marginTop: 1,
-  },
-  rangeArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 8,
-  },
-
-  // Section Heading
-  sectionHeading: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#8FA0B8',
-    letterSpacing: 0.6,
-    marginBottom: 8,
-    marginTop: 4,
-  },
-
-  // Presets Grid
-  presetsGrid: {
+  rangeCenterBadge: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 14,
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 4,
   },
-  presetCard: {
-    width: '31%',
-    backgroundColor: '#F8FAFD',
-    borderRadius: 10,
-    padding: 10,
+  rangeDaysText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
+
+  // Presets Strip
+  presetsStrip: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 2,
+    marginBottom: 10,
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#F4F8FD',
     borderWidth: 1,
     borderColor: '#DFE7F2',
   },
-  presetCardActive: {
+  presetChipActive: {
     backgroundColor: '#0047AB',
     borderColor: '#0047AB',
     shadowColor: '#0047AB',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 2,
   },
-  presetCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  presetCardText: {
+  presetChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0E204E',
+    color: '#5A6B87',
   },
-  presetCardTextActive: {
+  presetChipTextActive: {
     color: '#FFFFFF',
   },
 
-  // Custom Date
-  customDateBox: {
+  // Visual Calendar Card
+  calendarCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#DFE7F2',
     padding: 12,
-    marginBottom: 14,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  customDateRow: {
+  monthNavRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 8,
   },
-  customDateCol: {
-    flex: 1,
-  },
-  inputLabel: {
-    fontSize: 11,
-    color: '#5A6B87',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  inputWrap: {
-    height: 40,
-    backgroundColor: '#F8FAFD',
+  navArrowBtn: {
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#DFE7F2',
-    paddingHorizontal: 10,
-    justifyContent: 'center',
-  },
-  dateTextInput: {
-    fontSize: 13,
-    color: '#0E204E',
-    fontWeight: '600',
-    paddingVertical: 0,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 6,
-  },
-  stepperBtn: {
-    flex: 1,
     backgroundColor: '#EFF6FF',
-    paddingVertical: 4,
-    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#BFDBFE',
   },
-  stepperBtnText: {
-    fontSize: 10,
+  monthTitleWrap: {
+    alignItems: 'center',
+  },
+  monthTitleText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0E204E',
+  },
+
+  dowRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  dowCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dowText: {
+    fontSize: 11,
     fontWeight: '700',
+    color: '#8FA0B8',
+  },
+  dowWeekend: {
+    color: '#DC2626',
+  },
+
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  cellWrapper: {
+    width: '14.28%',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 1,
+  },
+  cellInRange: {
+    backgroundColor: '#EFF6FF',
+  },
+  cellRangeStart: {
+    backgroundColor: '#EFF6FF',
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  cellRangeEnd: {
+    backgroundColor: '#EFF6FF',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  cellRangeSingle: {},
+
+  dayButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayButtonSelected: {
+    backgroundColor: '#0047AB',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  dayButtonToday: {
+    borderWidth: 1.5,
+    borderColor: '#FF6E00',
+  },
+  todayDot: {
+    position: 'absolute',
+    bottom: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#FF6E00',
+  },
+
+  dayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0E204E',
+  },
+  dayTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  dayTextInRange: {
     color: '#0047AB',
+    fontWeight: '700',
+  },
+  dayTextToday: {
+    color: '#FF6E00',
+    fontWeight: '800',
   },
 
   // Footer Buttons
@@ -561,9 +744,10 @@ const styles = StyleSheet.create({
   },
   resetBtn: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: '#F4F8FD',
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -579,7 +763,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#0047AB',
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#0047AB',
@@ -589,8 +773,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   applyBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
 });

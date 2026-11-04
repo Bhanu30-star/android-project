@@ -12,6 +12,7 @@ export interface SaleRegisterItem {
   hsn: string;
   party_name: string;
   party_phone?: string;
+  party_gstin?: string;
   quentity: number;
   price: number;
   discount: number;
@@ -19,6 +20,43 @@ export interface SaleRegisterItem {
   tax_amount: number;
   mode_type: 'Cash' | 'Credit' | 'Online' | 'UPI' | string;
   bill_type: string;
+  // Comprehensive ERP fields matching Web Frontend
+  code?: string;
+  vch_series?: string;
+  sale_type?: string;
+  mc_name?: string;
+  beat?: string;
+  godown_name?: string;
+  category?: string;
+  unit?: string;
+  address_1?: string;
+  state?: string;
+  pincode?: string;
+  regn_type?: string;
+  taxable_value?: number;
+  cgst?: number;
+  sgst?: number;
+  igst?: number;
+  cess_amount?: number;
+  tcs_amount?: number;
+  tds_amount?: number;
+  other_charges?: number;
+  freight_charges?: number;
+  labour_charges?: number;
+  place_of_supply?: string;
+  reverse_charge?: string;
+  invoice_type?: string;
+  deposit_bank?: string;
+  cheque_bank?: string;
+  cheque_no?: string;
+  cheque_date?: string;
+  cash_amount?: number;
+  cheque_amount?: number;
+  online_amount?: number;
+  fse_detail?: string;
+  message_txn_id?: string;
+  source?: string;
+  remark?: string;
 }
 
 export interface SaleRegisterSummary {
@@ -27,13 +65,38 @@ export interface SaleRegisterSummary {
   total_amount: number;
   total_discount: number;
   total_net_amount: number;
+  summaryByTab?: Record<string, number>;
 }
+
+export type PatternKey = 'marg' | 'busy' | 'tally' | 'tfd' | 'saral' | 'stdInv' | 'stdItem';
+
+export interface PatternTabDef {
+  key: PatternKey;
+  label: string;
+  fullName: string;
+  fetchType: string;
+}
+
+export const PATTERN_TABS: PatternTabDef[] = [
+  { key: 'marg', label: 'MARG', fullName: 'Marg ERP', fetchType: 'Marg' },
+  { key: 'busy', label: 'BUSY', fullName: 'Busy Accounting', fetchType: 'Busy' },
+  { key: 'tally', label: 'TALLY', fullName: 'Tally Prime', fetchType: 'Tally' },
+  { key: 'tfd', label: 'TFD', fullName: 'TFD Tax', fetchType: 'TFD' },
+  { key: 'saral', label: 'SARAL', fullName: 'Saral Accounts', fetchType: 'SARAL' },
+  { key: 'stdInv', label: 'STD.INV', fullName: 'Standard Invoice', fetchType: 'Std Inv' },
+  { key: 'stdItem', label: 'STD.ITEM', fullName: 'Standard Item', fetchType: 'Std Item' },
+];
 
 export interface SaleRegisterFilters {
   start_date: string;
   end_date: string;
   search?: string;
   mode_type?: string;
+  pattern?: PatternKey;
+  invoice_type?: string;
+  product_type?: string;
+  tax_type?: string;
+  bill_type?: string;
   page?: number;
   limit?: number;
 }
@@ -42,6 +105,141 @@ export async function fetchSaleRegisterApi(
   filters: SaleRegisterFilters
 ): Promise<{ data: SaleRegisterItem[]; summary: SaleRegisterSummary }> {
   try {
+    const activePattern = filters.pattern || 'marg';
+    const fetchType = PATTERN_TABS.find((p) => p.key === activePattern)?.fetchType || 'Marg';
+
+    // 1. Try Primary Web API: /sales/getSaleRegisterReportData (Exact Web Frontend Endpoint)
+    try {
+      const webPayload = {
+        fetch_type: fetchType,
+        s_retailer_type: 'Both',
+        start_date: filters.start_date,
+        end_date: filters.end_date,
+        product_type: filters.product_type || 'Business',
+        tax_type: filters.tax_type || 'Tax',
+        bill_type: filters.bill_type || 'Tax Invoice',
+        party_id: '',
+        invoice_type: filters.invoice_type || '',
+        searchparty: filters.search?.trim() || '',
+        page: filters.page || 1,
+        limit: filters.limit || 50,
+      };
+
+      const webRes = await apiClient.post<any>('/sales/getSaleRegisterReportData', webPayload);
+      const tableRows = webRes.data?.data?.table || [];
+      const totalRec = webRes.data?.data || {};
+
+      if (Array.isArray(tableRows) && tableRows.length > 0) {
+        const mapped: SaleRegisterItem[] = tableRows.map((r: any, idx: number) => ({
+          id: r.id || r.invoice_id || idx + 1,
+          bill_no: r.bill_no || r.invoice_no || `INV-${String(idx + 1).padStart(4, '0')}`,
+          bill_date: r.bill_date || filters.start_date,
+          item_name: r.item_name || r.product_name || 'Standard SKU Item',
+          hsn: r.hsn || r.item_hsn || '190531',
+          party_name: r.retailer_name || r.party_name || r.customer_name || 'Retailer Party',
+          party_phone: r.party_phone || r.phone || '',
+          party_gstin: r.party_gstin || r.gstin_no || r.gst_no || r.gstin_of_recipient || '',
+          quentity: Number(r.quentity || r.quantity || r.qty || r.billed_quantity || 1),
+          price: Number(r.price || r.rate || 0),
+          discount: Number(r.discount || 0),
+          net_amount: Number(r.net_amount || r.net_amt || r.amount || r.total_amt || 0),
+          tax_amount: Number(r.cgst || r.cgst_total || 0) + Number(r.sgst || r.sgst_total || 0) + Number(r.igst || r.igst_total || 0) || Number(r.tax_amount || 0),
+          mode_type: r.mode_type || r.payment_mode || r.mode || 'Cash',
+          bill_type: r.bill_type || r.gst_configure || filters.bill_type || 'Tax Invoice',
+          code: r.code || '',
+          vch_series: r.vch_series || 'GST',
+          sale_type: r.sale_type || '',
+          mc_name: r.mc_name || '',
+          beat: r.beat || '',
+          godown_name: r.godown_name || '',
+          category: r.category || '',
+          unit: r.unit || 'Pcs',
+          address_1: r.address_1 || '',
+          state: r.state || '',
+          pincode: r.pincode || '',
+          regn_type: r.regn_type || '',
+          taxable_value: Number(r.taxable_value || r.taxable_amount || 0),
+          cgst: Number(r.cgst || r.cgst_total || 0),
+          sgst: Number(r.sgst || r.sgst_total || 0),
+          igst: Number(r.igst || r.igst_total || 0),
+          cess_amount: Number(r.cess || r.cess_amount || 0),
+          tcs_amount: Number(r.tcs_amount || 0),
+          tds_amount: Number(r.tds_amount || 0),
+          other_charges: Number(r.other_charges || r.other_expenses || 0),
+          freight_charges: Number(r.freight_charges || 0),
+          labour_charges: Number(r.labour_charges || 0),
+          place_of_supply: r.place_of_supply || '',
+          reverse_charge: r.reverse_charge || 'N',
+          invoice_type: r.invoice_type || '',
+          deposit_bank: r.deposit_bank || '',
+          cheque_bank: r.cheque_bank || '',
+          cheque_no: r.cheque_no || '',
+          cheque_date: r.cheque_date || '',
+          cash_amount: Number(r.cash_amount || r.cash || 0),
+          cheque_amount: Number(r.cheque_amount || 0),
+          online_amount: Number(r.online_amount || 0),
+          fse_detail: r.fse_detail || r.fse || '',
+          message_txn_id: r.message_txn_id || r.txn_id || '',
+          source: r.source || 'Web POS',
+          remark: r.remark || '',
+        }));
+
+        const totalNet = Number(totalRec?.total_net_amt ?? totalRec?.total_net_amount ?? totalRec?.total_netamount ?? 0);
+        const totalTxn = Number(totalRec?.total_txn ?? mapped.length);
+        const totalQty = Number(totalRec?.total_quentity ?? totalRec?.total_quantity ?? mapped.reduce((acc, m) => acc + m.quentity, 0));
+        const totalAmt = Number(totalRec?.total_amount ?? totalRec?.total_amt ?? mapped.reduce((acc, m) => acc + m.net_amount, 0));
+        const totalDisc = Number(totalRec?.total_discount ?? mapped.reduce((acc, m) => acc + m.discount, 0));
+
+        // Format dynamic pattern summary object matching web frontend
+        const summaryByTab: Record<string, number> = {};
+        if (activePattern === 'marg' || activePattern === 'tally') {
+          summaryByTab['total_txn'] = totalTxn;
+          summaryByTab['total_quentity'] = totalQty;
+          summaryByTab['total_amount'] = totalAmt;
+          summaryByTab['total_discount'] = totalDisc;
+          summaryByTab['total_net_amt'] = totalNet || totalAmt;
+        } else if (activePattern === 'busy') {
+          summaryByTab['total_txn'] = totalTxn;
+          summaryByTab['total_quentity'] = totalQty;
+          summaryByTab['total_amount'] = totalAmt;
+        } else if (activePattern === 'tfd') {
+          summaryByTab['total_txn'] = totalTxn;
+          summaryByTab['total_amount'] = totalAmt;
+          summaryByTab['total_taxable'] = Number(totalRec?.total_taxable ?? 0);
+          summaryByTab['total_cgst'] = Number(totalRec?.total_cgst ?? 0);
+          summaryByTab['total_sgst'] = Number(totalRec?.total_sgst ?? 0);
+          summaryByTab['total_igst'] = Number(totalRec?.total_igst ?? 0);
+          summaryByTab['total_cess'] = Number(totalRec?.total_cess ?? 0);
+        } else if (activePattern === 'saral' || activePattern === 'stdItem') {
+          summaryByTab['total_txn'] = totalTxn;
+          summaryByTab['total_quantity'] = totalQty;
+          summaryByTab['total_amt'] = totalAmt;
+        } else if (activePattern === 'stdInv') {
+          summaryByTab['total_txn'] = totalTxn;
+          summaryByTab['total_amount'] = totalAmt;
+          summaryByTab['total_net_amount'] = totalNet || totalAmt;
+          summaryByTab['total_discount'] = totalDisc;
+          summaryByTab['total_cgst'] = Number(totalRec?.total_cgst ?? 0);
+          summaryByTab['total_sgst'] = Number(totalRec?.total_sgst ?? 0);
+        }
+
+        return {
+          data: mapped,
+          summary: {
+            total_bills: totalTxn,
+            total_quentity: totalQty,
+            total_amount: totalAmt,
+            total_discount: totalDisc,
+            total_net_amount: totalNet || totalAmt,
+            summaryByTab,
+          },
+        };
+      }
+    } catch {
+      // Gracefully continue to fallback endpoints
+    }
+
+    // 2. Secondary fallback: /sale/getSaleRegister
     const payload: any = {
       start_date: filters.start_date,
       end_date: filters.end_date,
@@ -87,6 +285,7 @@ export async function fetchSaleRegisterApi(
           hsn,
           party_name: partyName,
           party_phone: partyPhone,
+          party_gstin: r.party_gstin || r.gstin_no || r.gst_no || '',
           quentity: qty,
           price,
           discount,
@@ -94,6 +293,42 @@ export async function fetchSaleRegisterApi(
           tax_amount: taxAmt,
           mode_type: mode,
           bill_type: billType,
+          code: r.code || '',
+          vch_series: r.vch_series || 'GST',
+          sale_type: r.sale_type || '',
+          mc_name: r.mc_name || '',
+          beat: r.beat || '',
+          godown_name: r.godown_name || '',
+          category: r.category || '',
+          unit: r.unit || 'Pcs',
+          address_1: r.address_1 || '',
+          state: r.state || '',
+          pincode: r.pincode || '',
+          regn_type: r.regn_type || '',
+          taxable_value: Number(r.taxable_value || r.taxable_amount || 0),
+          cgst: Number(r.cgst || r.cgst_total || 0),
+          sgst: Number(r.sgst || r.sgst_total || 0),
+          igst: Number(r.igst || r.igst_total || 0),
+          cess_amount: Number(r.cess || r.cess_amount || 0),
+          tcs_amount: Number(r.tcs_amount || 0),
+          tds_amount: Number(r.tds_amount || 0),
+          other_charges: Number(r.other_charges || r.other_expenses || 0),
+          freight_charges: Number(r.freight_charges || 0),
+          labour_charges: Number(r.labour_charges || 0),
+          place_of_supply: r.place_of_supply || '',
+          reverse_charge: r.reverse_charge || 'N',
+          invoice_type: r.invoice_type || '',
+          deposit_bank: r.deposit_bank || '',
+          cheque_bank: r.cheque_bank || '',
+          cheque_no: r.cheque_no || '',
+          cheque_date: r.cheque_date || '',
+          cash_amount: Number(r.cash_amount || r.cash || 0),
+          cheque_amount: Number(r.cheque_amount || 0),
+          online_amount: Number(r.online_amount || 0),
+          fse_detail: r.fse_detail || r.fse || '',
+          message_txn_id: r.message_txn_id || r.txn_id || '',
+          source: r.source || 'POS',
+          remark: r.remark || '',
         };
       });
 

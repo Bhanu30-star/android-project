@@ -401,12 +401,18 @@ export const ReviewAndSubmitSheet: React.FC<ReviewAndSubmitSheetProps> = ({
                     <View style={styles.reviewGstRow}>
                       <View style={styles.reviewGstTag}>
                         <Text style={styles.reviewGstTagText}>
-                          GST {line.product_gst}% · {formatIndianCurrency(line.tax_amount)}
+                          {draft.taxRegion === 'InterState' ? 'IGST' : 'GST'} {line.product_gst}% · {formatIndianCurrency(line.tax_amount)}
                         </Text>
                       </View>
-                      <Text style={styles.reviewGstSplitText}>
-                        CGST {halfRate}%: {formatIndianCurrency(cgst)} · SGST {halfRate}%: {formatIndianCurrency(sgst)}
-                      </Text>
+                      {draft.taxRegion === 'InterState' ? (
+                        <Text style={styles.reviewGstSplitText}>
+                          Integrated Tax: {formatIndianCurrency(line.tax_amount)}
+                        </Text>
+                      ) : (
+                        <Text style={styles.reviewGstSplitText}>
+                          CGST {halfRate}%: {formatIndianCurrency(cgst)} · SGST {halfRate}%: {formatIndianCurrency(sgst)}
+                        </Text>
+                      )}
                     </View>
 
                     {line.cess_amount > 0 || (line.total_crate || 0) > 0 || (line.total_bottle || 0) > 0 ? (
@@ -467,20 +473,33 @@ export const ReviewAndSubmitSheet: React.FC<ReviewAndSubmitSheetProps> = ({
                 <View style={styles.gstBreakdownBox}>
                   <View style={styles.gstBreakdownHeader}>
                     <Feather name="percent" size={13} color={Colors.primary} />
-                    <Text style={styles.gstBreakdownTitle}>GST Tax Breakdown</Text>
-                  </View>
-                  <View style={styles.gstBreakdownRow}>
-                    <Text style={styles.gstBreakdownLabel}>CGST (Central Tax)</Text>
-                    <Text style={styles.gstBreakdownVal}>
-                      {formatIndianCurrency(totalsSummary.totalCgstAmount)}
+                    <Text style={styles.gstBreakdownTitle}>
+                      {draft.taxRegion === 'InterState' ? 'IGST Tax Breakdown' : 'GST Tax Breakdown'}
                     </Text>
                   </View>
-                  <View style={styles.gstBreakdownRow}>
-                    <Text style={styles.gstBreakdownLabel}>SGST (State Tax)</Text>
-                    <Text style={styles.gstBreakdownVal}>
-                      {formatIndianCurrency(totalsSummary.totalSgstAmount)}
-                    </Text>
-                  </View>
+                  {draft.taxRegion === 'InterState' ? (
+                    <View style={styles.gstBreakdownRow}>
+                      <Text style={styles.gstBreakdownLabel}>IGST (Integrated Tax)</Text>
+                      <Text style={styles.gstBreakdownVal}>
+                        {formatIndianCurrency(totalsSummary.totalIgstAmount)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
+                      <View style={styles.gstBreakdownRow}>
+                        <Text style={styles.gstBreakdownLabel}>CGST (Central Tax)</Text>
+                        <Text style={styles.gstBreakdownVal}>
+                          {formatIndianCurrency(totalsSummary.totalCgstAmount)}
+                        </Text>
+                      </View>
+                      <View style={styles.gstBreakdownRow}>
+                        <Text style={styles.gstBreakdownLabel}>SGST (State Tax)</Text>
+                        <Text style={styles.gstBreakdownVal}>
+                          {formatIndianCurrency(totalsSummary.totalSgstAmount)}
+                        </Text>
+                      </View>
+                    </>
+                  )}
                   <View style={styles.gstBreakdownDivider} />
                   <View style={styles.gstBreakdownRow}>
                     <Text style={styles.gstBreakdownTotalLabel}>Total GST</Text>

@@ -175,69 +175,6 @@ export interface ProfileDetails {
   bank_qr_code?: string;
 }
 
-// Developer-only test fixtures for Returnable, Bag, and Serial/IMEI products
-const DEV_TEST_PRODUCTS: ApiProductItem[] = [
-  {
-    product_id: 999901,
-    product_name: '[FIXTURE] Cold Drink 200ml (Returnable Crate & Bottle)',
-    product_code: 'FMCG-RET-01',
-    product_type: 'FMCG',
-    mrp_price: 25,
-    product_price_inc: 20,
-    product_price_exc: 17.86,
-    product_dealer_price: 18,
-    invoice_bill_type: 'Inclusive',
-    new_quantity: 240,
-    unit: 'BTL',
-    maintain_inventory: 'Yes',
-    product_gst: 12,
-    product_cess: 0,
-  },
-  {
-    product_id: 999902,
-    product_name: '[FIXTURE] Premium Basmati Rice (Bag Product 25kg/50kg)',
-    product_code: 'FMCG-BAG-02',
-    product_type: 'FMCG',
-    mrp_price: 2200,
-    product_price_inc: 2000,
-    product_price_exc: 1904.76,
-    product_dealer_price: 75,
-    invoice_bill_type: 'Inclusive',
-    new_quantity: 80,
-    unit: 'BAG',
-    maintain_inventory: 'Yes',
-    product_gst: 5,
-    product_cess: 0,
-    bagjson_detail: [
-      { id: 1, total_unit: 25, sale_price: 1050, bag_name: '25 KG Bag', primary_value: 'Yes', conversion_unit: 'KG' },
-      { id: 2, total_unit: 50, sale_price: 2000, bag_name: '50 KG Bag', primary_value: 'No', conversion_unit: 'KG' },
-    ],
-  },
-  {
-    product_id: 999903,
-    product_name: '[FIXTURE] Smartphone 5G 128GB (Serial / IMEI)',
-    product_code: 'SRL-MOB-03',
-    product_type: 'Serial No',
-    serial_type: 'Mobile',
-    mrp_price: 16999,
-    product_price_inc: 14999,
-    product_price_exc: 12711.02,
-    product_dealer_price: 13500,
-    invoice_bill_type: 'Inclusive',
-    new_quantity: 4,
-    unit: 'PCS',
-    maintain_inventory: 'Yes',
-    product_gst: 18,
-    product_cess: 0,
-    proSerialno_imei: [
-      { IMEI: '862039049281721' },
-      { IMEI: '862039049281722' },
-      { IMEI: '862039049281723' },
-      { IMEI: '862039049281724' },
-    ],
-  },
-];
-
 export const invoiceService = {
   /**
    * Fetch retailers list
@@ -431,25 +368,8 @@ export const invoiceService = {
         return_rows: 20,
       });
 
-      let products = res.data?.data?.cart_list || [];
+      const products = res.data?.data?.cart_list || [];
       const newLastId = res.data?.data?.last_id || 0;
-
-      // Check if catalog has FMCG / Bag / Returnable / Serial test items.
-      // If not, inject fixtures on first page so developer can test every edge case.
-      if (lastId === 0) {
-        const hasFmcg = products.some((p) => p.product_type === 'FMCG');
-        const hasSerial = products.some((p) => p.product_type === 'Serial No');
-
-        if (!hasFmcg || !hasSerial) {
-          const filteredFixtures = DEV_TEST_PRODUCTS.filter((f) =>
-            query
-              ? f.product_name.toLowerCase().includes(query.toLowerCase()) ||
-                (f.product_code && f.product_code.toLowerCase().includes(query.toLowerCase()))
-              : true
-          );
-          products = [...filteredFixtures, ...products];
-        }
-      }
 
       return {
         products,
@@ -457,15 +377,8 @@ export const invoiceService = {
         hasMore: (res.data?.data?.cart_list || []).length >= 20,
       };
     } catch {
-      // Offline / fallback to fixtures
-      const filteredFixtures = DEV_TEST_PRODUCTS.filter((f) =>
-        query
-          ? f.product_name.toLowerCase().includes(query.toLowerCase()) ||
-            (f.product_code && f.product_code.toLowerCase().includes(query.toLowerCase()))
-          : true
-      );
       return {
-        products: filteredFixtures,
+        products: [],
         lastId: 0,
         hasMore: false,
       };

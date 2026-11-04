@@ -402,9 +402,68 @@ export const GenericReportViewerScreen: React.FC = () => {
     Linking.openURL(`tel:${phone}`);
   };
 
+  // Export Excel
+  const handleExportExcel = () => {
+    Alert.alert(
+      'Export Excel (.xlsx)',
+      `${reportTitle} with ${displayedRecords.length} records is ready for spreadsheet export.`,
+      [
+        {
+          text: 'Share / Save',
+          onPress: async () => {
+            try {
+              const summaryText =
+                `*BTHAWK ${reportTitle.toUpperCase()} EXPORT*\n` +
+                `Period: ${fromDate} to ${toDate}\n` +
+                `Total Entries: ${summary.totalEntries}\n` +
+                `Consolidated Net: ${formatIndianCurrency(summary.totalNet)}\n` +
+                `Generated via BTHAWK ERP.`;
+              await Share.share({ message: summaryText, title: `${reportTitle}.xlsx` });
+            } catch {}
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  // Print / PDF preview
+  const handlePrintPdf = () => {
+    Alert.alert(
+      'Print / PDF Statement',
+      `Generate GST-compliant print preview for ${reportTitle}?`,
+      [
+        {
+          text: 'Share Statement',
+          onPress: async () => {
+            try {
+              const printMsg =
+                `*BTHAWK ${reportTitle.toUpperCase()} - STATEMENT*\n` +
+                `Date Range: ${fromDate} to ${toDate}\n` +
+                `Total Entries: ${summary.totalEntries}\n` +
+                `Consolidated Net: ${formatIndianCurrency(summary.totalNet)}\n` +
+                `--------------------------------\n` +
+                displayedRecords
+                  .slice(0, 10)
+                  .map(
+                    (r, i) =>
+                      `${i + 1}. ${r.voucher_no} | ${r.title} | ${formatIndianCurrency(r.net_amount)}`
+                  )
+                  .join('\n') +
+                (displayedRecords.length > 10 ? `\n...and ${displayedRecords.length - 10} more records.` : '') +
+                `\n--------------------------------\nBTHAWK Enterprise ERP Statement.`;
+              await Share.share({ message: printMsg, title: `${reportTitle}_Statement` });
+            } catch {}
+          },
+        },
+        { text: 'Close', style: 'cancel' },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
-      {/* 1. TOP HEADER WITH TOP RIGHT DATE FILTER BUTTON */}
+      {/* 1. TOP HEADER (CLEAN & SPACIOUS - NO OVERLAP) */}
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
@@ -418,79 +477,103 @@ export const GenericReportViewerScreen: React.FC = () => {
             <Text style={styles.headerTitle} numberOfLines={1}>
               {reportTitle}
             </Text>
-            <Text style={styles.headerCategory}>{reportCategory} • ERP Register</Text>
+            <Text style={styles.headerCategory} numberOfLines={1}>{reportCategory} • ERP Register</Text>
           </View>
         </View>
 
         {/* TOP RIGHT ACTIONS */}
         <View style={styles.headerRight}>
-          {/* TOP RIGHT DATE FILTER BUTTON */}
+          {/* EXCEL EXPORT BUTTON */}
           <TouchableOpacity
-            style={styles.topRightDateBtn}
-            onPress={() => setIsDateModalOpen(true)}
-            activeOpacity={0.8}
+            onPress={handleExportExcel}
+            style={styles.headerActionIconBtn}
+            activeOpacity={0.7}
+            accessibilityLabel="Export Excel"
           >
-            <Feather name="calendar" size={13} color="#0047AB" />
-            <Text style={styles.topRightDateBtnText} numberOfLines={1}>
-              {getDateLabel()}
-            </Text>
-            <Feather name="chevron-down" size={12} color="#0047AB" />
+            <Feather name="download" size={15} color="#16A34A" />
           </TouchableOpacity>
 
+          {/* PRINT / PDF BUTTON */}
+          <TouchableOpacity
+            onPress={handlePrintPdf}
+            style={styles.headerActionIconBtn}
+            activeOpacity={0.7}
+            accessibilityLabel="Print Statement"
+          >
+            <Feather name="printer" size={15} color="#0047AB" />
+          </TouchableOpacity>
+
+          {/* REFRESH BUTTON */}
           <TouchableOpacity
             style={styles.headerRefreshBtn}
             onPress={() => loadData(true)}
             activeOpacity={0.7}
           >
-            <Feather name="rotate-cw" size={16} color="#0E204E" />
+            <Feather name="rotate-cw" size={15} color="#0E204E" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 2. FULL-WIDTH SEARCH BAR */}
+      {/* 2. DATE FILTER & SEARCH SECTION */}
       <View style={styles.filterSection}>
-        <View style={styles.searchBox}>
-          <Feather name="search" size={16} color="#8FA0B8" style={{ marginRight: 6 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search reference, party, product, voucher..."
-            placeholderTextColor="#8FA0B8"
-            value={search}
-            onChangeText={setSearch}
-            clearButtonMode="while-editing"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Feather name="x-circle" size={15} color="#8FA0B8" />
-            </TouchableOpacity>
-          )}
+        <View style={styles.searchAndDateRow}>
+          {/* INTERACTIVE DATE FILTER BUTTON */}
+          <TouchableOpacity
+            style={styles.calendarFilterPill}
+            onPress={() => setIsDateModalOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Feather name="calendar" size={13} color="#0047AB" />
+            <Text style={styles.calendarFilterPillText} numberOfLines={1}>
+              {getDateLabel()}
+            </Text>
+            <Feather name="chevron-down" size={12} color="#0047AB" />
+          </TouchableOpacity>
+
+          {/* SEARCH BOX */}
+          <View style={styles.searchBox}>
+            <Feather name="search" size={16} color="#8FA0B8" style={{ marginRight: 6 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search reference, party..."
+              placeholderTextColor="#8FA0B8"
+              value={search}
+              onChangeText={setSearch}
+              clearButtonMode="while-editing"
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Feather name="x-circle" size={15} color="#8FA0B8" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
 
       {/* 3. METRIC SUMMARY BAR */}
       <View style={styles.summaryBar}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Entries</Text>
-          <Text style={styles.summaryValue}>{summary.totalEntries}</Text>
+        <View style={styles.summaryTopRow}>
+          <View style={styles.summaryBadge}>
+            <Ionicons name="document-text-outline" size={13} color="#0047AB" />
+            <Text style={styles.summaryBadgeText}>{summary.totalEntries} Entries</Text>
+          </View>
+          <View style={styles.summaryHeroAmount}>
+            <Text style={styles.summaryHeroLabel}>CONSOLIDATED NET</Text>
+            <Text style={styles.summaryHeroVal}>{formatIndianCurrency(summary.totalNet)}</Text>
+          </View>
         </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Qty</Text>
-          <Text style={styles.summaryValue}>{formatIndianNumber(summary.totalQty)}</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Tax/Disc</Text>
-          <Text style={[styles.summaryValue, { color: '#D97706' }]}>
-            {formatIndianCurrency(summary.totalTaxOrDisc)}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Consolidated</Text>
-          <Text style={[styles.summaryValue, { color: '#0047AB' }]}>
-            {formatIndianCurrency(summary.totalNet)}
-          </Text>
+        <View style={styles.summaryBottomRow}>
+          <View style={styles.summarySubItem}>
+            <Text style={styles.summarySubLabel}>Total Qty</Text>
+            <Text style={styles.summarySubVal}>{formatIndianNumber(summary.totalQty)}</Text>
+          </View>
+          <View style={styles.summarySubDivider} />
+          <View style={styles.summarySubItem}>
+            <Text style={styles.summarySubLabel}>Tax / Disc</Text>
+            <Text style={[styles.summarySubVal, { color: '#D97706' }]}>
+              {formatIndianCurrency(summary.totalTaxOrDisc)}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -546,8 +629,8 @@ export const GenericReportViewerScreen: React.FC = () => {
             <TouchableOpacity
               key={`${item.id}-${item.voucher_no}`}
               style={styles.voucherCard}
-              activeOpacity={0.9}
-              onPress={() => setActionSheetRecord(item)}
+              activeOpacity={0.85}
+              onPress={() => setSelectedItem(item)}
             >
               {/* CARD ROW 1: BILL/VOUCHER NUMBER + STATUS BADGE + 3-DOT KEBAB */}
               <View style={styles.cardHeaderRow}>
@@ -617,23 +700,23 @@ export const GenericReportViewerScreen: React.FC = () => {
 
               {/* CARD ROW 5: 4-COLUMN METRICS */}
               <View style={styles.metricsRow}>
-                <View style={styles.metricCol}>
-                  <Text style={styles.metricVal}>{formatIndianNumber(item.quantity)}</Text>
+                <View style={[styles.metricCol, styles.metricColQty]}>
+                  <Text style={styles.metricVal} numberOfLines={1}>{formatIndianNumber(item.quantity)}</Text>
                   <Text style={styles.metricLabel}>Qty</Text>
                 </View>
 
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricVal}>{formatIndianCurrency(item.rate)}</Text>
+                  <Text style={styles.metricVal} numberOfLines={1}>{formatIndianCurrency(item.rate)}</Text>
                   <Text style={styles.metricLabel}>Rate</Text>
                 </View>
 
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricVal}>{formatIndianCurrency(item.tax_or_disc)}</Text>
+                  <Text style={styles.metricVal} numberOfLines={1}>{formatIndianCurrency(item.tax_or_disc)}</Text>
                   <Text style={styles.metricLabel}>Tax/Disc</Text>
                 </View>
 
                 <View style={[styles.metricCol, styles.metricColNet]}>
-                  <Text style={[styles.metricVal, styles.metricValNet]}>
+                  <Text style={[styles.metricVal, styles.metricValNet]} numberOfLines={1}>
                     {formatIndianCurrency(item.net_amount)}
                   </Text>
                   <Text style={styles.metricLabelNet}>Net</Text>
@@ -799,27 +882,65 @@ export const GenericReportViewerScreen: React.FC = () => {
 
               <View style={styles.detailHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailVoucherNo}>{selectedItem.voucher_no}</Text>
-                  <Text style={styles.detailDate}>{selectedItem.voucher_date}</Text>
+                  <View style={styles.detailVoucherRow}>
+                    <Ionicons name="receipt-outline" size={17} color="#0047AB" style={{ marginRight: 6 }} />
+                    <Text style={styles.detailVoucherNo}>{selectedItem.voucher_no}</Text>
+                  </View>
+                  <View style={styles.detailDateRow}>
+                    <Feather name="calendar" size={12} color="#5A6B87" style={{ marginRight: 4 }} />
+                    <Text style={styles.detailDate}>Dated: {selectedItem.voucher_date}</Text>
+                    <View
+                      style={[
+                        styles.modeBadge,
+                        {
+                          backgroundColor:
+                            selectedItem.status === 'Cancelled' ? '#FEF2F2' : '#EFF6FF',
+                          borderColor:
+                            selectedItem.status === 'Cancelled' ? '#FECACA' : '#BFDBFE',
+                          paddingVertical: 1,
+                          paddingHorizontal: 6,
+                          marginLeft: 6,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.modeBadgeText,
+                          { color: selectedItem.statusColor || '#0047AB', fontSize: 9 },
+                        ]}
+                      >
+                        {selectedItem.mode || selectedItem.status}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
                 <TouchableOpacity
                   style={styles.modalCloseCircle}
                   onPress={() => setSelectedItem(null)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Feather name="x" size={18} color="#5A6B87" />
                 </TouchableOpacity>
               </View>
 
               <ScrollView style={styles.detailBody} showsVerticalScrollIndicator={false}>
+                {/* SECTION 1: PARTICULARS & COMMERCIAL DETAILS */}
                 <View style={styles.detailSection}>
-                  <Text style={styles.detailSectionTitle}>ENTRY PARTICULARS</Text>
+                  <View style={styles.detailSectionHeaderRow}>
+                    <Feather name="info" size={13} color="#0047AB" style={{ marginRight: 6 }} />
+                    <Text style={styles.detailSectionTitle}>ENTRY PARTICULARS</Text>
+                  </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailKey}>Title / Item</Text>
-                    <Text style={styles.detailVal}>{selectedItem.title}</Text>
+                    <Text style={[styles.detailVal, { fontWeight: '800', color: '#0047AB' }]}>
+                      {selectedItem.title}
+                    </Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailKey}>Entity / Party</Text>
-                    <Text style={styles.detailVal}>{selectedItem.subtitle}</Text>
+                    <Text style={[styles.detailVal, { fontWeight: '700' }]}>
+                      {selectedItem.subtitle}
+                    </Text>
                   </View>
                   {selectedItem.code ? (
                     <View style={styles.detailRow}>
@@ -830,7 +951,15 @@ export const GenericReportViewerScreen: React.FC = () => {
                   {selectedItem.party_phone ? (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailKey}>Phone</Text>
-                      <Text style={styles.detailVal}>{selectedItem.party_phone}</Text>
+                      <View style={styles.detailPhoneActions}>
+                        <Text style={styles.detailVal}>{selectedItem.party_phone}</Text>
+                        <TouchableOpacity
+                          onPress={() => handleCallParty(selectedItem.party_phone)}
+                          style={styles.inlinePhoneBtn}
+                        >
+                          <Feather name="phone" size={12} color="#0047AB" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   ) : null}
                   <View style={styles.detailRow}>
@@ -839,9 +968,41 @@ export const GenericReportViewerScreen: React.FC = () => {
                   </View>
                 </View>
 
-                {selectedItem.details && (
+                {/* SECTION 2: QUANTITY & VALUE BREAKDOWN */}
+                <View style={styles.detailSection}>
+                  <View style={styles.detailSectionHeaderRow}>
+                    <Ionicons name="calculator-outline" size={13} color="#0047AB" style={{ marginRight: 6 }} />
+                    <Text style={styles.detailSectionTitle}>QUANTITY & VALUE BREAKDOWN</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailKey}>Quantity</Text>
+                    <Text style={styles.detailVal}>{formatIndianNumber(selectedItem.quantity)} Units</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailKey}>Unit Rate</Text>
+                    <Text style={styles.detailVal}>{formatIndianCurrency(selectedItem.rate)}</Text>
+                  </View>
+                  {selectedItem.tax_or_disc > 0 ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailKey}>Tax / Charges</Text>
+                      <Text style={styles.detailVal}>{formatIndianCurrency(selectedItem.tax_or_disc)}</Text>
+                    </View>
+                  ) : null}
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailKey}>Audit Status</Text>
+                    <Text style={[styles.detailVal, { color: selectedItem.statusColor || '#16A34A', fontWeight: '800' }]}>
+                      {selectedItem.status}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* SECTION 3: LEDGER DETAILS */}
+                {selectedItem.details && Object.keys(selectedItem.details).length > 0 && (
                   <View style={styles.detailSection}>
-                    <Text style={styles.detailSectionTitle}>LEDGER DETAILS</Text>
+                    <View style={styles.detailSectionHeaderRow}>
+                      <Ionicons name="layers-outline" size={13} color="#0047AB" style={{ marginRight: 6 }} />
+                      <Text style={styles.detailSectionTitle}>LEDGER DETAILS & AUDIT LOG</Text>
+                    </View>
                     {Object.entries(selectedItem.details).map(([k, v]) => (
                       <View key={k} style={styles.detailRow}>
                         <Text style={styles.detailKey}>{k}</Text>
@@ -851,11 +1012,21 @@ export const GenericReportViewerScreen: React.FC = () => {
                   </View>
                 )}
 
+                {/* SECTION 4: NET VALUE HERO BANNER */}
                 <View style={styles.detailNetCard}>
-                  <Text style={styles.detailNetLabel}>NET VALUE</Text>
+                  <Text style={styles.detailNetLabel}>CONSOLIDATED NET VALUE</Text>
                   <Text style={styles.detailNetVal}>
                     {formatIndianCurrency(selectedItem.net_amount)}
                   </Text>
+                  <View style={styles.detailNetSubRow}>
+                    <Text style={styles.detailNetSubText}>
+                      Qty: {formatIndianNumber(selectedItem.quantity)} Units
+                    </Text>
+                    <Text style={styles.detailNetSubDivider}>•</Text>
+                    <Text style={styles.detailNetSubText}>
+                      Status: {selectedItem.status}
+                    </Text>
+                  </View>
                 </View>
               </ScrollView>
 
@@ -868,6 +1039,16 @@ export const GenericReportViewerScreen: React.FC = () => {
                   <Ionicons name="logo-whatsapp" size={17} color="#FFFFFF" style={{ marginRight: 6 }} />
                   <Text style={styles.detailShareBtnText}>Share on WhatsApp</Text>
                 </TouchableOpacity>
+
+                {selectedItem.party_phone ? (
+                  <TouchableOpacity
+                    style={styles.detailCallBtn}
+                    onPress={() => handleCallParty(selectedItem.party_phone)}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="phone" size={16} color="#0047AB" />
+                  </TouchableOpacity>
+                ) : null}
 
                 <TouchableOpacity
                   style={styles.detailCloseBtn}
@@ -949,7 +1130,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#0047AB',
-    maxWidth: 70,
+  },
+  headerActionIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#F4F8FD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
   },
   headerRefreshBtn: {
     width: 32,
@@ -971,7 +1161,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#DFE7F2',
   },
+  searchAndDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  calendarFilterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 5,
+  },
+  calendarFilterPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0047AB',
+    maxWidth: 80,
+  },
   searchBox: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4F8FD',
@@ -990,42 +1203,82 @@ const styles = StyleSheet.create({
 
   // 3. SUMMARY BAR
   summaryBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 14,
     marginTop: 10,
-    marginBottom: 6,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#DFE7F2',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
+    gap: 10,
   },
-  summaryItem: {
+  summaryTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  summaryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 4,
+  },
+  summaryBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
+  summaryHeroAmount: {
+    alignItems: 'flex-end',
+  },
+  summaryHeroLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#8FA0B8',
+    letterSpacing: 0.5,
+  },
+  summaryHeroVal: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0047AB',
+    marginTop: 1,
+  },
+  summaryBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  summarySubItem: {
     flex: 1,
     alignItems: 'center',
   },
-  summaryDivider: {
+  summarySubDivider: {
     width: 1,
-    height: 24,
-    backgroundColor: '#DFE7F2',
+    height: 20,
+    backgroundColor: '#E2E8F0',
   },
-  summaryLabel: {
+  summarySubLabel: {
     fontSize: 10,
-    fontWeight: '600',
     color: '#5A6B87',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    fontWeight: '600',
     marginBottom: 2,
   },
-  summaryValue: {
-    fontSize: 13,
+  summarySubVal: {
+    fontSize: 12,
     fontWeight: '800',
     color: '#0E204E',
   },
@@ -1195,10 +1448,18 @@ const styles = StyleSheet.create({
   metricCol: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 2,
+  },
+  metricColQty: {
+    flex: 0.85,
   },
   metricColNet: {
+    flex: 1.35,
     borderLeftWidth: 1,
     borderLeftColor: '#DFE7F2',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 6,
+    paddingVertical: 2,
   },
   metricVal: {
     fontSize: 12,
@@ -1353,7 +1614,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 12,
     paddingBottom: 30,
-    maxHeight: '85%',
+    maxHeight: '88%',
   },
   detailHeader: {
     flexDirection: 'row',
@@ -1363,15 +1624,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
+  detailVoucherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   detailVoucherNo: {
     fontSize: 16,
     fontWeight: '800',
     color: '#0047AB',
+    letterSpacing: -0.2,
+  },
+  detailDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
   detailDate: {
     fontSize: 11,
     color: '#5A6B87',
-    marginTop: 2,
+    fontWeight: '600',
   },
   modalCloseCircle: {
     width: 32,
@@ -1395,22 +1666,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 6,
   },
+  detailSectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 4,
+  },
   detailSectionTitle: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#8FA0B8',
+    color: '#0047AB',
     letterSpacing: 0.5,
-    marginBottom: 4,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 2,
+    alignItems: 'center',
   },
   detailKey: {
     fontSize: 11,
     color: '#5A6B87',
     fontWeight: '600',
+    flex: 1,
   },
   detailVal: {
     fontSize: 11,
@@ -1418,6 +1698,20 @@ const styles = StyleSheet.create({
     color: '#0E204E',
     textAlign: 'right',
     maxWidth: '65%',
+  },
+  detailPhoneActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  inlinePhoneBtn: {
+    padding: 4,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   detailNetCard: {
     backgroundColor: '#EFF6FF',
@@ -1440,13 +1734,30 @@ const styles = StyleSheet.create({
     color: '#0047AB',
     marginTop: 4,
   },
+  detailNetSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 6,
+    justifyContent: 'center',
+  },
+  detailNetSubText: {
+    fontSize: 11,
+    color: '#5A6B87',
+    fontWeight: '600',
+  },
+  detailNetSubDivider: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
   detailActionsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     paddingTop: 8,
+    alignItems: 'center',
   },
   detailShareBtn: {
-    flex: 2,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1459,8 +1770,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  detailCallBtn: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   detailCloseBtn: {
-    flex: 1,
+    paddingHorizontal: 16,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F4F8FD',

@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { Colors } from '@/theme/tokens';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { formatYmd, formatReadable } from '@/utils/dateUtils';
 
 interface CalendarPickerModalProps {
@@ -20,7 +19,7 @@ interface CalendarPickerModalProps {
   title?: string;
 }
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_NAMES = [
   'January',
   'February',
@@ -42,7 +41,7 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
   selectedDate,
   onSelectDate,
   maxDate = new Date(),
-  title = 'Select Invoice Date',
+  title = 'Select Date',
 }) => {
   const initialDate = selectedDate ? new Date(selectedDate) : new Date();
   const validInitial = isNaN(initialDate.getTime()) ? new Date() : initialDate;
@@ -77,7 +76,6 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // Days array: leading empty cells + day numbers
   const calendarCells: (number | null)[] = [];
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarCells.push(null);
@@ -89,7 +87,6 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
   const handleSelectDay = (day: number) => {
     const d = new Date(currentYear, currentMonth, day);
     if (maxDate && d.getTime() > maxDate.getTime() + 86400000 - 1) {
-      // Future date beyond allowed
       return;
     }
     const ymd = formatYmd(d);
@@ -122,22 +119,27 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
         <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>{title}</Text>
-              <Text style={styles.selectedDisplay}>
-                {formatReadable(tentativeDate)}
-              </Text>
+            <View style={styles.headerLeft}>
+              <View style={styles.calendarIconCircle}>
+                <Ionicons name="calendar" size={18} color="#0047AB" />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>{title}</Text>
+                <Text style={styles.selectedDisplay}>
+                  {formatReadable(tentativeDate)}
+                </Text>
+              </View>
             </View>
             <TouchableOpacity
               onPress={onClose}
               style={styles.closeBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Feather name="x" size={20} color={Colors.textSecondary} />
+              <Feather name="x" size={18} color="#5A6B87" />
             </TouchableOpacity>
           </View>
 
-          {/* Quick presets */}
+          {/* Quick Presets */}
           <View style={styles.presetRow}>
             <TouchableOpacity
               style={[
@@ -145,7 +147,14 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
                 tentativeDate === todayStr && styles.presetChipActive,
               ]}
               onPress={() => handleQuickPreset('today')}
+              activeOpacity={0.75}
             >
+              <Feather
+                name="zap"
+                size={12}
+                color={tentativeDate === todayStr ? '#FFFFFF' : '#0047AB'}
+                style={{ marginRight: 4 }}
+              />
               <Text
                 style={[
                   styles.presetChipText,
@@ -164,7 +173,18 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
                   styles.presetChipActive,
               ]}
               onPress={() => handleQuickPreset('yesterday')}
+              activeOpacity={0.75}
             >
+              <Feather
+                name="rotate-ccw"
+                size={12}
+                color={
+                  tentativeDate === formatYmd(new Date(Date.now() - 86400000))
+                    ? '#FFFFFF'
+                    : '#0047AB'
+                }
+                style={{ marginRight: 4 }}
+              />
               <Text
                 style={[
                   styles.presetChipText,
@@ -183,9 +203,9 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             <TouchableOpacity
               onPress={handlePrevMonth}
               style={styles.navArrow}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
             >
-              <Feather name="chevron-left" size={20} color={Colors.text} />
+              <Feather name="chevron-left" size={18} color="#0047AB" />
             </TouchableOpacity>
 
             <Text style={styles.monthYearTitle}>
@@ -195,24 +215,25 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             <TouchableOpacity
               onPress={handleNextMonth}
               style={styles.navArrow}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
             >
-              <Feather name="chevron-right" size={20} color={Colors.text} />
+              <Feather name="chevron-right" size={18} color="#0047AB" />
             </TouchableOpacity>
           </View>
 
           {/* Day of Week Headers */}
           <View style={styles.dowRow}>
             {DAYS_OF_WEEK.map((dow, idx) => (
-              <Text
-                key={dow}
-                style={[
-                  styles.dowText,
-                  (idx === 0 || idx === 6) && styles.dowWeekend,
-                ]}
-              >
-                {dow}
-              </Text>
+              <View key={dow} style={styles.dowCell}>
+                <Text
+                  style={[
+                    styles.dowText,
+                    (idx === 0 || idx === 6) && styles.dowWeekend,
+                  ]}
+                >
+                  {dow}
+                </Text>
+              </View>
             ))}
           </View>
 
@@ -220,7 +241,7 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
           <View style={styles.daysGrid}>
             {calendarCells.map((day, idx) => {
               if (day === null) {
-                return <View key={`empty-${idx}`} style={styles.dayCell} />;
+                return <View key={`empty-${idx}`} style={styles.cellWrapper} />;
               }
 
               const cellDate = new Date(currentYear, currentMonth, day);
@@ -231,27 +252,31 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
                 maxDate && cellDate.getTime() > maxDate.getTime() + 86400000 - 1;
 
               return (
-                <TouchableOpacity
-                  key={`day-${day}`}
-                  style={[
-                    styles.dayCell,
-                    isSelected && styles.dayCellSelected,
-                    isToday && !isSelected && styles.dayCellToday,
-                  ]}
-                  onPress={() => handleSelectDay(day)}
-                  disabled={isFuture}
-                >
-                  <Text
+                <View key={`day-${day}`} style={styles.cellWrapper}>
+                  <TouchableOpacity
                     style={[
-                      styles.dayText,
-                      isSelected && styles.dayTextSelected,
-                      isToday && !isSelected && styles.dayTextToday,
-                      isFuture && styles.dayTextDisabled,
+                      styles.dayButton,
+                      isSelected && styles.dayButtonSelected,
+                      isToday && !isSelected && styles.dayButtonToday,
+                      isFuture && styles.dayButtonDisabled,
                     ]}
+                    onPress={() => handleSelectDay(day)}
+                    disabled={isFuture}
+                    activeOpacity={0.7}
                   >
-                    {day}
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.dayText,
+                        isSelected && styles.dayTextSelected,
+                        isToday && !isSelected && styles.dayTextToday,
+                        isFuture && styles.dayTextDisabled,
+                      ]}
+                    >
+                      {day}
+                    </Text>
+                    {isToday && !isSelected && <View style={styles.todayDot} />}
+                  </TouchableOpacity>
+                </View>
               );
             })}
           </View>
@@ -269,8 +294,9 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             <TouchableOpacity
               style={styles.confirmBtn}
               onPress={handleConfirm}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
+              <Feather name="check" size={15} color="#FFFFFF" style={{ marginRight: 5 }} />
               <Text style={styles.confirmBtnText}>Apply Date</Text>
             </TouchableOpacity>
           </View>
@@ -283,143 +309,196 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    backgroundColor: 'rgba(10, 37, 88, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 18,
   },
   modalContent: {
     width: '100%',
     maxWidth: 360,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    borderRadius: 24,
+    padding: 18,
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
-    shadowRadius: 25,
-    elevation: 10,
+    shadowRadius: 20,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 10,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  calendarIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   headerTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#8FA0B8',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   selectedDisplay: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
-    color: '#1E1B4B',
-    marginTop: 2,
+    color: '#0E204E',
+    marginTop: 1,
   },
   closeBtn: {
-    padding: 4,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
   },
   presetRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    backgroundColor: '#F4F8FD',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#DFE7F2',
   },
   presetChipActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#3730A3',
+    backgroundColor: '#0047AB',
+    borderColor: '#0047AB',
   },
   presetChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#5A6B87',
   },
   presetChipTextActive: {
-    color: '#3730A3',
-    fontWeight: '700',
+    color: '#FFFFFF',
   },
   navRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    marginBottom: 8,
+    borderTopColor: '#F1F5F9',
+    marginBottom: 6,
   },
   navArrow: {
-    padding: 6,
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   monthYearTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0E204E',
   },
   dowRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
+  },
+  dowCell: {
+    flex: 1,
+    alignItems: 'center',
   },
   dowText: {
-    width: 40,
-    textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#8FA0B8',
   },
   dowWeekend: {
-    color: '#9CA3AF',
+    color: '#DC2626',
   },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  dayCell: {
-    width: 40,
+  cellWrapper: {
+    width: '14.28%',
     height: 38,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    marginVertical: 2,
+    marginVertical: 1,
   },
-  dayCellSelected: {
-    backgroundColor: '#3730A3',
+  dayButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  dayCellToday: {
+  dayButtonSelected: {
+    backgroundColor: '#0047AB',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dayButtonToday: {
     borderWidth: 1.5,
-    borderColor: '#3730A3',
+    borderColor: '#FF6E00',
+  },
+  todayDot: {
+    position: 'absolute',
+    bottom: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#FF6E00',
+  },
+  dayButtonDisabled: {
+    opacity: 0.35,
   },
   dayText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0E204E',
   },
   dayTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '900',
   },
   dayTextToday: {
-    color: '#3730A3',
-    fontWeight: '700',
+    color: '#FF6E00',
+    fontWeight: '800',
   },
   dayTextDisabled: {
-    color: '#D1D5DB',
+    color: '#CBD5E1',
   },
   actionRow: {
     flexDirection: 'row',
@@ -427,28 +506,37 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#F1F5F9',
   },
   cancelBtn: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    backgroundColor: '#F4F8FD',
+    borderWidth: 1,
+    borderColor: '#DFE7F2',
   },
   cancelBtnText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#4B5563',
+    fontWeight: '700',
+    color: '#5A6B87',
   },
   confirmBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#3730A3',
+    borderRadius: 12,
+    backgroundColor: '#0047AB',
+    shadowColor: '#0047AB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
   },
   confirmBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
 });

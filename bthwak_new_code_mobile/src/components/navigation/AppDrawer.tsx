@@ -185,6 +185,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
     ) {
       router.push('/generate-receipt' as any);
     } else if (
+      route === '/receipt-register' ||
       route === '/receipt-book' ||
       route === '/sale/receipt-book' ||
       route === '/receipt_book'
@@ -202,11 +203,19 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       route === '/credit-note-detail' ||
       route === '/credit-note'
     ) {
-      router.push('/master/Creditnote' as any);
+      router.push('/credit-note-detail' as any);
     } else if (route === '/product/waste_damage' || route === '/waste-damage') {
       router.push('/product/waste_damage' as any);
     } else if (route === '/product/add' || route === '/product-master' || route.startsWith('/product')) {
       router.push('/product-master');
+    } else if (
+      route === '/pending_request' ||
+      route === '/stock_transfer' ||
+      route === '/cancelled_request' ||
+      route === '/Executive_stocktransfer' ||
+      route === '/stock-request-master'
+    ) {
+      router.push(route as any);
     } else if (route === '/dashboard') {
       onNavigateTab?.('dashboard');
     } else if (route === '/invoice' || route.startsWith('/invoice')) {

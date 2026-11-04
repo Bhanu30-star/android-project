@@ -669,6 +669,10 @@ export default function DashboardScreen() {
             router.push('/generate-invoice');
             return;
           }
+          if (tab === 'parties') {
+            router.push('/add-stock' as any);
+            return;
+          }
           setActiveTab(tab);
         }}
       />

@@ -31,6 +31,7 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
       <TouchableOpacity
         style={styles.tabBtn}
         onPress={() => {
+          if (activeTab === 'sales') return;
           router.push('/generate-invoice' as any);
         }}
         activeOpacity={0.75}
@@ -62,7 +63,10 @@ export const AppTabBar: React.FC<AppTabBarProps> = ({
       {/* 2. PURCHASE TAB */}
       <TouchableOpacity
         style={styles.tabBtn}
-        onPress={() => onTabChange('parties')}
+        onPress={() => {
+          if (activeTab === 'parties') return;
+          router.push('/add-stock' as any);
+        }}
         activeOpacity={0.75}
         accessibilityLabel="Purchase tab"
         accessibilityRole="button"

@@ -31,7 +31,7 @@ interface AuthContextType {
   user: DecodedAuthPayload | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  loginWithToken: (token: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<DecodedAuthPayload | null>;
   logout: () => Promise<void>;
 }
 
@@ -40,7 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
-  loginWithToken: async () => {},
+  loginWithToken: async () => null,
   logout: async () => {},
 });
 
@@ -96,15 +96,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const loginWithToken = async (newToken: string) => {
+  const loginWithToken = async (newToken: string): Promise<DecodedAuthPayload | null> => {
     await saveAuthToken(newToken);
     setToken(newToken);
     try {
       const decoded = jwtDecode<DecodedAuthPayload>(newToken);
       setUser(decoded);
       await saveUserData(decoded);
+      return decoded;
     } catch {
       setUser(null);
+      return null;
     }
   };
 

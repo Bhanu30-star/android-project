@@ -130,7 +130,7 @@ export const SalesView: React.FC<SalesViewProps> = ({
       </View>
 
       {/* QUICK INVOICE CREATION ACTIONS */}
-      <Text style={styles.sectionTitle}>Invoicing Operations</Text>
+      <Text style={styles.sectionTitle}>Invoicing & Collection Operations</Text>
       <View style={styles.grid}>
         <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={onNewInvoice}>
           <View style={[styles.actionIcon, { backgroundColor: '#EFF6FF' }]}>
@@ -140,12 +140,40 @@ export const SalesView: React.FC<SalesViewProps> = ({
           <Text style={styles.actionDesc}>Generate GST invoice with HSN</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={onNewInvoice}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/receipt-book' as any)}
+        >
           <View style={[styles.actionIcon, { backgroundColor: '#ECFDF5' }]}>
-            <Feather name="truck" size={20} color="#10B981" />
+            <Ionicons name="book-outline" size={20} color="#059669" />
           </View>
-          <Text style={styles.actionTitle}>Delivery Challan</Text>
-          <Text style={styles.actionDesc}>Create delivery & dispatch note</Text>
+          <Text style={styles.actionTitle}>Receipt Register</Text>
+          <Text style={styles.actionDesc}>View collection slips & register</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/generate-receipt' as any)}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: '#F0FDF4' }]}>
+            <Feather name="plus-circle" size={20} color="#16A34A" />
+          </View>
+          <Text style={styles.actionTitle}>Generate Receipt</Text>
+          <Text style={styles.actionDesc}>Collect payment against invoice</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/sales-register' as any)}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: '#FAF5FF' }]}>
+            <Ionicons name="receipt-outline" size={20} color="#9333EA" />
+          </View>
+          <Text style={styles.actionTitle}>Sale Register</Text>
+          <Text style={styles.actionDesc}>Export full ledger & sales history</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -160,16 +188,12 @@ export const SalesView: React.FC<SalesViewProps> = ({
           <Text style={styles.actionDesc}>Manage returned goods & credit note</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionCard}
-          activeOpacity={0.7}
-          onPress={() => router.push('/sales-register' as any)}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: '#FAF5FF' }]}>
-            <Ionicons name="receipt-outline" size={20} color="#9333EA" />
+        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={onNewInvoice}>
+          <View style={[styles.actionIcon, { backgroundColor: '#F1F5F9' }]}>
+            <Feather name="truck" size={20} color="#475569" />
           </View>
-          <Text style={styles.actionTitle}>Sale Register</Text>
-          <Text style={styles.actionDesc}>Export full ledger & sales history</Text>
+          <Text style={styles.actionTitle}>Delivery Challan</Text>
+          <Text style={styles.actionDesc}>Create delivery & dispatch note</Text>
         </TouchableOpacity>
       </View>
 

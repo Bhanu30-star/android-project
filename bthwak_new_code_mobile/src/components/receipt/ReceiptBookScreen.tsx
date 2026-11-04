@@ -242,7 +242,7 @@ export const ReceiptBookScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* 1. TOP HEADER BAR WITH TOP RIGHT DATE FILTER BUTTON */}
+      {/* 1. TOP HEADER BAR (CLEAN & SPACIOUS - NO OVERLAP) */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
@@ -258,27 +258,14 @@ export const ReceiptBookScreen: React.FC = () => {
           >
             <Feather name="chevron-left" size={24} color="#0E204E" />
           </TouchableOpacity>
-          <View>
-            <Text style={styles.headerTitle}>Receipt Book</Text>
-            <Text style={styles.headerSubtitle}>Vouchers, settlements & receipts</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle} numberOfLines={1}>Receipt Register</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={1}>Vouchers, settlements & payment slips</Text>
           </View>
         </View>
 
         {/* TOP RIGHT ACTIONS */}
         <View style={styles.headerActions}>
-          {/* TOP RIGHT DATE FILTER BUTTON */}
-          <TouchableOpacity
-            style={styles.topRightDateBtn}
-            onPress={() => setIsDateModalOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Feather name="calendar" size={13} color="#0047AB" />
-            <Text style={styles.topRightDateBtnText} numberOfLines={1}>
-              {getDateLabel()}
-            </Text>
-            <Feather name="chevron-down" size={12} color="#0047AB" />
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.newReceiptBtn}
             onPress={() => router.push('/generate-receipt')}
@@ -349,23 +336,39 @@ export const ReceiptBookScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 3. FULL-WIDTH SEARCH & PAYMENT MODE CHIPS */}
+      {/* 3. DATE FILTER & SEARCH SECTION */}
       <View style={styles.searchBarSection}>
-        <View style={styles.searchBox}>
-          <Feather name="search" size={16} color="#8FA0B8" style={{ marginRight: 6 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search party, bill, phone, receipt no..."
-            placeholderTextColor="#8FA0B8"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Feather name="x-circle" size={15} color="#8FA0B8" />
-            </TouchableOpacity>
-          )}
+        <View style={styles.searchAndDateRow}>
+          {/* INTERACTIVE DATE FILTER BUTTON */}
+          <TouchableOpacity
+            style={styles.calendarFilterPill}
+            onPress={() => setIsDateModalOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Feather name="calendar" size={13} color="#0047AB" />
+            <Text style={styles.calendarFilterPillText} numberOfLines={1}>
+              {getDateLabel()}
+            </Text>
+            <Feather name="chevron-down" size={12} color="#0047AB" />
+          </TouchableOpacity>
+
+          {/* SEARCH BOX */}
+          <View style={styles.searchBox}>
+            <Feather name="search" size={16} color="#8FA0B8" style={{ marginRight: 6 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search party, bill, phone..."
+              placeholderTextColor="#8FA0B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Feather name="x-circle" size={15} color="#8FA0B8" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* PAYMENT MODE FILTER CHIPS */}
@@ -390,23 +393,30 @@ export const ReceiptBookScreen: React.FC = () => {
 
       {/* 4. SUMMARY METRIC STRIP */}
       <View style={styles.summaryBar}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Receipts</Text>
-          <Text style={styles.summaryValue}>{stats.totalCount}</Text>
+        <View style={styles.summaryTopRow}>
+          <View style={styles.summaryBadge}>
+            <Ionicons name="receipt-outline" size={13} color="#0047AB" />
+            <Text style={styles.summaryBadgeText}>{stats.totalCount} Receipts</Text>
+          </View>
+          <View style={styles.summaryHeroAmount}>
+            <Text style={styles.summaryHeroLabel}>TOTAL COLLECTION</Text>
+            <Text style={styles.summaryHeroVal}>{formatIndianCurrency(stats.totalAmt)}</Text>
+          </View>
         </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Cash Collected</Text>
-          <Text style={[styles.summaryValue, { color: '#059669' }]}>
-            {formatIndianCurrency(stats.cashAmt)}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Collection</Text>
-          <Text style={[styles.summaryValue, { color: '#0047AB' }]}>
-            {formatIndianCurrency(stats.totalAmt)}
-          </Text>
+        <View style={styles.summaryBottomRow}>
+          <View style={styles.summarySubItem}>
+            <Text style={styles.summarySubLabel}>Cash Received</Text>
+            <Text style={[styles.summarySubVal, { color: '#059669' }]}>
+              {formatIndianCurrency(stats.cashAmt)}
+            </Text>
+          </View>
+          <View style={styles.summarySubDivider} />
+          <View style={styles.summarySubItem}>
+            <Text style={styles.summarySubLabel}>Online / Bank</Text>
+            <Text style={[styles.summarySubVal, { color: '#2563EB' }]}>
+              {formatIndianCurrency(stats.onlineBankAmt)}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -468,8 +478,8 @@ export const ReceiptBookScreen: React.FC = () => {
               <TouchableOpacity
                 key={`${item.receipt_id}-${item.receipt_no}`}
                 style={styles.receiptCard}
-                activeOpacity={0.9}
-                onPress={() => setActionSheetReceipt(item)}
+                activeOpacity={0.85}
+                onPress={() => setSelectedReceiptForSlip(item)}
               >
                 {/* CARD ROW 1: RECEIPT NUMBER + MODE BADGE + 3-DOT KEBAB MENU */}
                 <View style={styles.cardHeaderRow}>
@@ -734,7 +744,7 @@ export const ReceiptBookScreen: React.FC = () => {
           setToDate(newTo);
           setDatePreset(newPreset);
         }}
-        title="Receipt Book Date Filter"
+        title="Receipt Register Date Filter"
       />
 
       {/* 9. RECEIPT SLIP PREVIEW MODAL */}
@@ -982,7 +992,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#0047AB',
-    maxWidth: 70,
   },
   newReceiptBtn: {
     flexDirection: 'row',
@@ -1056,7 +1065,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#DFE7F2',
   },
+  searchAndDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  calendarFilterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 5,
+  },
+  calendarFilterPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0047AB',
+    maxWidth: 80,
+  },
   searchBox: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F4F8FD',
@@ -1101,42 +1133,82 @@ const styles = StyleSheet.create({
 
   // 4. SUMMARY METRIC STRIP
   summaryBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 14,
     marginTop: 10,
-    marginBottom: 6,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#DFE7F2',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
+    gap: 10,
   },
-  summaryItem: {
+  summaryTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  summaryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 4,
+  },
+  summaryBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
+  summaryHeroAmount: {
+    alignItems: 'flex-end',
+  },
+  summaryHeroLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#8FA0B8',
+    letterSpacing: 0.5,
+  },
+  summaryHeroVal: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0047AB',
+    marginTop: 1,
+  },
+  summaryBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  summarySubItem: {
     flex: 1,
     alignItems: 'center',
   },
-  summaryDivider: {
+  summarySubDivider: {
     width: 1,
-    height: 24,
-    backgroundColor: '#DFE7F2',
+    height: 20,
+    backgroundColor: '#E2E8F0',
   },
-  summaryLabel: {
+  summarySubLabel: {
     fontSize: 10,
-    fontWeight: '600',
     color: '#5A6B87',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    fontWeight: '600',
     marginBottom: 2,
   },
-  summaryValue: {
-    fontSize: 13,
+  summarySubVal: {
+    fontSize: 12,
     fontWeight: '800',
     color: '#0E204E',
   },

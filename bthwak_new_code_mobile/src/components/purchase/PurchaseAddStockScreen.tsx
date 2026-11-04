@@ -31,6 +31,8 @@ import {
 } from '@/api/purchase';
 import { AddItemsModal } from './AddItemsModal';
 import { AddPartySheet } from '@/components/modals/AddPartySheet';
+import { CalendarPickerModal } from '@/components/common/CalendarPickerModal';
+import { AppTabBar } from '@/components/navigation/AppTabBar';
 
 interface PurchaseAddStockScreenProps {
   onOpenDrawer?: () => void;
@@ -627,7 +629,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
           {/* CART BODY */}
           {isLoadingCart ? (
             <View style={styles.cartLoaderWrap}>
-              <ActivityIndicator size="small" color="#818EF8" />
+              <ActivityIndicator size="small" color="#0047AB" />
               <Text style={styles.cartLoaderText}>Loading cart details...</Text>
             </View>
           ) : cart.items.length === 0 ? (
@@ -756,7 +758,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
               onPress={() => setIsAddItemsModalVisible(true)}
               activeOpacity={0.8}
             >
-              <Feather name="plus" size={18} color="#818EF8" />
+              <Feather name="plus" size={18} color="#0047AB" />
               <Text style={styles.addItemOutlineText}>Add Item</Text>
             </TouchableOpacity>
 
@@ -776,7 +778,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
         {/* ============================================================ */}
         <View style={styles.card}>
           <View style={styles.termsHeaderRow}>
-            <MaterialCommunityIcons name="file-document-outline" size={18} color="#818EF8" />
+            <MaterialCommunityIcons name="file-document-outline" size={18} color="#0047AB" />
             <Text style={styles.termsHeaderTitle}>TERMS & CONDITIONS</Text>
           </View>
           <View style={styles.termsList}>
@@ -1102,7 +1104,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
                       <View
                         style={[
                           styles.partyItemAvatar,
-                          isSelected && { backgroundColor: '#818EF8' },
+                          isSelected && { backgroundColor: '#0047AB' },
                         ]}
                       >
                         <Text
@@ -1125,7 +1127,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
                       </View>
                     </View>
 
-                    {isSelected && <Feather name="check-circle" size={20} color="#818EF8" />}
+                    {isSelected && <Feather name="check-circle" size={20} color="#0047AB" />}
                   </TouchableOpacity>
                 );
               })}
@@ -1182,7 +1184,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
                     setIsBankModalOpen(false);
                   }}
                 >
-                  <Ionicons name="business-outline" size={20} color="#818EF8" />
+                  <Ionicons name="business-outline" size={20} color="#0047AB" />
                   <View style={{ marginLeft: 12, flex: 1 }}>
                     <Text style={styles.bankItemName}>{b.bankName}</Text>
                     {b.accountNo ? (
@@ -1190,7 +1192,7 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
                     ) : null}
                   </View>
                   {paymentDetails.depositBankId === b.bankMasterId && (
-                    <Feather name="check" size={18} color="#818EF8" />
+                    <Feather name="check" size={18} color="#0047AB" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -1303,71 +1305,19 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
       </Modal>
 
       {/* ============================================================ */}
-      {/* MODAL 5: DATE PICKER MODAL */}
+      {/* MODAL 5: CALENDAR PICKER MODAL */}
       {/* ============================================================ */}
-      <Modal
+      <CalendarPickerModal
         visible={isDatePickerOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setIsDatePickerOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalSheet, { paddingBottom: 24 }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Bill Date</Text>
-              <TouchableOpacity onPress={() => setIsDatePickerOpen(false)}>
-                <Feather name="x" size={20} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.datePresetsRow}>
-              {[
-                { label: 'Today', days: 0 },
-                { label: 'Yesterday', days: -1 },
-                { label: '-2 Days', days: -2 },
-                { label: '-7 Days', days: -7 },
-              ].map((p) => (
-                <TouchableOpacity
-                  key={p.label}
-                  style={styles.datePresetChip}
-                  onPress={() => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + p.days);
-                    const formatted = d.toISOString().slice(0, 10);
-                    setBillDate(formatted);
-                    setIsDatePickerOpen(false);
-                  }}
-                >
-                  <Text style={styles.datePresetChipText}>{p.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={[styles.fieldLabelSmall, { marginTop: 16 }]}>
-              Or enter custom date (YYYY-MM-DD):
-            </Text>
-            <TextInput
-              style={styles.textInput}
-              value={tempDateInput}
-              onChangeText={setTempDateInput}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
-            />
-
-            <TouchableOpacity
-              style={[styles.saveChargesBtn, { marginTop: 16 }]}
-              onPress={() => {
-                if (tempDateInput.trim()) {
-                  setBillDate(tempDateInput.trim());
-                }
-                setIsDatePickerOpen(false);
-              }}
-            >
-              <Text style={styles.saveChargesBtnText}>Confirm Date</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setIsDatePickerOpen(false)}
+        selectedDate={billDate}
+        onSelectDate={(ymd) => {
+          setBillDate(ymd);
+          setIsDatePickerOpen(false);
+        }}
+        maxDate={new Date()}
+        title="Select Bill Date"
+      />
 
       {/* ============================================================ */}
       {/* MODAL 6: ADD BUYER SHEET (REUSED) */}
@@ -1381,6 +1331,21 @@ export const PurchaseAddStockScreen: React.FC<PurchaseAddStockScreenProps> = ({
           setParties(updated);
           if (updated.length > 0) {
             setSelectedParty(updated[0]);
+          }
+        }}
+      />
+      {/* BOTTOM TAB BAR */}
+      <AppTabBar
+        activeTab="parties"
+        onTabChange={(tab) => {
+          if (tab === 'dashboard') {
+            router.replace('/dashboard?tab=dashboard' as any);
+          } else if (tab === 'sales') {
+            router.replace('/generate-invoice' as any);
+          } else if (tab === 'reports') {
+            router.replace('/dashboard?tab=reports' as any);
+          } else if (tab === 'chat') {
+            router.replace('/dashboard?tab=chat' as any);
           }
         }}
       />

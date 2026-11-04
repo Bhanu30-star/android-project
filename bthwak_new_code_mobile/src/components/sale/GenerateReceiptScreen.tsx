@@ -319,7 +319,8 @@ export const GenerateReceiptScreen: React.FC<GenerateReceiptScreenProps> = ({ on
 
   // Submit Advance Receipt
   const handleSubmitAdvance = async () => {
-    if (!advanceParty) {
+    const rawPid = Number(advanceParty?.partyId || (advanceParty as any)?.party_id || 0);
+    if (!advanceParty || !rawPid || rawPid <= 0) {
       Alert.alert('Required', 'Please select a Party to receive advance.');
       return;
     }
@@ -333,7 +334,7 @@ export const GenerateReceiptScreen: React.FC<GenerateReceiptScreenProps> = ({ on
     try {
       setIsSubmittingAdvance(true);
       const res = await submitAdvanceReceiptApi({
-        partyId: advanceParty.partyId,
+        partyId: rawPid,
         receiptDate: advanceDate.split('T')[0],
         totalAmount: parsedAmount,
         paymentMode: advancePaymentMode,
