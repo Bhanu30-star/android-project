@@ -204,6 +204,14 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       route === '/credit-note'
     ) {
       router.push('/credit-note-detail' as any);
+    } else if (
+      route === '/master/Debitnote' ||
+      route === '/master/debit-note' ||
+      route === '/debit-note-detail' ||
+      route === '/debit-note' ||
+      route === '/purchase/debit-note-detail'
+    ) {
+      router.push('/debit-note-detail' as any);
     } else if (route === '/product/waste_damage' || route === '/waste-damage') {
       router.push('/product/waste_damage' as any);
     } else if (route === '/product/add' || route === '/product-master' || route.startsWith('/product')) {

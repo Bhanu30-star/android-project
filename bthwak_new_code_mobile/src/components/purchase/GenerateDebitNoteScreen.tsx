@@ -293,7 +293,8 @@ export const GenerateDebitNoteScreen: React.FC<GenerateDebitNoteScreenProps> = (
 
       Alert.alert('Success', 'Debit Note generated successfully!', [
         {
-          text: 'OK',
+          text: 'Close',
+          style: 'cancel',
           onPress: () => {
             if (onBack) {
               onBack();
@@ -302,6 +303,12 @@ export const GenerateDebitNoteScreen: React.FC<GenerateDebitNoteScreenProps> = (
             } else {
               router.replace('/dashboard');
             }
+          },
+        },
+        {
+          text: 'View Details',
+          onPress: () => {
+            router.push('/debit-note-detail' as any);
           },
         },
       ]);
@@ -346,7 +353,14 @@ export const GenerateDebitNoteScreen: React.FC<GenerateDebitNoteScreenProps> = (
           <Feather name="arrow-left" size={22} color="#0E204E" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Generate Debit Note</Text>
-        <View style={styles.headerRightPlaceholder} />
+        <TouchableOpacity
+          style={styles.headerDetailBtn}
+          onPress={() => router.push('/debit-note-detail' as any)}
+          activeOpacity={0.7}
+        >
+          <Feather name="file-text" size={14} color="#0047AB" />
+          <Text style={styles.headerDetailBtnText}>Details</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -681,6 +695,16 @@ export const GenerateDebitNoteScreen: React.FC<GenerateDebitNoteScreenProps> = (
             <Text style={styles.submitBtnText}>Submit</Text>
           )}
         </TouchableOpacity>
+
+        {/* VIEW DEBIT NOTE DETAILS BUTTON */}
+        <TouchableOpacity
+          style={styles.viewDetailsSecondaryBtn}
+          onPress={() => router.push('/debit-note-detail' as any)}
+          activeOpacity={0.7}
+        >
+          <Feather name="file-text" size={16} color="#0047AB" />
+          <Text style={styles.viewDetailsSecondaryText}>View Debit Note Details</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* PARTY SELECTION MODAL */}
@@ -971,6 +995,39 @@ const styles = StyleSheet.create({
   },
   headerRightPlaceholder: {
     width: 38,
+  },
+  headerDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: 5,
+  },
+  headerDetailBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0047AB',
+  },
+  viewDetailsSecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+    marginTop: 6,
+  },
+  viewDetailsSecondaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0047AB',
   },
   scrollFlex: {
     flex: 1,

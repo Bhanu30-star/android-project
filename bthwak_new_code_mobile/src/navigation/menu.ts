@@ -45,6 +45,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
       { id: 'master-beat', label: 'Beat list', route: '/master/beat' },
       { id: 'master-bulk-retailer', label: 'Bulk Retailer Movement', route: '/master/bulkretailer' },
       { id: 'master-credit-note', label: 'Credit Note Detail', route: '/credit-note-detail' },
+      { id: 'master-debit-note', label: 'Debit Note Detail', route: '/debit-note-detail' },
     ],
   },
   {
@@ -55,6 +56,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
       { id: 'purchase-credit-list', label: 'Credit List', route: '/purchase/credit_list' },
       { id: 'purchase-add-stock', label: 'Add Stock', route: '/purchase/add_stock' },
       { id: 'purchase-debit-note', label: 'Generate Debit Note', route: '/purchase/generate_debit_note' },
+      { id: 'purchase-debit-note-detail', label: 'Debit Note Detail', route: '/debit-note-detail' },
     ],
   },
   {
