@@ -1,0 +1,2 @@
+[08-Jun-2026 17:20:59 Asia/Kolkata] PHP Warning:  mysqli_connect(): (HY000/2002): Connection refused in /home/wwwagury/public_html/newbtconnect/connect.php on line 6
+[08-Jun-2026 17:20:59 Asia/Kolkata] PHP Warning:  mysqli_connect(): (HY000/2002): Connection refused in /home/wwwagury/public_html/newbtconnect/connect.php on line 6

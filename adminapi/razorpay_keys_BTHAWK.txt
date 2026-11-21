@@ -1,0 +1,7 @@
+Razorpay key and secret BTHAWK
+
+key_id
+rzp_live_76zXlorDA7pu6N
+
+key_secret
+tZDluXuw5z8fu5GG8lutjQNa

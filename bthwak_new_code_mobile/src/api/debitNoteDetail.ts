@@ -56,59 +56,27 @@ export async function fetchDebitNoteDetailListApi(payload: {
   party_mobile_no?: string;
   party_id?: number;
 }): Promise<{ items: DebitNoteDetailItem[]; total_net_amt?: number }> {
-  // Attempt 1: Modern endpoint matching credit note detail list
   try {
-    const res = await apiClient.post('/master/get_debit_note_detail_list', {
-      start_date: payload.start_date,
-      end_date: payload.end_date,
-      party_name: payload.party_name || '',
-      party_mobile_no: payload.party_mobile_no || '',
-      party_id: payload.party_id || 0,
+    const res = await apiClient.get('/master/get_debit_note_detail_list', {
+      params: {
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        from_date: payload.start_date,
+        to_date: payload.end_date,
+        party_name: payload.party_name || '',
+        party_mobile_no: payload.party_mobile_no || '',
+        party_id: payload.party_id || 0,
+      },
     });
 
     const data = res.data?.data;
-    const rawList = data?.data?.data ?? data?.data ?? data?.debit_note_result ?? data ?? [];
-    if (Array.isArray(rawList) && rawList.length > 0) {
-      const items: DebitNoteDetailItem[] = rawList.map(normalizeDebitNoteItem);
-      const total_net_amt =
-        data?.total_net_amt ??
-        items.reduce((acc, it) => acc + (parseFloat(String(it.final_bill_amt)) || 0), 0);
-      return { items, total_net_amt };
-    }
-  } catch (err) {
-    // Fall back to alternative endpoint below
-  }
-
-  // Attempt 2: Standard `/master/debit_note_detail`
-  try {
-    const res = await apiClient.post('/master/debit_note_detail', {
-      page: 1,
-      limit: 200,
-      search: payload.party_name || '',
-      party_id: payload.party_id || 0,
-      from_date: payload.start_date,
-      to_date: payload.end_date,
-    });
-
-    const data = res.data?.data;
-    const rawList =
-      data?.debit_note_result ??
-      data?.data ??
-      data?.items ??
-      (Array.isArray(data) ? data : []);
-
-    const items: DebitNoteDetailItem[] = (Array.isArray(rawList) ? rawList : []).map(
-      normalizeDebitNoteItem
-    );
-
-    const total_net_amt = items.reduce(
-      (acc, it) => acc + (parseFloat(String(it.final_bill_amt)) || 0),
-      0
-    );
-
+    const rawList = data?.debit_note_result ?? data?.data ?? data?.items ?? (Array.isArray(data) ? data : []);
+    const items: DebitNoteDetailItem[] = (Array.isArray(rawList) ? rawList : []).map(normalizeDebitNoteItem);
+    const total_net_amt =
+      data?.total_net_amt ??
+      items.reduce((acc, it) => acc + (parseFloat(String(it.final_bill_amt)) || 0), 0);
     return { items, total_net_amt };
   } catch (err: any) {
-    // If party_id was 0 and resulted in error, retry once without party_id restriction or return empty
     console.warn('fetchDebitNoteDetailListApi warning:', err?.message || err);
     return { items: [], total_net_amt: 0 };
   }
@@ -180,55 +148,22 @@ export async function fetchDebitNoteDetailHistoryListApi(payload: {
   party_name?: string;
   party_mobile_no?: string;
 }): Promise<DebitNoteHistoryItem[]> {
-  // Attempt 1: get_debit_note_detail_history_list
   try {
-    const res = await apiClient.post('/master/get_debit_note_detail_history_list', {
-      start_date: payload.start_date,
-      end_date: payload.end_date,
-      party_name: payload.party_name || '',
-      party_mobile_no: payload.party_mobile_no || '',
+    const res = await apiClient.get('/master/get_debit_note_detail_history_list', {
+      params: {
+        start_date: payload.start_date,
+        end_date: payload.end_date,
+        party_name: payload.party_name || '',
+        party_mobile_no: payload.party_mobile_no || '',
+      },
     });
 
-    const data = res.data?.data;
-    const rawList = data?.data?.data ?? data?.data ?? data ?? [];
-    if (Array.isArray(rawList) && rawList.length > 0) {
-      return rawList;
-    }
-  } catch {
-    // fallback
-  }
-
-  // Attempt 2: Retrieve from debit_note_detail filtered for completed/history items
-  try {
-    const res = await apiClient.post('/master/debit_note_detail', {
-      page: 1,
-      limit: 200,
-      search: payload.party_name || '',
-      party_id: 0,
-      from_date: payload.start_date,
-      to_date: payload.end_date,
-    });
-
-    const list = res.data?.data?.debit_note_result ?? [];
-    if (Array.isArray(list)) {
-      return list.map((it: any) => ({
-        bill_no: it.bill_no || it.debit_note_receipt,
-        debit_note_bill_no: it.bill_no,
-        party_name: it.party_name,
-        date: it.bill_date || it.org_billdate || it.transaction_date,
-        txn_date: it.transaction_date || it.transactionDate || it.bill_date,
-        total_amt: it.final_bill_amt ?? it.total_amt ?? 0,
-        adjust_amount: it.final_adjust_amt ?? it.adjust_amt ?? 0,
-        pending_amt: it.pending_amount ?? it.pending_amt ?? 0,
-        type: it.type || it.debit_note_type || 'Stock Return',
-        unique_bill: it.unique_bill,
-      }));
-    }
+    const rawList = res.data?.data?.data ?? res.data?.data ?? [];
+    return Array.isArray(rawList) ? rawList : [];
   } catch (err: any) {
-    console.warn('fetchDebitNoteDetailHistoryListApi error:', err?.message);
+    console.warn('fetchDebitNoteDetailHistoryListApi error:', err?.message || err);
+    return [];
   }
-
-  return [];
 }
 
 /**

@@ -387,8 +387,7 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice-cart'] });
       queryClient.invalidateQueries({ queryKey: ['invoice-product-catalog'] });
-      onCartUpdated();
-      onClose();
+            onClose();
     },
     onError: (err: any) => {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to add items to cart');

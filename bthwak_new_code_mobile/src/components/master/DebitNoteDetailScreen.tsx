@@ -40,11 +40,7 @@ export const DebitNoteDetailScreen: React.FC<DebitNoteDetailScreenProps> = ({ on
   // Search & Filters
   const [search, setSearch] = useState('');
   const todayStr = formatYmd(new Date());
-  const [fromDate, setFromDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return formatYmd(d);
-  });
+  const [fromDate, setFromDate] = useState(todayStr);
   const [toDate, setToDate] = useState(todayStr);
 
   // Purchase Party Selection
