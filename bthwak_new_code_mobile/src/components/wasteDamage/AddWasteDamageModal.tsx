@@ -226,7 +226,7 @@ export const AddWasteDamageModal: React.FC<AddWasteDamageModalProps> = ({
         Alert.alert('Duplicate IMEI', 'This IMEI is already added.');
         return prev;
       }
-      if (maxStock > 0 && current.selectedImeis.length >= maxStock) {
+      if (current.selectedImeis.length >= maxStock) {
         Alert.alert('Stock limit', `Cannot exceed available stock (${maxStock}).`);
         return prev;
       }
@@ -323,7 +323,7 @@ export const AddWasteDamageModal: React.FC<AddWasteDamageModalProps> = ({
         const bagMultiplier = cfg.selectedBagUnit || 1;
         const totalUnits = cfg.quantity * bagMultiplier;
 
-        if (p.stock_quantity > 0 && totalUnits > p.stock_quantity) {
+        if (totalUnits > p.stock_quantity) {
           Alert.alert(
             'Stock Limit Exceeded',
             `Total units (${totalUnits}) exceeds available stock (${p.stock_quantity}) for "${p.product_name}".`

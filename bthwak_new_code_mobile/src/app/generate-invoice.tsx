@@ -993,7 +993,7 @@ export default function GenerateInvoiceScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitleText}>PAYMENT MODE</Text>
           <View style={styles.paymentPillsGrid}>
-            {(['Cash', 'Credit', 'Online', 'Cheque'] as const).map((pm) => (
+            {(['Cash', 'Credit', 'Online', 'Cheque', 'Both'] as const).map((pm) => (
               <TouchableOpacity
                 key={pm}
                 style={[styles.paymentPill, draft.paymentMode === pm && styles.paymentPillActive]}
@@ -1021,9 +1021,63 @@ export default function GenerateInvoiceScreen() {
             </View>
           )}
 
-          {/* If Cheque: Cheque fields */}
-          {draft.paymentMode === 'Cheque' && (
+          {/* If Online: Online Payment Type & Ref No */}
+          {draft.paymentMode === 'Online' && (
             <View style={styles.chequeFieldsGroup}>
+              <View style={styles.twoColRow}>
+                <View style={[styles.formGroup, { flex: 1 }]}>
+                  <Text style={styles.formLabel}>Online Mode</Text>
+                  <TextInput
+                    style={styles.textInputBox}
+                    placeholder="UPI / IMPS / NEFT / RTGS"
+                    placeholderTextColor="#94A3B8"
+                    value={draft.paymentType || 'UPI'}
+                    onChangeText={(val) => updateDraft({ paymentType: val })}
+                  />
+                </View>
+                <View style={[styles.formGroup, { flex: 1 }]}>
+                  <Text style={styles.formLabel}>Transaction / UTR No</Text>
+                  <TextInput
+                    style={styles.textInputBox}
+                    placeholder="UTR / Ref No"
+                    placeholderTextColor="#94A3B8"
+                    value={draft.chequeTxnNo}
+                    onChangeText={(val) => updateDraft({ chequeTxnNo: val })}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* If Cheque or Both: Cheque fields */}
+          {(draft.paymentMode === 'Cheque' || draft.paymentMode === 'Both') && (
+            <View style={styles.chequeFieldsGroup}>
+              {draft.paymentMode === 'Both' && (
+                <View style={styles.twoColRow}>
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={styles.formLabel}>Cash Amount (₹)</Text>
+                    <TextInput
+                      style={styles.textInputBox}
+                      keyboardType="numeric"
+                      placeholder="Cash ₹"
+                      placeholderTextColor="#94A3B8"
+                      value={draft.cashAmt ? String(draft.cashAmt) : ''}
+                      onChangeText={(val) => updateDraft({ cashAmt: parseFloat(val) || 0 })}
+                    />
+                  </View>
+                  <View style={[styles.formGroup, { flex: 1 }]}>
+                    <Text style={styles.formLabel}>Cheque Amount (₹)</Text>
+                    <TextInput
+                      style={styles.textInputBox}
+                      keyboardType="numeric"
+                      placeholder="Cheque ₹"
+                      placeholderTextColor="#94A3B8"
+                      value={draft.chequeAmt ? String(draft.chequeAmt) : ''}
+                      onChangeText={(val) => updateDraft({ chequeAmt: parseFloat(val) || 0 })}
+                    />
+                  </View>
+                </View>
+              )}
               <View style={styles.twoColRow}>
                 <View style={[styles.formGroup, { flex: 1 }]}>
                   <Text style={styles.formLabel}>Bank Name</Text>

@@ -110,31 +110,35 @@ export const SalesRegisterScreen: React.FC = () => {
     return () => clearTimeout(t);
   }, [loadRegister]);
 
-  // Export to Excel handler
-  const handleExportExcel = () => {
+  // Export to CSV / Excel handler
+  const handleExportExcel = async () => {
     const patName = PATTERN_TABS.find((p) => p.key === activePattern)?.fullName || 'Sales';
-    Alert.alert(
-      'Export Excel (.xlsx)',
-      `Sales Register (${patName}) with ${records.length} voucher rows is ready for spreadsheet export.`,
-      [
-        {
-          text: 'Share / Save',
-          onPress: async () => {
-            try {
-              const summaryText =
-                `*BTHAWK ${patName.toUpperCase()} REGISTER EXPORT*\n` +
-                `Period: ${fromDate} to ${toDate}\n` +
-                `Total Invoices: ${summary.total_bills}\n` +
-                `Total Quantity: ${summary.total_quentity} Units\n` +
-                `Total Revenue: ${formatIndianCurrency(summary.total_net_amount)}\n` +
-                `Generated via BTHAWK ERP.`;
-              await Share.share({ message: summaryText, title: `${patName}_Register.xlsx` });
-            } catch {}
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+    try {
+      const header = 'Sr,Bill No,Date,Party,Item,HSN,Qty,Price,Discount,Tax,Net Amount,Mode';
+      const rowsCsv = records.map((r, i) =>
+        [
+          i + 1,
+          `"${String(r.bill_no).replace(/"/g, '""')}"`,
+          `"${String(r.bill_date)}"`,
+          `"${String(r.party_name).replace(/"/g, '""')}"`,
+          `"${String(r.item_name).replace(/"/g, '""')}"`,
+          `"${String(r.hsn || '')}"`,
+          r.quentity,
+          Number(r.price || 0).toFixed(2),
+          Number(r.discount || 0).toFixed(2),
+          Number(r.tax_amount || 0).toFixed(2),
+          Number(r.net_amount || 0).toFixed(2),
+          `"${String(r.mode_type || '')}"`,
+        ].join(',')
+      );
+      const totalRow = `TOTAL,,,,"${summary.total_bills} bills",,${summary.total_quentity},,${Number(summary.total_discount || 0).toFixed(2)},,${Number(summary.total_net_amount || 0).toFixed(2)},`;
+      await Share.share({
+        message: [header, ...rowsCsv, totalRow].join('\n'),
+        title: `${patName.replace(/\s+/g, '_')}_Register.csv`,
+      });
+    } catch {
+      Alert.alert('Export Error', 'Unable to export Sales Register CSV.');
+    }
   };
 
   // Print / PDF preview handler

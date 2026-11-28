@@ -3,6 +3,7 @@ import { getMobileDeviceInfo } from '../utils/deviceInfo';
 
 export interface LoginResponseData {
   auth_token: string;
+  user_role?: string;
 }
 
 export interface ApiResponse<T = unknown> {

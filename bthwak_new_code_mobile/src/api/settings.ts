@@ -221,7 +221,7 @@ export async function updateDsrSettingsApi(payload: {
   stock_request: 'Yes' | 'No';
   credit_sale: 'Yes' | 'No';
   negative_billing: 'Yes' | 'No';
-  quotation_invoice: 'Yes' | 'No';
+  quotation_inavoice: 'Yes' | 'No';
   auto_approve: 'Yes' | 'No';
   watermark: 'Yes' | 'No';
   bill_cancel_users: string[];

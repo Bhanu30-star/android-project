@@ -47,6 +47,11 @@ import { SalesView } from '@/components/dashboard/SalesView';
 import { PartiesView } from '@/components/dashboard/PartiesView';
 import { ReportsView } from '@/components/dashboard/ReportsView';
 import { SettingsScreen } from '@/components/settings/SettingsScreen';
+import { SalesPurchaseChart } from '@/components/dashboard/SalesPurchaseChart';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { SupportFaqSection } from '@/components/dashboard/SupportFaqSection';
+import { DateRangePickerModal } from '@/components/common/DateRangePickerModal';
+import { formatShortDate } from '@/utils/dateUtils';
 
 const formatMetric = (val: number | string | undefined | null, isCurrency = false): string => {
   if (val === undefined || val === null) return isCurrency ? '₹ 0' : '0';
@@ -81,13 +86,16 @@ export default function DashboardScreen() {
   }, [params.tab, setActiveTab]);
 
   // Time Filter State - Default to 'FTD' (Today) as in screenshot
-  const [selectedPreset, setSelectedPreset] = useState<PresetKey>('FTD');
+  const [selectedPreset, setSelectedPreset] = useState<PresetKey | 'CUSTOM'>('FTD');
   const [activeRange, setActiveRange] = useState<DateRange>(() =>
     getPresetDateRange('FTD')
   );
+  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
 
   // Data State
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [isLoadingFaqs, setIsLoadingFaqs] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -168,6 +176,20 @@ export default function DashboardScreen() {
       isCancelled = true;
     };
   }, [activeRange]);
+
+  useEffect(() => {
+    let mounted = true;
+    getFaqDetailsApi()
+      .then((list) => {
+        if (mounted) setFaqs(list);
+      })
+      .finally(() => {
+        if (mounted) setIsLoadingFaqs(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSelectPreset = (preset: PresetKey) => {
     setSelectedPreset(preset);
@@ -286,6 +308,7 @@ export default function DashboardScreen() {
             <DashboardTopBar
               onPressHamburger={() => setShowDrawer(true)}
               onPressSettings={() => setActiveTab('settings')}
+              onPressQr={() => setShowQrScanner(true)}
             />
 
             {/* SCROLLABLE HOME CONTENT */}
@@ -309,6 +332,8 @@ export default function DashboardScreen() {
               <DashboardFilterHeader
                 selectedPreset={selectedPreset}
                 onSelectPreset={handleSelectPreset}
+                onPressCustomRange={() => setShowDateRangeModal(true)}
+                customRangeLabel={`${formatShortDate(activeRange.startDate)} - ${formatShortDate(activeRange.endDate)}`}
               />
 
             {apiError && (
@@ -345,7 +370,7 @@ export default function DashboardScreen() {
                       <Text style={styles.heroCardLabel}>Sales</Text>
                     </View>
                     <Text style={styles.heroCardSalesValue} numberOfLines={1}>
-                      {formatMetric(dashboardData?.totalSale ?? 288000, true)}
+                      {formatMetric(dashboardData?.totalSale ?? 0, true)}
                     </Text>
                     <View style={styles.salesAccentIndicator} />
                   </TouchableOpacity>
@@ -363,14 +388,14 @@ export default function DashboardScreen() {
                       <Text style={styles.heroCardLabel}>Purchases</Text>
                     </View>
                     <Text style={styles.heroCardPurchasesValue} numberOfLines={1}>
-                      {formatMetric(dashboardData?.totalPurchase ?? 451000, true)}
+                      {formatMetric(dashboardData?.totalPurchase ?? 0, true)}
                     </Text>
                     <View style={styles.purchasesAccentIndicator} />
                   </TouchableOpacity>
                 </View>
 
-              {/* SECTION: COLLECTIONS */}
-              <Text style={styles.sectionTitle}>Collections</Text>
+              {/* SECTION: COLLECTIONS & OUTSTANDING */}
+              <Text style={styles.sectionTitle}>Collections & Outstanding</Text>
               <View style={styles.grid2x2}>
                 {/* Cash Collected */}
                 <TouchableOpacity
@@ -385,7 +410,7 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>Cash{'\n'}Collected</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {formatMetric(dashboardData?.cashCollected ?? 288000)}
+                    {formatMetric(dashboardData?.cashCollected ?? 0, true)}
                   </Text>
                 </TouchableOpacity>
 
@@ -402,14 +427,14 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>Bank{'\n'}Collected</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {formatMetric(dashboardData?.bankCollected ?? 0)}
+                    {formatMetric(dashboardData?.bankCollected ?? 0, true)}
                   </Text>
                 </TouchableOpacity>
 
                 {/* To Collect */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={handleOpenToCollectDetail}
+                  onPress={() => router.push('/generate-receipt' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -418,15 +443,15 @@ export default function DashboardScreen() {
                     </View>
                     <Text style={styles.insightLabel}>To Collect</Text>
                   </View>
-                  <Text style={styles.insightValue}>
-                    {formatMetric(dashboardData?.outstandingCollected ?? dashboardData?.toCollect ?? 290)}
+                  <Text style={[styles.insightValue, { color: '#EA580C' }]}>
+                    {formatMetric(dashboardData?.outstandingCollected ?? dashboardData?.toCollect ?? 0, true)}
                   </Text>
                 </TouchableOpacity>
 
                 {/* To Pay */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={handleOpenPurchaseDetail}
+                  onPress={() => router.push('/purchase/credit_list' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -435,19 +460,53 @@ export default function DashboardScreen() {
                     </View>
                     <Text style={styles.insightLabel}>To Pay</Text>
                   </View>
-                  <Text style={styles.insightValue}>
-                    {formatMetric(dashboardData?.outstandingPay ?? dashboardData?.toPay ?? 235000)}
+                  <Text style={[styles.insightValue, { color: '#DC2626' }]}>
+                    {formatMetric(dashboardData?.outstandingPay ?? dashboardData?.toPay ?? 0, true)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Cash Balance */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenCashCollectedDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#ECFDF5' }]}>
+                      <Ionicons name="wallet" size={18} color="#059669" />
+                    </View>
+                    <Text style={styles.insightLabel}>Cash{'\n'}Balance</Text>
+                  </View>
+                  <Text style={[styles.insightValue, { color: '#059669' }]}>
+                    {formatMetric(dashboardData?.cashBalance ?? 0, true)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Bank Balance */}
+                <TouchableOpacity
+                  style={styles.insightCard}
+                  onPress={handleOpenCashCollectedDetail}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.insightTopRow}>
+                    <View style={[styles.insightIconBadge, { backgroundColor: '#F0F9FF' }]}>
+                      <MaterialCommunityIcons name="bank-check" size={18} color="#0284C7" />
+                    </View>
+                    <Text style={styles.insightLabel}>Bank{'\n'}Balance</Text>
+                  </View>
+                  <Text style={[styles.insightValue, { color: '#0284C7' }]}>
+                    {formatMetric(dashboardData?.bankBalance ?? 0, true)}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               {/* SECTION: OTHER INSIGHTS (8) */}
-              <Text style={styles.sectionTitle}>Other Insights (8)</Text>
+              <Text style={styles.sectionTitle}>Operations & Insights</Text>
               <View style={styles.grid2x2}>
                 {/* 1. Total Invoice */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={handleOpenSaleDetail}
+                  onPress={() => router.push('/invoice' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -457,14 +516,14 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>Total Invoice</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {dashboardData?.totalInvoice ?? 8}
+                    {dashboardData?.totalInvoice ?? 0}
                   </Text>
                 </TouchableOpacity>
 
                 {/* 2. Credit Invoices */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={handleOpenSaleDetail}
+                  onPress={() => router.push('/sales-register' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -498,7 +557,7 @@ export default function DashboardScreen() {
                 {/* 4. Pending Stock */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={() => setActiveTab('parties')}
+                  onPress={() => router.push('/pending_request' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -515,7 +574,7 @@ export default function DashboardScreen() {
                 {/* 5. Stock Approved */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={() => setActiveTab('parties')}
+                  onPress={() => router.push('/stock_transfer' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -525,14 +584,14 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>Stock{'\n'}Approved</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {dashboardData?.stockApproved ?? 1}
+                    {dashboardData?.stockApproved ?? 0}
                   </Text>
                 </TouchableOpacity>
 
                 {/* 6. FSE */}
                 <TouchableOpacity
                   style={styles.insightCard}
-                  onPress={() => setActiveTab('parties')}
+                  onPress={() => router.push('/master/sales-executive' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.insightTopRow}>
@@ -542,7 +601,7 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>FSE</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {dashboardData?.totalFSE ?? 1}
+                    {dashboardData?.totalFSE ?? 0}
                   </Text>
                 </TouchableOpacity>
 
@@ -576,7 +635,7 @@ export default function DashboardScreen() {
                       items: [
                         {
                           label: 'Total Expenses',
-                          value: dashboardData?.expenseAmt ?? 12,
+                          value: dashboardData?.expenseAmt ?? 0,
                           highlightColor: '#DC2626',
                         },
                       ],
@@ -591,9 +650,24 @@ export default function DashboardScreen() {
                     <Text style={styles.insightLabel}>Total{'\n'}Expenses</Text>
                   </View>
                   <Text style={styles.insightValue}>
-                    {dashboardData?.expenseAmt ?? 12}
+                    {formatMetric(dashboardData?.expenseAmt ?? 0, true)}
                   </Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* SALE & PURCHASE CHART */}
+              <View style={{ marginTop: 14 }}>
+                <SalesPurchaseChart data={dashboardData?.graphData ?? []} currency="₹" />
+              </View>
+
+              {/* WEB QR PAIRING QUICK ACTION */}
+              <View style={{ marginTop: 14 }}>
+                <QuickActions onOpenQr={() => setShowQrScanner(true)} />
+              </View>
+
+              {/* SUPPORT & FAQS (Matches Web Dashboard) */}
+              <View style={{ marginTop: 14 }}>
+                <SupportFaqSection faqs={faqs} isLoadingFaqs={isLoadingFaqs} />
               </View>
             </View>
           )}
@@ -711,6 +785,24 @@ export default function DashboardScreen() {
       <QrScannerSheet
         visible={showQrScanner}
         onClose={() => setShowQrScanner(false)}
+      />
+
+      {/* CUSTOM DATE RANGE PICKER */}
+      <DateRangePickerModal
+        visible={showDateRangeModal}
+        onClose={() => setShowDateRangeModal(false)}
+        fromDate={activeRange.startDate}
+        toDate={activeRange.endDate}
+        title="Select Dashboard Date Range"
+        onApply={(fromDate, toDate) => {
+          setSelectedPreset('CUSTOM');
+          setActiveRange({
+            startDate: fromDate,
+            endDate: toDate,
+            label: `${fromDate} - ${toDate}`,
+          });
+          setShowDateRangeModal(false);
+        }}
       />
     </SafeAreaView>
     </View>

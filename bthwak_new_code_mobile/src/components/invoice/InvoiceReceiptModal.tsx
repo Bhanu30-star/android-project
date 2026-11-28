@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import { API_BASE_URL } from '@/api/client';
 import { fetchInvoiceDataApi, InvoiceRecord } from '@/api/invoiceList';
 
 interface InvoiceReceiptModalProps {
@@ -65,6 +67,16 @@ export const InvoiceReceiptModal: React.FC<InvoiceReceiptModalProps> = ({
       await Share.share({ message: text, title: `Invoice ${billNo}` });
     } catch {
       // Ignored
+    }
+  };
+
+  const handleOpenPdf = async () => {
+    if (!invoice) return;
+    try {
+      const pdfUrl = `${API_BASE_URL}/sale/generate-pdf?transaction_id=${encodeURIComponent(String(invoice.transaction_id))}&lang=${lang}`;
+      await WebBrowser.openBrowserAsync(pdfUrl);
+    } catch {
+      Alert.alert('PDF Error', 'Unable to open invoice PDF.');
     }
   };
 
@@ -209,9 +221,14 @@ export const InvoiceReceiptModal: React.FC<InvoiceReceiptModalProps> = ({
 
           {/* Footer Actions */}
           <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleOpenPdf} activeOpacity={0.8}>
+              <Feather name="file-text" size={17} color="#FFFFFF" />
+              <Text style={styles.shareBtnText}>PDF</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.shareBtn, { backgroundColor: '#16A34A' }]} onPress={handleShare} activeOpacity={0.8}>
               <Feather name="share-2" size={17} color="#FFFFFF" />
-              <Text style={styles.shareBtnText}>Share Receipt</Text>
+              <Text style={styles.shareBtnText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.8}>

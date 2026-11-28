@@ -55,6 +55,7 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
       { id: 'purchase-credit-list', label: 'Credit List', route: '/purchase/credit_list' },
       { id: 'purchase-add-stock', label: 'Add Stock', route: '/purchase/add_stock' },
       { id: 'purchase-debit-note', label: 'Generate Debit Note', route: '/purchase/generate_debit_note' },
+      { id: 'purchase-return', label: 'Purchase Return', route: '/purchase/purchasereturn' },
     ],
   },
   {
@@ -95,8 +96,9 @@ export const DRAWER_MENU_ITEMS: MenuItemConfig[] = [
     icon: 'file-text',
     children: [
       { id: 'inv-all', label: 'All Invoices', route: '/invoice' },
-      { id: 'inv-multi', label: 'Multi Recharge', route: '/multi_recharge' },
+      { id: 'inv-einvoice', label: 'E-Invoice', route: '/einvoice' },
       { id: 'inv-eway', label: 'Generate E-Way', route: '/ewaybill' },
+      { id: 'inv-multi', label: 'Multi Recharge', route: '/multi_recharge' },
       { id: 'inv-payout', label: 'Payout Invoice', route: '/payout_invoice' },
       { id: 'inv-return', label: 'Sales Return', route: '/sale-return' },
     ],

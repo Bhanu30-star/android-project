@@ -306,7 +306,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         stock_request: dsrSettings.stockRequestAllowed === 'Yes' ? 'Yes' : 'No',
         credit_sale: dsrSettings.creditSaleAllowed === 'Yes' ? 'Yes' : 'No',
         negative_billing: dsrSettings.negativeBilling === 'Yes' ? 'Yes' : 'No',
-        quotation_invoice: dsrSettings.performaApplicable === 'Yes' ? 'Yes' : 'No',
+        quotation_inavoice: dsrSettings.performaApplicable === 'Yes' ? 'Yes' : 'No',
         auto_approve: dsrSettings.dsr_auto_approve === 'Yes' ? 'Yes' : 'No',
         watermark: dsrSettings.Mode_watermark === 'Yes' ? 'Yes' : 'No',
         bill_cancel_users: cancelUsers,

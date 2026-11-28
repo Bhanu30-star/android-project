@@ -214,6 +214,8 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       router.push('/debit-note-detail' as any);
     } else if (route === '/product/waste_damage' || route === '/waste-damage') {
       router.push('/product/waste_damage' as any);
+    } else if (route === '/add_payout') {
+      router.push('/add_payout' as any);
     } else if (route === '/product/add' || route === '/product-master' || route.startsWith('/product')) {
       router.push('/product-master');
     } else if (
@@ -226,18 +228,30 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       router.push(route as any);
     } else if (route === '/dashboard') {
       onNavigateTab?.('dashboard');
+    } else if (route === '/ewaybill') {
+      router.push('/ewaybill' as any);
+    } else if (route === '/einvoice') {
+      router.push('/einvoice' as any);
+    } else if (route === '/multi_recharge') {
+      router.push('/multi_recharge' as any);
+    } else if (route === '/payout_invoice') {
+      router.push('/payout_invoice' as any);
+    } else if (route === '/collection_dsr') {
+      router.push('/collection_dsr' as any);
+    } else if (route === '/stockdsr') {
+      router.push('/stockdsr' as any);
+    } else if (route === '/purchase/purchasereturn') {
+      router.push('/purchase/purchasereturn' as any);
+    } else if (route === '/sales-register') {
+      router.push('/sales-register' as any);
     } else if (route === '/invoice' || route.startsWith('/invoice')) {
       router.push('/invoice' as any);
     } else if (route.startsWith('/purchase') || route.startsWith('/master')) {
       onNavigateTab?.('parties');
-    } else if (
-      route.startsWith('/reports') ||
-      route.startsWith('/collection_dsr') ||
-      route.startsWith('/stockdsr')
-    ) {
+    } else if (route.startsWith('/reports')) {
       onNavigateTab?.('reports');
     } else {
-      Alert.alert(label, `${label} module (${route}) is ready for backend sync.`);
+      router.push(route as any);
     }
   };
 

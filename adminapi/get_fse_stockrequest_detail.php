@@ -58,15 +58,15 @@ if(isset($_POST['distributor_id']) && isset($_POST['distributor_user_id']) && is
 			$executive['transaction_date']=$fetch_product['transaction_date'];
 			$executive['transaction_time']=$fetch_product['transaction_time'];
 			$executive['executivedetail']=array(); 
-			$res11 = mysqli_query($con,"select tbl_user_request_detail.transaction_detail_id,tbl_user_request_detail.product_name,tbl_user_request_detail.quantity,tbl_user_request_detail.product_id from tbl_user_request_detail,tbl_product where  tbl_user_request_detail.product_id=tbl_product.product_id and tbl_user_request_detail.transaction_id='$request_id'");
+			$res11 = mysqli_query($con,"select tbl_user_request_detail.transaction_detail_id,tbl_user_request_detail.product_name,tbl_user_request_detail.quantity,tbl_user_request_detail.product_id from tbl_user_request_detail left join tbl_product on tbl_user_request_detail.product_id=tbl_product.product_id where tbl_user_request_detail.transaction_id='$request_id'");
 			if(mysqli_num_rows($res11)>0)
 			{    
-				while($fetch_product=mysqli_fetch_assoc($res11))
+				while($fetch_product_detail=mysqli_fetch_assoc($res11))
 				{
-					$executivedetail['transaction_detail_id']=$fetch_product['transaction_detail_id'];
-					$executivedetail['product_id']=$fetch_product['product_id'];
-					$executivedetail['product_name']=$fetch_product['product_name'];
-					$executivedetail['quantity']=$fetch_product['quantity'];
+					$executivedetail['transaction_detail_id']=$fetch_product_detail['transaction_detail_id'];
+					$executivedetail['product_id']=$fetch_product_detail['product_id'];
+					$executivedetail['product_name']=$fetch_product_detail['product_name'];
+					$executivedetail['quantity']=$fetch_product_detail['quantity'];
 					$executive['executivedetail'][]=$executivedetail;
 				}
 			}
@@ -77,6 +77,7 @@ if(isset($_POST['distributor_id']) && isset($_POST['distributor_user_id']) && is
 	}
 	else
 	{
+		$response['executive']=array();
 		$response['success']='0';
 		$response['details']="No Request Available!!";
 	}

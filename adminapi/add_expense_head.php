@@ -16,7 +16,7 @@ if(isset($_POST['head_name']) && isset($_POST['distributor_id']))
 			date_default_timezone_set('Asia/Dubai');
 	}
 	$cdate11=date("Y-m-d");
-	$rs1=mysqli_query($con,"select * from tbl_expense_head where distributor_id='$session_dist_ver' and expense_head_name='$head_name'");
+	$rs1=mysqli_query($con,"select * from tbl_expense_head where distributor_id='$session_dist_ver' and _head_name='$head_name'");
 	if(mysqli_num_rows($rs1)<=0)
 	{
 		$query = mysqli_query($con,"INSERT INTO `tbl_expense_head`(`distributor_id`, `expense_head_name`, `status`, `insert_date`, `expenses_category`) VALUES ('$session_dist_ver','$head_name','Active','$cdate11','$head_category')");

@@ -1,7 +1,7 @@
 <?php
 include("../../connect.php"); 
 $response = array();
-if(isset($_POST['key_uid']) && isset($_POST['amount']) && isset($_POST['total_order']))
+if(isset($_POST['key_uid']) && isset($_POST['amount']) && isset($_POST['total_order']) && isset($_POST['distributor_id']))
 {
 	$client1 = $_POST['key_uid'];
 	$message_txn_id = isset($_POST['message_txn_id']) ? $_POST['message_txn_id'] : '';
@@ -53,10 +53,10 @@ if(isset($_POST['key_uid']) && isset($_POST['amount']) && isset($_POST['total_or
 			$json_a=json_decode($toder, true);     
 			foreach ($json_a as $person_a)
 			{
-				$prodid=$person_a['pid'];
-				$prodname=$person_a['pname'];
-				$pro_price=$person_a['pro_price'];
-				$ordquantiy=$person_a['quantity'];
+				$prodid = isset($person_a['pid']) ? $person_a['pid'] : (isset($person_a['product_id']) ? $person_a['product_id'] : 0);
+				$prodname = isset($person_a['pname']) ? $person_a['pname'] : (isset($person_a['product_name']) ? $person_a['product_name'] : '');
+				$pro_price = isset($person_a['pro_price']) ? $person_a['pro_price'] : (isset($person_a['price']) ? $person_a['price'] : 0);
+				$ordquantiy = isset($person_a['quantity']) ? $person_a['quantity'] : 0;
 				$query2=mysqli_query($con,"insert into tbl_user_request_detail(transaction_id,product_id, product_name, quantity, product_price)values('$re','$prodid','$prodname','$ordquantiy','$pro_price')");
 				
 				$res_stock = mysqli_query($con,"SELECT quantity FROM  tbl_user_stock where date ='$da' and user_id='$client1' and product_id='$prodid' ORDER BY `date` DESC LIMIT 1");
@@ -97,14 +97,20 @@ if(isset($_POST['key_uid']) && isset($_POST['amount']) && isset($_POST['total_or
 				{
 					$query_stock1="SELECT closing_stock FROM  tbl_distributor_stock where date <='$da' and distributor_id='$session_dist_ver' and product_id='$prodid' ORDER BY `date` DESC LIMIT 1";
 					$res_stock1 = mysqli_query($con,$query_stock1);
-					$row_stock1 =  mysqli_fetch_assoc($res_stock1);
 					if(mysqli_num_rows($res_stock1)>0)
 					{
+						$row_stock1 =  mysqli_fetch_assoc($res_stock1);
 						$stock_quantity=$row_stock1['closing_stock'];
-						$temp_quantity=round($stock_quantity-$ordquantiy,2);
-						$stock_insert1=mysqli_query($con,"insert into tbl_distributor_stock(distributor_id,product_id,opening_stock, closing_stock,date,time)values('$session_dist_ver','$prodid','$stock_quantity','$temp_quantity','$da','$scro')");
-						$uq21=mysqli_query($con,"update tbl_product set stock_quantity='$temp_quantity',tb_updatedatetime='$scri' where product_id='$prodid' and distributor_id='$session_dist_ver'"); 
 					}
+					else
+					{
+						$prod_stock_q = mysqli_query($con, "SELECT stock_quantity FROM tbl_product WHERE product_id='$prodid' AND distributor_id='$session_dist_ver'");
+						$fetch_prod_sq = mysqli_fetch_assoc($prod_stock_q);
+						$stock_quantity = isset($fetch_prod_sq['stock_quantity']) ? $fetch_prod_sq['stock_quantity'] : 0;
+					}
+					$temp_quantity=round($stock_quantity-$ordquantiy,2);
+					$stock_insert1=mysqli_query($con,"insert into tbl_distributor_stock(distributor_id,product_id,opening_stock, closing_stock,date,time)values('$session_dist_ver','$prodid','$stock_quantity','$temp_quantity','$da','$scro')");
+					$uq21=mysqli_query($con,"update tbl_product set stock_quantity='$temp_quantity',tb_updatedatetime='$scri' where product_id='$prodid' and distributor_id='$session_dist_ver'"); 
 				}
 			}
 			$FIREBASE_API_KEY="AAAAZno7F7E:APA91bH7hbOcUWxp29ZfjJ4vQp-IMpuzZ3y5wNnIBRCzLOS3Fl7dD4RRzslJ4fxF5fIGoIHjcZ5kYPvVW8Obk7dI4moxP8BGbg3J47xHtEiOGZYTnOr60Rz3izk1axcCC_P0krknYmnw";

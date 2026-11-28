@@ -1,17 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { PresetKey } from '@/utils/dateUtils';
 import { BthawkLogo } from '@/components/BthawkLogo';
 
 export interface DashboardTopBarProps {
   onPressHamburger: () => void;
   onPressSettings: () => void;
+  onPressQr?: () => void;
 }
 
 export interface DashboardFilterHeaderProps {
-  selectedPreset: PresetKey;
+  selectedPreset: PresetKey | 'CUSTOM';
   onSelectPreset: (preset: PresetKey) => void;
+  onPressCustomRange?: () => void;
+  customRangeLabel?: string;
 }
 
 export interface ScreenHeaderProps extends DashboardTopBarProps, DashboardFilterHeaderProps {}
@@ -19,7 +22,11 @@ export interface ScreenHeaderProps extends DashboardTopBarProps, DashboardFilter
 const PRESET_PILLS: { key: PresetKey; label: string }[] = [
   { key: 'FTD', label: 'Today' },
   { key: 'YESTERDAY', label: 'Yesterday' },
-  { key: 'LAST_7', label: 'Last 7 Days' },
+  { key: 'LAST_7', label: '7 Days' },
+  { key: 'LAST_30', label: '30 Days' },
+  { key: 'MTD', label: 'This Month' },
+  { key: 'LAST_MONTH', label: 'Last Month' },
+  { key: 'YTD', label: 'YTD' },
 ];
 
 /**
@@ -29,6 +36,7 @@ const PRESET_PILLS: { key: PresetKey; label: string }[] = [
 export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
   onPressHamburger,
   onPressSettings,
+  onPressQr,
 }) => {
   return (
     <View style={styles.topBarPinned}>
@@ -48,17 +56,30 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
         <BthawkLogo size={34} showText={true} textSize={18} textColor="#0E204E" />
       </View>
 
-      {/* Right: Modern Squircle Settings Button with Orange Accent Dot */}
-      <TouchableOpacity
-        onPress={onPressSettings}
-        style={styles.iconButton}
-        activeOpacity={0.7}
-        accessibilityLabel="Open settings"
-        accessibilityRole="button"
-      >
-        <Feather name="settings" size={19} color="#0A2558" />
-        <View style={styles.notificationDot} />
-      </TouchableOpacity>
+      {/* Right: QR Scanner + Settings Buttons */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {onPressQr && (
+          <TouchableOpacity
+            onPress={onPressQr}
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            accessibilityLabel="Scan Web QR Code"
+            accessibilityRole="button"
+          >
+            <Ionicons name="qr-code-outline" size={19} color="#0047AB" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={onPressSettings}
+          style={styles.iconButton}
+          activeOpacity={0.7}
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+        >
+          <Feather name="settings" size={19} color="#0A2558" />
+          <View style={styles.notificationDot} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -70,6 +91,8 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
 export const DashboardFilterHeader: React.FC<DashboardFilterHeaderProps> = ({
   selectedPreset,
   onSelectPreset,
+  onPressCustomRange,
+  customRangeLabel,
 }) => {
   return (
     <View style={styles.filterContainer}>
@@ -81,7 +104,11 @@ export const DashboardFilterHeader: React.FC<DashboardFilterHeaderProps> = ({
       </View>
 
       {/* 2. TIME FILTER PILLS */}
-      <View style={styles.pillsRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.pillsRow}
+      >
         {PRESET_PILLS.map((pill) => {
           const isActive = selectedPreset === pill.key;
           return (
@@ -105,7 +132,39 @@ export const DashboardFilterHeader: React.FC<DashboardFilterHeaderProps> = ({
             </TouchableOpacity>
           );
         })}
-      </View>
+
+        {onPressCustomRange && (
+          <TouchableOpacity
+            onPress={onPressCustomRange}
+            style={[
+              styles.pillButton,
+              selectedPreset === 'CUSTOM'
+                ? styles.pillButtonActive
+                : styles.pillButtonInactive,
+              { flexDirection: 'row', alignItems: 'center', gap: 5 },
+            ]}
+            activeOpacity={0.8}
+          >
+            <Feather
+              name="calendar"
+              size={13}
+              color={selectedPreset === 'CUSTOM' ? '#FFFFFF' : '#475569'}
+            />
+            <Text
+              style={[
+                styles.pillText,
+                selectedPreset === 'CUSTOM'
+                  ? styles.pillTextActive
+                  : styles.pillTextInactive,
+              ]}
+            >
+              {selectedPreset === 'CUSTOM' && customRangeLabel
+                ? customRangeLabel
+                : 'Custom'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
     </View>
   );
 };

@@ -345,10 +345,20 @@ export const StockRequestMasterScreen: React.FC<StockRequestMasterScreenProps> =
       }
     }
 
+    const availableStock = Number(prod.newQuantity || 0);
+    if (availableStock <= 0) {
+      Alert.alert('Out of Stock', `"${prod.productName}" has 0 in-hand stock.`);
+      return;
+    }
+
     const defaultImeis = isSerial && availableImeis[0] ? [availableImeis[0]] : [];
 
     const existingIdx = transferCart.findIndex((c) => c.product.productId === prod.productId);
     if (existingIdx >= 0) {
+      if (transferCart[existingIdx].quantity >= availableStock) {
+        Alert.alert('Stock Limit', `Cannot exceed available in-hand stock (${availableStock}).`);
+        return;
+      }
       setTransferCart((prev) =>
         prev.map((c, idx) => {
           if (idx !== existingIdx) return c;
@@ -461,6 +471,11 @@ export const StockRequestMasterScreen: React.FC<StockRequestMasterScreenProps> =
       const isSerial = item.product.productType === 'Serial No';
 
       if (delta > 0) {
+        const availableStock = Number(item.product.newQuantity || 0);
+        if (item.quantity >= availableStock) {
+          Alert.alert('Stock Limit', `Cannot exceed available in-hand stock (${availableStock}).`);
+          return prev;
+        }
         const nextQty = item.quantity + 1;
         let nextImeis = [...item.selectedImeis];
         if (isSerial && item.product.stock_imei) {

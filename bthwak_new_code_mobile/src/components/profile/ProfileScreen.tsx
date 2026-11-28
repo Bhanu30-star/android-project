@@ -25,6 +25,7 @@ import { ImageUploadTile } from '../common/ImageUploadTile';
 import { OfflineBanner } from '../common/OfflineBanner';
 import { Toast } from '../common/Toast';
 import { ChangePasswordSheet } from './ChangePasswordSheet';
+import { QrScannerSheet } from '../modals/QrScannerSheet';
 
 interface ProfileFormInnerProps {
   initialProfile: ProfileDetails;
@@ -44,6 +45,7 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
 
   // Change password modal
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
 
   // Toast state
   const [toastConfig, setToastConfig] = useState<{
@@ -320,6 +322,15 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
         <Text style={styles.topBarTitle}>Profile</Text>
 
         <View style={styles.topBarRight}>
+          <TouchableOpacity
+            style={[styles.editPencilBtn, { marginRight: 8 }]}
+            onPress={() => setQrScannerVisible(true)}
+            activeOpacity={0.7}
+            accessibilityLabel="Scan Web QR Login"
+            accessibilityRole="button"
+          >
+            <Ionicons name="qr-code-outline" size={18} color="#0047AB" />
+          </TouchableOpacity>
           {isDirty ? (
             <TouchableOpacity
               style={styles.saveHeaderBtn}
@@ -887,6 +898,11 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
             type: 'success',
           });
         }}
+      />
+
+      <QrScannerSheet
+        visible={qrScannerVisible}
+        onClose={() => setQrScannerVisible(false)}
       />
     </View>
   );

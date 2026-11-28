@@ -407,6 +407,17 @@ export const AddItemsSheet: React.FC<AddItemsSheetProps> = ({
       Alert.alert('Validation', `${p.product_name}: Quantity must be greater than 0`);
       return null;
     }
+    if (isStockMaintained(p)) {
+      const remaining = Math.max(0, p.new_quantity - getProductInCartQty(p));
+      const requestedUnits = finalQty * s.bagVal;
+      if (requestedUnits > remaining) {
+        Alert.alert(
+          'Insufficient Stock',
+          `${p.product_name}: Requested ${requestedUnits} units exceeds available stock (${remaining}).`
+        );
+        return null;
+      }
+    }
     if (s.price <= 0) {
       Alert.alert('Validation', `${p.product_name}: Price must be greater than 0`);
       return null;

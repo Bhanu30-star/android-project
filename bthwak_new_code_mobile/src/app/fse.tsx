@@ -847,8 +847,8 @@ export default function FseScreen() {
                 total_cash: totalDsrCash,
               });
               Alert.alert('DSR Submitted', 'Your DSR was submitted successfully!');
-            } catch {
-              Alert.alert('Submitted', 'DSR submitted for supervisor review.');
+            } catch (err: any) {
+              Alert.alert('DSR Submission Failed', err?.message || 'Unable to submit DSR. Please try again.');
             } finally {
               setIsSubmittingDsr(false);
             }

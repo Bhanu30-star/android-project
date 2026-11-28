@@ -301,6 +301,14 @@ export const AddEditProductModal: React.FC<AddEditProductModalProps> = ({
         return false;
       }
     }
+    if (stockInHand && parseFloat(stockInHand) < 0) {
+      Alert.alert('Validation Error', 'Stock in hand cannot be negative.');
+      return false;
+    }
+    if (lowStockQty && parseFloat(lowStockQty) < 0) {
+      Alert.alert('Validation Error', 'Low stock alert quantity cannot be negative.');
+      return false;
+    }
     return true;
   };
 

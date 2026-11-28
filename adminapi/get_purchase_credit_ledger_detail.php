@@ -93,7 +93,7 @@ if(isset($_POST['searchdate1']) && isset($_POST['searchdate2']) && isset($_POST[
 		{
 			while($fetch_product_credit=mysqli_fetch_assoc($rescredit1))
 			{	
-				if($fetch_product_credit['payment_mode']=="Cash" || $fetch_product_credit['payment_mode']=="Cheque" || $fetch_product_credit['payment_mode']=="Online" || $fetch_product_credit['payment_mode']=="Adjustment") 
+				if($fetch_product_credit['payment_mode']=="Cash" || $fetch_product_credit['payment_mode']=="Cheque" || $fetch_product_credit['payment_mode']=="Online" || ($fetch_product_credit['payment_mode']=="Adjustment" && $fetch_product_credit['remark']!="Purchase Return" && $fetch_product_credit['remark']!="Direct Debit Note" && stripos($fetch_product_credit['remark'], 'debit') === false)) 
 				{
 					$total_credit=$total_credit+$fetch_product_credit['total_amount']+$fetch_product_credit['receive_disc_amt'];	
 					$product['bill_date']=$fetch_product_credit['payment_date'];
@@ -229,7 +229,6 @@ if(isset($_POST['searchdate1']) && isset($_POST['searchdate2']) && isset($_POST[
 					if ($fetch_product_credit['payment_mode'] == "Cash" || $fetch_product_credit['payment_mode'] == "Cheque" || $fetch_product_credit['payment_mode'] == "Online") 
 					{
 						$total_credit = $total_credit + $fetch_product_credit['total_amount'] + $fetch_product_credit['receive_disc_amt'];
-						$total_credit=$total_credit+$fetch_product_credit['total_amount']+$fetch_product_credit['receive_disc_amt'];
 						$product['bill_date']=$fetch_product_credit['payment_date'];
 						$product['particular']='By '.$fetch_product_credit['payment_mode'];
 						$product['vch_type']='Receipt';

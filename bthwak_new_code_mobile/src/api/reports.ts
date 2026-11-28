@@ -827,3 +827,241 @@ export async function fetchExpenseMasterApi(params: {
 
   return { data: [], totalExpense: 0 };
 }
+
+export interface DynamicReportRow {
+  id: string | number;
+  voucher_no: string;
+  voucher_date: string;
+  title: string;
+  subtitle: string;
+  code?: string;
+  quantity: number;
+  rate: number;
+  tax_or_disc: number;
+  net_amount: number;
+  status: string;
+  statusColor: string;
+  mode?: string;
+  details: Record<string, string>;
+}
+
+export async function fetchDynamicReportApi(
+  reportId: string,
+  params: { from_date: string; to_date: string; search?: string }
+): Promise<DynamicReportRow[]> {
+  const id = reportId.toLowerCase();
+  const basePayload = {
+    from_date: params.from_date,
+    to_date: params.to_date,
+    start_date: params.from_date,
+    end_date: params.to_date,
+    date: params.to_date,
+    search: params.search || '',
+    page: 1,
+    limit: 50,
+  };
+
+  let endpoint = '';
+  let payload: Record<string, any> = basePayload;
+
+  if (id === 'cash_in_hand') {
+    endpoint = '/cash/getCashInHandDetails';
+    payload = { getmonth: null, getyear: new Date().getFullYear().toString(), page: 1, limit: 50 };
+  } else if (id === 'cash_at_bank') {
+    endpoint = '/cash/getCashAtBankDetails';
+    payload = { page: 1, limit: 50 };
+  } else if (id === 'bank_deposit') {
+    endpoint = '/cash/getBankDepositDetails';
+  } else if (id === 'expense_head') {
+    endpoint = '/cash/getExpenseHeadDetail';
+    payload = { page: 1, limit: 50 };
+  } else if (id === 'purchase_cancel') {
+    endpoint = '/purchase/getPurchaseCancelDetail';
+  } else if (id === 'purchase_receipt') {
+    endpoint = '/purchase/getPurchaseReceiptRegister';
+  } else if (id === 'purchase_ledger') {
+    endpoint = '/purchase/getPurchaseLedgerSummary';
+  } else if (id === 'purchase_tds') {
+    endpoint = '/purchase/getPurchaseTdsRegister';
+  } else if (id === 'purchase_advance') {
+    endpoint = '/purchase/getPurchaseAdvancePayment';
+  } else if (id === 'stock_detail_exec') {
+    endpoint = '/stocks/getExecutiveStockDetail';
+  } else if (id === 'material_transfer') {
+    endpoint = '/stocks/getStockTransferRegister';
+  } else if (id === 'exec_attendance' || id === 'shift_master' || id === 'leave_history') {
+    endpoint = '/sale-attendance/getRetailerAttendance';
+  } else if (id === 'exec_outstanding_report') {
+    endpoint = '/sales/getSalesExecSaleSummary';
+  } else if (id === 'bulk_upload') {
+    endpoint = '/miscellaneous/getBulkPurchaseDetail';
+  } else if (id === 'gst_summary_report') {
+    endpoint = '/gst-register/report';
+  } else if (id === 'profit_loss_report') {
+    try {
+      const res = await apiClient.get<any>('/trading-pl/account');
+      const d = res.data?.data ?? {};
+      const rows = Array.isArray(d.rows) ? d.rows : Array.isArray(d) ? d : [d];
+      return rows.filter(Boolean).map((r: any, idx: number) => ({
+        id: idx + 1,
+        voucher_no: `PL-${idx + 1}`,
+        voucher_date: params.to_date,
+        title: String(r.account_name || r.particulars || 'Trading & P&L'),
+        subtitle: String(r.type || 'Financial Summary'),
+        quantity: 1,
+        rate: Number(r.net_profit ?? r.gross_profit ?? r.amount ?? 0),
+        tax_or_disc: 0,
+        net_amount: Number(r.net_profit ?? r.gross_profit ?? r.amount ?? 0),
+        status: 'Audited',
+        statusColor: '#0047AB',
+        mode: 'P&L',
+        details: Object.fromEntries(
+          Object.entries(r)
+            .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
+            .slice(0, 12)
+            .map(([k, v]) => [k, String(v)])
+        ),
+      }));
+    } catch {
+      return [];
+    }
+  } else if (id === 'sales_cancel_edit') {
+    endpoint = '/sales/getSaleCancelEditHistory';
+  } else if (id === 'sales_receipt_cancel') {
+    endpoint = '/sales/getReceiptCancelRegister';
+  } else if (id === 'cheque_txn') {
+    endpoint = '/sales/getChequeTxnDetail';
+  } else if (id === 'money_report') {
+    endpoint = '/sales/moneyReceiptRegister';
+  } else if (id === 'retailer_credit') {
+    endpoint = '/retailer/getRetailerCreditSummary';
+  } else if (id === 'retailer_tds') {
+    endpoint = '/retailer/getRetailerTdsSummary';
+  } else if (id === 'retailer_monthly') {
+    endpoint = '/retailer/getRetailerMonthWiseSale';
+  } else if (id === 'retailer_ledger') {
+    endpoint = '/retailer/getRetailerLedger';
+  } else if (id === 'item_sale_party') {
+    endpoint = '/retailer/getItemWiseSale';
+  } else if (id === 'retailer_sales_exec') {
+    endpoint = '/retailer/getRetailerSales';
+  } else if (id === 'retailer_returnable') {
+    endpoint = '/retailer/getRetailerReturnable';
+  } else if (id === 'free_scheme') {
+    endpoint = '/retailer/getFreeScheme';
+  } else if (id === 'dtr_credit') {
+    endpoint = '/credits/getDistributorCreditBook';
+  } else if (id === 'credit_summary_report') {
+    endpoint = '/credits/getCreditSummaryTillDate';
+  } else if (id === 'challan_register_fy') {
+    endpoint = '/financials/getChallanRegister';
+  } else if (id === 'money_report_fy') {
+    endpoint = '/financials/getMoneyReceipt';
+  } else if (id === 'sale_register_fy') {
+    endpoint = '/financials/getSaleRegisterFinancialReport';
+  } else if (id === 'purchase_register_fy') {
+    endpoint = '/financials/getPurchaseFinancialReport';
+  } else if (id === 'receipt_payment_mode') {
+    endpoint = '/miscellaneous/getReceiptPaymentMode';
+  } else if (id === 'product_serial') {
+    endpoint = '/miscellaneous/getProductSerialNoDetail';
+  } else if (id === 'serial_return') {
+    endpoint = '/miscellaneous/getSerialNoReturnReport';
+  } else if (id === 'same_gstin') {
+    endpoint = '/miscellaneous/getSerialGstinNoDetail';
+  } else if (id === 'advance_payment') {
+    endpoint = '/sale/getAdvancePaymentDetail';
+  } else if (id === 'dtr_txn') {
+    endpoint = '/stock/getDtrTxn';
+  } else if (id === 'stock_transfer') {
+    endpoint = '/stock/getStockTransfer';
+  } else if (id === 'all_sales_stock') {
+    endpoint = '/stock/getAllSalesStock';
+  } else if (id === 'autofill_stock') {
+    endpoint = '/stock/getAutofillStock';
+  }
+
+  if (!endpoint) return [];
+
+  try {
+    const res = await apiClient.post<any>(endpoint, payload);
+    const d = res.data?.data;
+    const rawList: any[] = Array.isArray(d)
+      ? d
+      : Array.isArray(d?.rows)
+      ? d.rows
+      : Array.isArray(d?.finalRows)
+      ? d.finalRows
+      : Array.isArray(d?.data)
+      ? d.data
+      : Array.isArray(d?.list)
+      ? d.list
+      : [];
+
+    return rawList.map((r: any, idx: number) => {
+      const title =
+        r.party_name ||
+        r.retailer_name ||
+        r.bankName ||
+        r.head_name ||
+        r.product_name ||
+        r.sales_executive ||
+        r.accountHolderName ||
+        r.name ||
+        `Record #${idx + 1}`;
+      const voucherNo = String(
+        r.bill_no ||
+          r.invoice_no ||
+          r.receipt_no ||
+          r.voucher_no ||
+          r.txn_no ||
+          r.accountNo ||
+          r.head_id ||
+          `#${idx + 1}`
+      );
+      const voucherDate = String(
+        r.bill_date || r.date || r.txn_date || r.insert_date || r.created_at || params.to_date
+      );
+      const netAmt = Number(
+        r.net_amount ??
+          r.final_amt ??
+          r.amount ??
+          r.total_amount ??
+          r.balance ??
+          r.closing_balance ??
+          r.credit_amount ??
+          r.deposit ??
+          0
+      );
+      const taxAmt = Number(r.tax_amount ?? r.tax_amt ?? r.gst ?? r.tds_amount ?? 0);
+      const qty = Number(r.quantity ?? r.qty ?? r.total_txn ?? 1);
+      const details: Record<string, string> = {};
+      Object.entries(r).slice(0, 12).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && typeof v !== 'object') {
+          details[k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())] = String(v);
+        }
+      });
+
+      return {
+        id: r.id ?? r.head_id ?? r.bankMasterId ?? idx + 1,
+        voucher_no: voucherNo,
+        voucher_date: voucherDate,
+        title: String(title),
+        subtitle: String(
+          r.remark || r.payment_mode || r.accountType || r.category || r.status || reportId.replace(/_/g, ' ')
+        ),
+        code: r.gstin || r.ifsc || r.serial_no || r.cheque_no || undefined,
+        quantity: qty,
+        rate: qty > 0 ? netAmt / qty : netAmt,
+        tax_or_disc: taxAmt,
+        net_amount: netAmt,
+        status: String(r.status || 'Active'),
+        statusColor: '#0047AB',
+        mode: String(r.payment_mode || r.mode || r.accountType || 'Ledger'),
+        details,
+      };
+    });
+  } catch {
+    return [];
+  }
+}

@@ -25,6 +25,7 @@ import {
   fetchSalesExecSaleSummaryApi,
   fetchStockSummaryReportApi,
   fetchExpenseMasterApi,
+  fetchDynamicReportApi,
 } from '@/api/reports';
 import { formatIndianCurrency, formatIndianNumber } from '@/utils/formatters';
 import {
@@ -157,7 +158,7 @@ export const GenericReportViewerScreen: React.FC = () => {
           },
         }));
         setRecords(mapped);
-      } else if (reportId.includes('sale_return') || reportId.includes('return')) {
+      } else if (reportId === 'sale_return') {
         const res = await fetchSaleReturnRegisterApi({
           from_date: fromDate,
           to_date: toDate,
@@ -221,7 +222,7 @@ export const GenericReportViewerScreen: React.FC = () => {
           };
         });
         setRecords(mapped);
-      } else if (reportId.includes('purchase')) {
+      } else if (reportId === 'purchase_register') {
         const res = await fetchPurchaseRegisterApi({
           from_date: fromDate,
           to_date: toDate,
@@ -255,7 +256,7 @@ export const GenericReportViewerScreen: React.FC = () => {
           },
         }));
         setRecords(mapped);
-      } else if (reportId.includes('stock')) {
+      } else if (reportId === 'stock_summary') {
         const res = await fetchStockSummaryReportApi({
           search: search.trim(),
         });
@@ -282,7 +283,7 @@ export const GenericReportViewerScreen: React.FC = () => {
           },
         }));
         setRecords(mapped);
-      } else if (reportId.includes('expense')) {
+      } else if (reportId === 'expense_master') {
         const res = await fetchExpenseMasterApi({
           from_date: fromDate,
           to_date: toDate,
@@ -311,8 +312,12 @@ export const GenericReportViewerScreen: React.FC = () => {
         }));
         setRecords(mapped);
       } else {
-        // No fake mock data - return clean empty list
-        setRecords([]);
+        const dynamicRows = await fetchDynamicReportApi(reportId, {
+          from_date: fromDate,
+          to_date: toDate,
+          search: search.trim(),
+        });
+        setRecords(dynamicRows);
       }
     } catch {
       setRecords([]);
@@ -402,29 +407,33 @@ export const GenericReportViewerScreen: React.FC = () => {
     Linking.openURL(`tel:${phone}`);
   };
 
-  // Export Excel
-  const handleExportExcel = () => {
-    Alert.alert(
-      'Export Excel (.xlsx)',
-      `${reportTitle} with ${displayedRecords.length} records is ready for spreadsheet export.`,
-      [
-        {
-          text: 'Share / Save',
-          onPress: async () => {
-            try {
-              const summaryText =
-                `*BTHAWK ${reportTitle.toUpperCase()} EXPORT*\n` +
-                `Period: ${fromDate} to ${toDate}\n` +
-                `Total Entries: ${summary.totalEntries}\n` +
-                `Consolidated Net: ${formatIndianCurrency(summary.totalNet)}\n` +
-                `Generated via BTHAWK ERP.`;
-              await Share.share({ message: summaryText, title: `${reportTitle}.xlsx` });
-            } catch {}
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  // Export CSV / Excel
+  const handleExportExcel = async () => {
+    try {
+      const header = 'Sr,Voucher No,Date,Title,Subtitle,Qty,Tax/Disc,Net Amount,Mode,Status';
+      const rowsCsv = displayedRecords.map((r, i) =>
+        [
+          i + 1,
+          `"${String(r.voucher_no).replace(/"/g, '""')}"`,
+          `"${String(r.voucher_date)}"`,
+          `"${String(r.title).replace(/"/g, '""')}"`,
+          `"${String(r.subtitle).replace(/"/g, '""')}"`,
+          r.quantity,
+          r.tax_or_disc.toFixed(2),
+          r.net_amount.toFixed(2),
+          `"${String(r.mode || '')}"`,
+          `"${String(r.status)}"`,
+        ].join(',')
+      );
+      const totalRow = `TOTAL,,,,"${summary.totalEntries} entries",${summary.totalQty},,${summary.totalNet.toFixed(2)},,`;
+      const csvContent = [header, ...rowsCsv, totalRow].join('\n');
+      await Share.share({
+        message: csvContent,
+        title: `${reportTitle.replace(/\s+/g, '_')}_${fromDate}_${toDate}.csv`,
+      });
+    } catch {
+      Alert.alert('Export Error', 'Unable to export CSV.');
+    }
   };
 
   // Print / PDF preview

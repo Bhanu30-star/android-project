@@ -30,6 +30,7 @@ export interface InvoiceDraftState {
   chequeTxnNo: string;
   chequeDate: string;
   depositBank: string;
+  cashAmt?: number;
   chequeAmt: number;
   creditDays: number;
   signatureBase64: string;

@@ -9,7 +9,11 @@ import {
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/theme';
 
-export const QuickActions: React.FC = () => {
+interface QuickActionsProps {
+  onOpenQr?: () => void;
+}
+
+export const QuickActions: React.FC<QuickActionsProps> = ({ onOpenQr }) => {
   const [showQrModal, setShowQrModal] = useState(false);
 
   return (
@@ -28,7 +32,7 @@ export const QuickActions: React.FC = () => {
         <TouchableOpacity
           style={styles.scanPill}
           activeOpacity={0.8}
-          onPress={() => setShowQrModal(true)}
+          onPress={() => (onOpenQr ? onOpenQr() : setShowQrModal(true))}
         >
           <Feather name="camera" size={14} color="#FFFFFF" />
           <Text style={styles.scanPillText}>Scan</Text>
