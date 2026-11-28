@@ -24,7 +24,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onOpenQr }) => {
           <Ionicons name="qr-code-outline" size={24} color={Theme.colors.primary} />
         </View>
         <View style={styles.scannerTextGroup}>
-          <Text style={styles.scannerTitle}>Login to BTHAWK Web</Text>
+          <Text style={styles.scannerTitle}>Login to Mandio Web</Text>
           <Text style={styles.scannerSubtitle}>
             Scan the QR code displayed on your desktop screen to instantly log in.
           </Text>

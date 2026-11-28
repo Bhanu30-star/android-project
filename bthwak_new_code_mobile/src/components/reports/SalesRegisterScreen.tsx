@@ -153,7 +153,7 @@ export const SalesRegisterScreen: React.FC = () => {
           onPress: async () => {
             try {
               const printMsg =
-                `*BTHAWK TAX STATEMENT - ${patName.toUpperCase()}*\n` +
+                `*Mandio TAX STATEMENT - ${patName.toUpperCase()}*\n` +
                 `Date Range: ${fromDate} to ${toDate}\n` +
                 `Total Invoices: ${summary.total_bills}\n` +
                 `Total Qty: ${formatIndianNumber(summary.total_quentity)} Units\n` +
@@ -167,7 +167,7 @@ export const SalesRegisterScreen: React.FC = () => {
                   )
                   .join('\n') +
                 (records.length > 10 ? `\n...and ${records.length - 10} more bills.` : '') +
-                `\n--------------------------------\nBTHAWK Enterprise ERP Statement.`;
+                `\n--------------------------------\nMandio Enterprise ERP Statement.`;
               await Share.share({ message: printMsg, title: `${patName}_Statement` });
             } catch {}
           },
@@ -244,7 +244,7 @@ export const SalesRegisterScreen: React.FC = () => {
   const handleShareVoucher = async (item: SaleRegisterItem) => {
     const totalTax = (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0) + (item.cess_amount || 0);
     const msg =
-      `*BTHAWK SALE INVOICE* 🧾\n` +
+      `*Mandio SALE INVOICE* 🧾\n` +
       `--------------------------------\n` +
       `*Bill No:* ${item.bill_no}` + (item.vch_series ? ` (${item.vch_series})` : '') + `\n` +
       `*Date:* ${item.bill_date}\n` +
@@ -261,7 +261,7 @@ export const SalesRegisterScreen: React.FC = () => {
       `*Payment Mode:* ${item.mode_type}\n` +
       (item.source ? `*Source:* ${item.source}\n` : '') +
       `--------------------------------\n` +
-      `Powered by BTHAWK ERP.`;
+      `Powered by Mandio ERP.`;
 
     try {
       await Share.share({ message: msg, title: item.bill_no });

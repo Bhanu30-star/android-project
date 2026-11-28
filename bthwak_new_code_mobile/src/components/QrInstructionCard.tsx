@@ -13,7 +13,7 @@ export const QrInstructionCard: React.FC<QrInstructionCardProps> = ({ onSwitchTo
         <Ionicons name="qr-code-outline" size={38} color="#0047AB" />
       </View>
 
-      <Text style={styles.title}>Logging In to BTHAWK Web?</Text>
+      <Text style={styles.title}>Logging In to Mandio Web?</Text>
       <Text style={styles.description}>
         QR Code login allows you to securely authenticate your desktop or web browser instantly.
       </Text>

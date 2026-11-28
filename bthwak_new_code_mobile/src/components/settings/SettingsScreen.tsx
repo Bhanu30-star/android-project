@@ -752,7 +752,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               {/* Update Available */}
               <TouchableOpacity
                 style={styles.menuRow}
-                onPress={() => Alert.alert('App Update', 'BTHAWK is up to date (v2.4.0).')}
+                onPress={() => Alert.alert('App Update', 'Mandio is up to date (v2.4.0).')}
                 activeOpacity={0.7}
               >
                 <View style={styles.menuRowLeft}>
@@ -787,7 +787,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <TouchableOpacity
               style={styles.logoutCard}
               onPress={() => {
-                Alert.alert('Sign Out', 'Are you sure you want to log out of BTHAWK?', [
+                Alert.alert('Sign Out', 'Are you sure you want to log out of Mandio?', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Log Out', style: 'destructive', onPress: onLogout },
                 ]);
@@ -803,9 +803,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <Feather name="chevron-right" size={18} color="#DC2626" />
             </TouchableOpacity>
 
-            {/* VERSION INFO */}
+            {/* VERSION & ABOUT INFO */}
             <Text style={styles.versionFooter}>
-              BTHAWK Mobile Enterprise • Version 2.4.0 (Build 2026)
+              Mandio Mobile Enterprise • Version 2.4.0 (Build 2026){'\n'}
+              Mandio comes from 'mandi' (market). It helps you run your shop's billing, stock and accounts in one place.
             </Text>
           </ScrollView>
 
@@ -1532,7 +1533,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
             {/* TITLE */}
             <Text style={styles.renewalHeroTitle}>
-              Renew Your <Text style={styles.renewalBrandAccent}>BTHAWK</Text> Experience
+              Renew Your <Text style={styles.renewalBrandAccent}>Mandio</Text> Experience
             </Text>
 
             {/* EXPIRY WARNING BANNER */}
@@ -2503,9 +2504,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </View>
             <ScrollView style={{ marginTop: 10 }}>
               <Text style={styles.termsText}>
-                Welcome to BTHAWK Enterprise Billing and Distribution System.{'\n\n'}
+                Welcome to Mandio Enterprise Billing and Distribution System.{'\n\n'}
                 1. Account Security: You are responsible for safeguarding your credentials and any activity conducted under your account.{'\n\n'}
-                2. Data Integrity: GSTIN, PAN, and Tax invoice data uploaded through BTHAWK is synced securely with certified e-Invoice & e-Way bill portals.{'\n\n'}
+                2. Data Integrity: GSTIN, PAN, and Tax invoice data uploaded through Mandio is synced securely with certified e-Invoice & e-Way bill portals.{'\n\n'}
                 3. License & Renewals: Software services and cloud synchronization are active per selected duration. Plan renewal ensures zero service interruptions.
               </Text>
             </ScrollView>

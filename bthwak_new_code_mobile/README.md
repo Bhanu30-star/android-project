@@ -1,6 +1,6 @@
-# BTHAWK Mobile App 📱
+# Mandio Mobile App 📱
 
-This is the Expo React Native mobile client for the **BTHAWK Accounting & GST Platform**.
+This is the Expo React Native mobile client for the **Mandio Accounting & GST Platform**.
 
 ---
 
@@ -76,7 +76,7 @@ npx expo start
 
 ### 4. QR Code Login
 - Switch to the **QR Code** tab.
-- The tab displays an instruction guide explaining that the QR login feature is designed for logging into BTHAWK Desktop/Web. Once logged in on the mobile app, tap the **Scan** action on the dashboard to authenticate the desktop session.
+- The tab displays an instruction guide explaining that the QR login feature is designed for logging into Mandio Desktop/Web. Once logged in on the mobile app, tap the **Scan** action on the dashboard to authenticate the desktop session.
 
 ---
 

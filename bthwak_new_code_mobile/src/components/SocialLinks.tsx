@@ -79,13 +79,13 @@ export const SocialLinks: React.FC = () => {
       {/* Copyright text */}
       <View style={styles.textRow}>
         <Text style={styles.poweredText}>
-          Powered by <Text style={styles.brandText}>BTHAWK</Text>
+          Powered by <Text style={styles.brandText}>Mandio</Text>
           <Text style={styles.supText}>®</Text> 2026 | Copyright ©
         </Text>
         <TouchableOpacity
           onPress={() => openLink('https://www.bthawk.com')}
           accessibilityRole="link"
-          accessibilityLabel="Visit BTHAWK website"
+          accessibilityLabel="Visit Mandio website"
         >
           <Text style={styles.websiteLink}> www.bthawk.com</Text>
         </TouchableOpacity>

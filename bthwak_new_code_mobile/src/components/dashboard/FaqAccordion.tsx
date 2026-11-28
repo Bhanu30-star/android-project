@@ -23,7 +23,7 @@ interface FaqAccordionProps {
 const DEFAULT_FAQS: FaqItem[] = [
   {
     id: 1,
-    question: 'How is your data secure with BTHAWK?',
+    question: 'How is your data secure with Mandio?',
     answer_detail:
       'All your financial records, distributor invoices, and ledger information are encrypted in transit (TLS 1.3) and at rest (AES-256) on cloud infrastructure compliant with Indian data localization norms.',
   },
@@ -35,9 +35,9 @@ const DEFAULT_FAQS: FaqItem[] = [
   },
   {
     id: 3,
-    question: 'Is E-Way bill possible in BTHAWK?',
+    question: 'Is E-Way bill possible in Mandio?',
     answer_detail:
-      'Yes! BTHAWK provides one-tap automated E-Way bill generation linked directly with your outbound tax invoices for consignment values exceeding statutory thresholds.',
+      'Yes! Mandio provides one-tap automated E-Way bill generation linked directly with your outbound tax invoices for consignment values exceeding statutory thresholds.',
   },
 ];
 

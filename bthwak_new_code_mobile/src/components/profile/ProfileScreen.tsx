@@ -463,7 +463,7 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
 
           <TouchableOpacity
             style={styles.menuRow}
-            onPress={() => Alert.alert('System Updates', 'Your BTHAWK client is on version 1.0.0 (Latest).')}
+            onPress={() => Alert.alert('System Updates', 'Your Mandio client is on version 1.0.0 (Latest).')}
             activeOpacity={0.7}
           >
             <View style={styles.menuIconChip}>
@@ -809,7 +809,7 @@ const ProfileFormInner: React.FC<ProfileFormInnerProps> = ({
             <View style={styles.subStatusCard}>
               <Ionicons name="shield-checkmark" size={24} color="#059669" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.subPlanTitle}>BTHAWK Enterprise Annual</Text>
+                <Text style={styles.subPlanTitle}>Mandio Enterprise Annual</Text>
                 <Text style={styles.subPlanExpiry}>
                   Renewal Date:{' '}
                   <Text style={styles.boldText}>

@@ -443,7 +443,7 @@ export async function fetchReceiptBookApi(
           r.bank_id ||
           (paymentMode === 'Cash' ? 'Cash Till' : 'Primary Bank');
         const cancelAllowed = !!r.cancel_allowed;
-        const source = r.source || 'BTHAWK ERP';
+        const source = r.source || 'Mandio ERP';
         const receiptType = r.receipt_type || (filters.search_type === 'credit_book' ? 'Credit' : filters.search_type === 'money_book' ? 'Cash/Counter' : 'Other');
 
         return {
@@ -515,7 +515,7 @@ export async function fetchCashReceiptDetailApi(
     const d = res.data?.data || {};
     return {
       company: {
-        name: d.distributor_name || 'BTHAWK ENTERPRISE',
+        name: d.distributor_name || 'Mandio ENTERPRISE',
         logo: d.company_logo,
         address: d.distributor_address || 'Main Market, Wholesale Complex',
         phone: d.distributor_phone || '',
@@ -555,7 +555,7 @@ export async function fetchCashReceiptDetailApi(
     // Default structured receipt object
     return {
       company: {
-        name: 'BTHAWK TRADING CORP',
+        name: 'Mandio TRADING CORP',
         address: 'Wholesale Commercial Center, Ring Road',
         phone: '+91 98765 00000',
         mobile: '+91 98765 00000',

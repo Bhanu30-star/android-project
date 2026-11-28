@@ -23,7 +23,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   const displayName =
     user?.distributor_name || user?.distributor_firm_name || 'Business Partner';
-  const firmName = user?.distributor_firm_name || 'BTHAWK Enterprise';
+  const firmName = user?.distributor_firm_name || 'Mandio Enterprise';
   const userRole = user?.user_role || 'Distributor Admin';
 
   return (

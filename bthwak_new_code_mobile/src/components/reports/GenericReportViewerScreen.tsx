@@ -392,7 +392,7 @@ export const GenericReportViewerScreen: React.FC = () => {
       `*Net Amount:* ${formatIndianCurrency(item.net_amount)}\n` +
       `*Status:* ${item.status}\n` +
       `--------------------------------\n` +
-      `BTHAWK Enterprise ERP Statement.`;
+      `Mandio Enterprise ERP Statement.`;
 
     try {
       await Share.share({ message: msg, title: item.voucher_no });
@@ -447,7 +447,7 @@ export const GenericReportViewerScreen: React.FC = () => {
           onPress: async () => {
             try {
               const printMsg =
-                `*BTHAWK ${reportTitle.toUpperCase()} - STATEMENT*\n` +
+                `*Mandio ${reportTitle.toUpperCase()} - STATEMENT*\n` +
                 `Date Range: ${fromDate} to ${toDate}\n` +
                 `Total Entries: ${summary.totalEntries}\n` +
                 `Consolidated Net: ${formatIndianCurrency(summary.totalNet)}\n` +
@@ -460,7 +460,7 @@ export const GenericReportViewerScreen: React.FC = () => {
                   )
                   .join('\n') +
                 (displayedRecords.length > 10 ? `\n...and ${displayedRecords.length - 10} more records.` : '') +
-                `\n--------------------------------\nBTHAWK Enterprise ERP Statement.`;
+                `\n--------------------------------\nMandio Enterprise ERP Statement.`;
               await Share.share({ message: printMsg, title: `${reportTitle}_Statement` });
             } catch {}
           },

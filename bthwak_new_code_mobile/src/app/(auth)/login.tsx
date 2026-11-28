@@ -339,6 +339,13 @@ export default function LoginScreen() {
                 <BthawkLogo size={82} />
               </View>
 
+              <Text style={{ fontSize: 20, fontWeight: '800', color: '#0E204E', marginTop: 6 }}>
+                Mandio
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: '400', color: '#64748B', marginBottom: 8 }}>
+                Aapki dukaan, aapka hisaab
+              </Text>
+
               <Text style={styles.heroTitle}>
                 Welcome <Text style={styles.heroTitleHighlight}>Back!</Text>
               </Text>

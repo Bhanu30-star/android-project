@@ -37,7 +37,7 @@ export const SupportCard: React.FC<SupportCardProps> = ({
         <View style={styles.row}>
           <TouchableOpacity
             style={styles.gridBtn}
-            onPress={onPressBookMeeting || (() => Alert.alert('Book Meeting', 'Schedule a consultation with our BTHAWK accounting expert.'))}
+            onPress={onPressBookMeeting || (() => Alert.alert('Book Meeting', 'Schedule a consultation with our Mandio accounting expert.'))}
             activeOpacity={0.8}
             accessibilityLabel="Book meeting"
             accessibilityRole="button"
@@ -86,13 +86,13 @@ export const SupportCard: React.FC<SupportCardProps> = ({
       {/* FULL WIDTH CHAT BUTTON */}
       <TouchableOpacity
         style={styles.chatBtn}
-        onPress={onPressChatAi || (() => Alert.alert('BTHAWK+ Assistant', 'Connecting to your automated compliance and billing assistant...'))}
+        onPress={onPressChatAi || (() => Alert.alert('Mandio Assistant', 'Connecting to your automated compliance and billing assistant...'))}
         activeOpacity={0.85}
-        accessibilityLabel="Chat with BTHAWK+"
+        accessibilityLabel="Chat with Mandio"
         accessibilityRole="button"
       >
         <Feather name="message-square" size={18} color={Colors.white} />
-        <Text style={styles.chatBtnText}>Chat with BTHAWK+</Text>
+        <Text style={styles.chatBtnText}>Chat with Mandio</Text>
       </TouchableOpacity>
     </View>
   );

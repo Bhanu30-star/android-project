@@ -18,7 +18,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   const { user } = useAuth();
   const { isPrivacyMode, togglePrivacyMode } = useApp();
 
-  const firmName = String(user?.distributor_firm_name || 'BTHAWK Enterprise');
+  const firmName = String(user?.distributor_firm_name || 'Mandio Enterprise');
   const ownerName = String(user?.distributor_name || 'Partner');
 
   return (

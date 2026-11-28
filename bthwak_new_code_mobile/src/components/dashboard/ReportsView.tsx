@@ -860,7 +860,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     if (item.id === 'other_cash') {
       Alert.alert(
         'Other Cash Txn Master',
-        'Other Cash Transaction Master is maintained and configured directly through the BTHAWK Web Portal.',
+        'Other Cash Transaction Master is maintained and configured directly through the Mandio Web Portal.',
         [{ text: 'OK' }]
       );
       return;
@@ -920,7 +920,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   // WhatsApp Share
   const handleShareWhatsApp = async () => {
     if (!selectedReport) return;
-    const textMsg = `*BTHAWK Report Statement*\nReport: *${selectedReport.fullName}*\nCategory: ${selectedReport.category}\nDate Filter: ${selectedDatePreset.toUpperCase()}\nGenerated via BTHAWK ERP.`;
+    const textMsg = `*Mandio Report Statement*\nReport: *${selectedReport.fullName}*\nCategory: ${selectedReport.category}\nDate Filter: ${selectedDatePreset.toUpperCase()}\nGenerated via Mandio ERP.`;
     try {
       await Share.share({
         message: textMsg,
@@ -962,7 +962,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
         <View style={styles.centerBrand}>
           <Text style={styles.brandTitle}>
-            BTHAWK <Text style={styles.brandAccent}>+</Text>
+            Mandio <Text style={styles.brandAccent}>+</Text>
           </Text>
         </View>
 

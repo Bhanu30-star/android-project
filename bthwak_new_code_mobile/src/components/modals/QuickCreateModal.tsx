@@ -54,7 +54,7 @@ const QUICK_ACTIONS: QuickActionItem[] = [
   {
     id: 'qr',
     title: 'Scan Desktop Web QR',
-    desc: 'Instant sign-in to BTHAWK web app on computer',
+    desc: 'Instant sign-in to Mandio web app on computer',
     iconName: 'camera',
     color: Theme.colors.primary,
     bgColor: '#EEF2FF',

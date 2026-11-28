@@ -193,7 +193,7 @@ export const ReceiptBookScreen: React.FC = () => {
   // Share receipt details via WhatsApp
   const handleShareReceipt = async (item: ReceiptBookItem) => {
     const shareText =
-      `*BTHAWK PAYMENT RECEIPT* 🧾\n` +
+      `*Mandio PAYMENT RECEIPT* 🧾\n` +
       `--------------------------------\n` +
       `*Receipt No:* ${item.receipt_no}\n` +
       `*Party Name:* ${item.party_name}\n` +
@@ -206,7 +206,7 @@ export const ReceiptBookScreen: React.FC = () => {
       (item.remark ? `*Remark:* ${item.remark}\n` : '') +
       `--------------------------------\n` +
       `Collected By: ${item.sales_exec_name || 'Staff'}\n` +
-      `Generated securely via BTHAWK ERP.`;
+      `Generated securely via Mandio ERP.`;
 
     try {
       await Share.share({
@@ -771,7 +771,7 @@ export const ReceiptBookScreen: React.FC = () => {
                   <Ionicons name="business" size={18} color="#0047AB" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.slipCompanyName}>BTHAWK ENTERPRISE</Text>
+                  <Text style={styles.slipCompanyName}>Mandio ENTERPRISE</Text>
                   <Text style={styles.slipCompanySub}>Official Payment Receipt Voucher</Text>
                 </View>
                 <TouchableOpacity

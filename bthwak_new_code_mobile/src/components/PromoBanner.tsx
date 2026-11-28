@@ -42,7 +42,7 @@ export const PromoBanner: React.FC = () => {
       >
         <View style={styles.headerLeft}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>BTHAWK</Text>
+            <Text style={styles.badgeText}>Mandio</Text>
           </View>
           <Text style={styles.headerTitle} numberOfLines={1}>
             Business Nahi, Accounting Tool Badlo

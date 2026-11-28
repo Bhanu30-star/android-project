@@ -130,7 +130,7 @@ export const QrScannerSheet: React.FC<QrScannerSheetProps> = ({
               <Feather name="x" size={20} color="#FFFFFF" />
             </TouchableOpacity>
 
-            <Text style={styles.topBarTitle}>Scan BTHAWK Web QR</Text>
+            <Text style={styles.topBarTitle}>Scan Mandio Web QR</Text>
 
             <TouchableOpacity
               onPress={() => setTorchOn(!torchOn)}

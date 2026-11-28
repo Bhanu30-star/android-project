@@ -63,7 +63,7 @@ export const InvoiceReceiptModal: React.FC<InvoiceReceiptModalProps> = ({
       const billNo = invoice.transaction_bill_number || `INV-${invoice.transaction_id}`;
       const amount = Number(invoice.final_amt || 0).toFixed(2);
       const party = invoice.party_name;
-      const text = `Invoice Receipt: ${billNo}\nCustomer: ${party}\nAmount: ₹${amount}\nDate: ${invoice.bill_date_time || 'Recent'}\nPowered by BTHAWK`;
+      const text = `Invoice Receipt: ${billNo}\nCustomer: ${party}\nAmount: ₹${amount}\nDate: ${invoice.bill_date_time || 'Recent'}\nPowered by Mandio`;
       await Share.share({ message: text, title: `Invoice ${billNo}` });
     } catch {
       // Ignored

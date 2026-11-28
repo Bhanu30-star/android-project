@@ -112,8 +112,8 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
     if (!phone) return;
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const msg = dueAmount > 0
-      ? `Dear ${name}, this is a gentle payment reminder for the outstanding balance of ₹${dueAmount.toLocaleString('en-IN')} with BTHAWK.`
-      : `Hello ${name}, greeting from BTHAWK.`;
+      ? `Dear ${name}, this is a gentle payment reminder for the outstanding balance of ₹${dueAmount.toLocaleString('en-IN')} with Mandio.`
+      : `Hello ${name}, greeting from Mandio.`;
     Linking.openURL(
       `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodeURIComponent(msg)}`
     ).catch(() => {});

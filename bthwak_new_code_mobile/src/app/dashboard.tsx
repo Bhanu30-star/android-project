@@ -722,7 +722,7 @@ export default function DashboardScreen() {
       {activeTab === 'chat' && (
         <View style={styles.chatPlaceholder}>
           <Ionicons name="chatbubbles-outline" size={48} color="#6C7CFF" />
-          <Text style={styles.chatTitle}>BTHAWK Support & Assistant</Text>
+          <Text style={styles.chatTitle}>Mandio Support & Assistant</Text>
           <Text style={styles.chatSubtitle}>
             Direct chat support and AI tax assistant available 24/7.
           </Text>

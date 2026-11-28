@@ -13,7 +13,7 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
   const handleLogoutPress = () => {
     Alert.alert(
       'Log Out',
-      'Are you sure you want to log out from BTHAWK?',
+      'Are you sure you want to log out from Mandio?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
